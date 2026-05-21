@@ -1,0 +1,16 @@
+# Ritual Studio Ops — Cloudflare Pages configuration
+# Account: Staff@ritualpalmbeach.com's Account (db7b2002741f559dc7d8558afc1abf07)
+#
+# To deploy manually from this directory:
+#   npx wrangler pages deploy app/ --project-name ritual-studio-ops
+#
+# To create the project for the first time (run once):
+#   npx wrangler pages project create ritual-studio-ops
+#
+# Production URL (once project exists): https://ritual-studio-ops.pages.dev
+
+name = "ritual-studio-ops"
+pages_build_output_dir = "app"
+
+[env.production]
+name = "ritual-studio-ops"

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Ritual Studios — Cover Opportunity</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-dark:  #2D5016; --green-mid: #4A7C59; --green-light: #8DB87F;
+      --green-bg: #EEF5E9; --bg: #F4F6F8; --card: #FFFFFF; --border: #E2E8F0;
+      --text: #1A1A2E; --text-muted: #6B7280; --radius: 14px;
+      --shadow: 0 2px 16px rgba(0,0,0,0.10);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+           background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    .header { background: var(--green-dark); padding: 18px 20px 16px; text-align: center; }
+    .header-logo { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+    .header-sub  { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .main { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px 40px; }
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 480px; overflow: hidden; }
+    .card-band { padding: 20px 22px 18px; background: var(--green-bg); border-bottom: 1px solid var(--border); }
+    .card-band.covered   { background: #D1FAE5; }
+    .card-band.declined  { background: #F3F4F6; }
+    .card-band.cancelled { background: #FEE2E2; }
+    .card-band.accepted  { background: #DBEAFE; }
+    .band-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 5px; }
+    .band-title { font-size: 22px; font-weight: 700; color: var(--green-dark); line-height: 1.2; }
+    .band-title.grey { color: #374151; } .band-title.red { color: #991B1B; } .band-title.blue { color: #1E40AF; }
+    .band-subtitle { font-size: 14px; color: var(--text-muted); margin-top: 5px; }
+    .card-body { padding: 22px; }
+    .detail-row { display: flex; align-items: flex-start; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; margin-top: 1px; }
+    .detail-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 2px; }
+    .detail-value { font-size: 15px; font-weight: 600; color: var(--text); }
+    .greeting { font-size: 15px; line-height: 1.6; color: var(--text); margin-bottom: 20px; }
+    .greeting strong { color: var(--green-dark); }
+    .action-area { padding: 0 22px 24px; }
+    .action-label { font-size: 12px; text-align: center; color: var(--text-muted); margin-bottom: 14px; font-weight: 500; }
+    .btn-stack { display: flex; flex-direction: column; gap: 10px; }
+    .btn { width: 100%; padding: 15px 20px; border-radius: 10px; border: none; font-size: 16px; font-weight: 700;
+           cursor: pointer; transition: opacity 0.15s, transform 0.1s; display: flex; align-items: center;
+           justify-content: center; gap: 8px; letter-spacing: 0.01em; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-accept  { background: var(--green-dark); color: #fff; }
+    .btn-decline { background: #F3F4F6; color: #374151; border: 1.5px solid var(--border); }
+    .btn-accept:hover  { background: var(--green-mid); }
+    .btn-decline:hover { background: #E5E7EB; }
+    .action-note { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 12px; line-height: 1.5; }
+    .status-icon  { font-size: 48px; text-align: center; margin: 4px 0 14px; }
+    .status-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 10px; }
+    .status-body  { font-size: 14px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 16px; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--green-mid);
+               border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { font-size: 14px; color: var(--text-muted); }
+    .footer { text-align: center; padding: 16px; font-size: 11px; color: var(--text-muted); opacity: 0.6; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+             background: var(--green-dark); color: #fff; padding: 12px 22px; border-radius: 30px;
+             font-size: 14px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 200;
+             opacity: 0; transition: transform 0.25s, opacity 0.25s; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.error { background: #991B1B; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #111827; }
+      .card { background: #1F2937; border: 1px solid #374151; }
+      .card-band { background: #1a2e10; border-color: #374151; }
+      .detail-row { border-color: #374151; }
+      .band-title { color: #86EFAC; }
+      .detail-value { color: #F9FAFB; }
+      .btn-decline { background: #374151; color: #F9FAFB; border-color: #4B5563; }
+    }
+  </style>
+</head>
+<body>
+<header class="header">
+  <div class="header-logo">Ritual Studios</div>
+  <div class="header-sub">Cover Portal</div>
+</header>
+<main class="main">
+  <div class="card" id="card">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading opportunity&#8230;</p>
+    </div>
+  </div>
+</main>
+<footer class="footer">Ritual Studios Cover Management &nbsp;&middot;&nbsp; Confidential</footer>
+<div class="toast" id="toast"></div>
+<script>
+const SUPABASE_URL = 'https://rfjygyqijwgkmxboddup.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmanlneXFpandna' +
+  '214Ym9kZHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDU5MjksImV4cCI6MjA4NzMyMTkyOX0.' +
+  'g40IEOLPDTWnbFYybWL01wZMiE_f2_yor_DKuaSCajU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function fmtDate(d) {
+  if (!d) return 'TBC';
+  const [y, m, day] = d.split('-');
+  return new Date(+y, +m - 1, +day).toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+function fmtTime(t) {
+  if (!t) return 'TBC';
+  const [h, m] = t.split(':');
+  const hour = +h, ampm = hour >= 12 ? 'pm' : 'am', h12 = hour % 12 || 12;
+  return `${h12}:${m}${ampm}`;
+}
+function fmtRange(s, e) { return e ? `${fmtTime(s)} \u2013 ${fmtTime(e)}` : fmtTime(s); }
+function discLabel(c) {
+  return {reformer:'Reformer Pilates',mat_pilates:'Mat Pilates',yin:'Yin Yoga',barre:'Barre',yoga:'Yoga'}[c] || c || 'Class';
+}
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast'+(isError?' error':''); t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+function row(icon, label, value) {
+  return `<div class="detail-row"><div class="detail-icon">${icon}</div><div>
+    <div class="detail-label">${label}</div><div class="detail-value">${value}</div></div></div>`;
+}
+
+function renderOpportunity(c, r, t) {
+  const name = t?.first_name || 'there';
+  const cls  = r.class_name_raw || discLabel(r.discipline_code);
+  const grade = r.discipline_code && t?.grades ? (t.grades[r.discipline_code] || 0) : null;
+  return `<div class="card-band">
+    <div class="band-eyebrow">Cover opportunity</div>
+    <div class="band-title">${cls}</div>
+    <div class="band-subtitle">You've been matched for this class</div></div>
+  <div class="card-body">
+    <p class="greeting">Hi <strong>${name}</strong>, the following cover is available. Can you step in?</p>
+    ${row('&#128197;','Date',fmtDate(r.class_date))}
+    ${row('&#128336;','Time',fmtRange(r.class_time,r.class_end_time))}
+    ${row('&#128205;','Studio',r.studio||'TBC')}
+    ${row('&#129340;','Class',cls)}
+    ${row('&#128100;','Covering for',r.requesting_teacher_name_raw||'Another teacher')}
+    ${grade!==null?row('&#11088;','Your grade',grade+' / 50'):''}
+  </div>
+  <div class="action-area">
+    <div class="action-label">Please let us know as soon as possible</div>
+    <div class="btn-stack">
+      <button class="btn btn-accept"  id="btn-accept"  onclick="respond('accepted')">&#10003;&nbsp;&nbsp;Yes, I can cover this class</button>
+      <button class="btn btn-decline" id="btn-decline" onclick="respond('declined')">&#10007;&nbsp;&nbsp;Sorry, I'm not available</button>
+    </div>
+    <p class="action-note">Your response is sent directly to the coordinator.<br>Accepting means the coordinator will confirm you shortly.</p>
+  </div>`;
+}
+
+function renderAccepted(r) {
+  const cls = r.class_name_raw || discLabel(r.discipline_code);
+  return `<div class="card-band accepted">
+    <div class="band-eyebrow">You accepted this cover</div>
+    <div class="band-title blue">${cls}</div>
+    <div class="band-subtitle">${fmtDate(r.class_date)} &middot; ${fmtRange(r.class_time,r.class_end_time)}</div></div>
+  <div class="card-body">
+    <div class="status-icon">&#128077;</div>
+    <div class="status-title" style="color:#1E40AF">Awaiting Confirmation</div>
+    <p class="status-body">Thank you for accepting! The coordinator will be in touch shortly to confirm your cover.<br><br>
+    If you need to change your response, please contact the studio directly.</p></div>`;
+}
+
+function renderConfirmed(r) {
+  const cls = r.class_name_raw || discLabel(r.discipline_code);
+  return `<div class="card-band covered">
+    <div class="band-eyebrow">You're confirmed!</div>
+    <div class="band-title">${cls}</div>
+    <div class="band-subtitle">${fmtDate(r.class_date)} &middot; ${fmtRange(r.class_time,r.class_end_time)}</div></div>
+  <div class="card-body">
+    <div class="status-icon">&#9989;</div>
+    <div class="status-title" style="color:#065F46">You're the cover teacher!</div>
+    <p class="status-body">This class is confirmed for you. See you on the mat!</p>
+    <div style="margin-top:16px">
+      ${row('&#128197;','Date',fmtDate(r.class_date))}
+      ${row('&#128336;','Time',fmtRange(r.class_time,r.class_end_time))}
+      ${row('&#128205;','Studio',r.studio||'TBC')}
+    </div></div>`;
+}
+
+function renderDeclined(r) {
+  return `<div class="card-band declined">
+    <div class="band-eyebrow">You declined this cover</div>
+    <div class="band-title grey">${r.class_name_raw||discLabel(r.discipline_code)}</div>
+    <div class="band-subtitle">${fmtDate(r.class_date)}</div></div>
+  <div class="card-body">
+    <div class="status-icon">&#128591;</div>
+    <div class="status-title" style="color:#374151">No problem</div>
+    <p class="status-body">Thanks for letting us know. We'll find another cover teacher.<br><br>
+    If your availability has changed, please contact the studio coordinator.</p></div>`;
+}
+
+function renderCovered(r) {
+  return `<div class="card-band covered">
+    <div class="band-eyebrow">Already covered</div>
+    <div class="band-title">${r.class_name_raw||discLabel(r.discipline_code)}</div>
+    <div class="band-subtitle">${fmtDate(r.class_date)}</div></div>
+  <div class="card-body">
+    <div class="status-icon">&#9989;</div>
+    <div class="status-title" style="color:#065F46">Cover has been filled</div>
+    <p class="status-body">Another teacher has taken this class. Thank you for your availability &#8212; we'll be in touch for future opportunities!</p></div>`;
+}
+
+function renderNoLongerNeeded(r) {
+  const why = r.status==='cancelled' ? 'This class has been cancelled.' : 'This cover is no longer required.';
+  return `<div class="card-band cancelled">
+    <div class="band-eyebrow">No longer needed</div>
+    <div class="band-title red">${r.class_name_raw||discLabel(r.discipline_code)}</div>
+    <div class="band-subtitle">${fmtDate(r.class_date)}</div></div>
+  <div class="card-body">
+    <div class="status-icon">&#8505;&#65039;</div>
+    <div class="status-title" style="color:#991B1B">Cover no longer needed</div>
+    <p class="status-body">${why}<br><br>Thank you for your availability. We'll be in touch for future opportunities!</p></div>`;
+}
+
+function renderExpired(r) {
+  return `<div class="card-band declined">
+    <div class="band-eyebrow">Opportunity expired</div>
+    <div class="band-title grey">${r.class_name_raw||discLabel(r.discipline_code)}</div>
+    <div class="band-subtitle">${fmtDate(r.class_date)}</div></div>
+  <div class="card-body">
+    <div class="status-icon">&#9200;</div>
+    <div class="status-title" style="color:#6B7280">This opportunity has passed</div>
+    <p class="status-body">The class date has passed or this opportunity is no longer active. Thank you for your availability!</p></div>`;
+}
+
+function renderNotFound() {
+  return `<div class="card-band declined">
+    <div class="band-eyebrow">Not found</div>
+    <div class="band-title grey">Opportunity unavailable</div></div>
+  <div class="card-body">
+    <div class="status-icon">&#128269;</div>
+    <div class="status-title" style="color:#6B7280">Link not recognised</div>
+    <p class="status-body">This link may have expired or been opened on a different device.<br><br>
+    Please contact the studio coordinator if you need assistance.</p></div>`;
+}
+
+let _candidateId = null;
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  _candidateId = params.get('c') || params.get('candidate');
+  if (!_candidateId) { document.getElementById('card').innerHTML = renderNotFound(); return; }
+
+  try {
+    const { data, error } = await sb
+      .from('cover_candidates')
+      .select(`*, teachers(id,first_name,last_name,grades,email,whatsapp_phone),
+        cover_requests(cover_request_id,class_date,class_time,class_end_time,
+          studio,discipline_code,class_name_raw,requesting_teacher_name_raw,status)`)
+      .eq('cover_candidate_id', _candidateId)
+      .single();
+
+    if (error || !data) { document.getElementById('card').innerHTML = renderNotFound(); return; }
+    render(data);
+  } catch (err) { document.getElementById('card').innerHTML = renderNotFound(); }
+}
+
+function render(data) {
+  const c = data, r = data.cover_requests || {}, t = data.teachers || {};
+  const card  = document.getElementById('card');
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (['cancelled','no_cover_needed'].includes(r.status)) { card.innerHTML = renderNoLongerNeeded(r); return; }
+  if ((r.class_date && r.class_date < today) || r.status === 'expired') { card.innerHTML = renderExpired(r); return; }
+  if (c.is_confirmed)                { card.innerHTML = renderConfirmed(r);         return; }
+  if (r.status === 'covered')        { card.innerHTML = renderCovered(r);           return; }
+  if (c.response === 'accepted')     { card.innerHTML = renderAccepted(r);          return; }
+  if (c.response === 'declined')     { card.innerHTML = renderDeclined(r);          return; }
+  card.innerHTML = renderOpportunity(c, r, t);
+}
+
+async function respond(response) {
+  if (!_candidateId) return;
+  const bA = document.getElementById('btn-accept');
+  const bD = document.getElementById('btn-decline');
+  if (bA) bA.disabled = true;
+  if (bD) bD.disabled = true;
+
+  try {
+    const { error } = await sb.from('cover_candidates')
+      .update({ response, responded_at: new Date().toISOString() })
+      .eq('cover_candidate_id', _candidateId);
+    if (error) throw error;
+
+    const { data: updated, error: e2 } = await sb
+      .from('cover_candidates')
+      .select(`*, teachers(id,first_name,last_name,grades),
+        cover_requests(cover_request_id,class_date,class_time,class_end_time,
+          studio,discipline_code,class_name_raw,requesting_teacher_name_raw,status)`)
+      .eq('cover_candidate_id', _candidateId)
+      .single();
+    if (e2) throw e2;
+
+    render(updated);
+    showToast(response === 'accepted' ? 'Response sent \u2014 thank you!' : 'Response recorded');
+  } catch (err) {
+    showToast('Could not save your response. Please try again.', true);
+    if (bA) bA.disabled = false;
+    if (bD) bD.disabled = false;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
