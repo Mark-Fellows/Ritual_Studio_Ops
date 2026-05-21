@@ -186,60 +186,36 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | DOCS_INDEX (this file) | RSO | `Ritual_Studio_Ops/docs/DOCS_INDEX.md` | active | |
 | CHANGELOG | RSO | `Ritual_Studio_Ops/docs/CHANGELOG.md` | active | |
 | LESSONS_LEARNED | RSO | `Ritual_Studio_Ops/docs/LESSONS_LEARNED.md` | active | |
-| Merger Plan v2 | RSO | *(move from TM folder)* | active | Move to `Ritual_Studio_Ops/docs/` |
+| Merger Plan v2 | RSO | `Ritual_Studio_Ops/docs/Ritual_Studio_Ops_Merger_Plan_v2.md` | active | Moved from TM folder 2026-05-21 |
 | .env template | RSO | `Ritual_Studio_Ops/.env.template` | active | Environment configuration template |
 | services/momence README | RSO | `Ritual_Studio_Ops/services/momence/README.md` | active | Momence code move instructions |
 | services/cover README | RSO | `Ritual_Studio_Ops/services/cover/README.md` | active | Cover pipeline move instructions (Phase 3) |
 
-**Tables-and-owners matrix** (updated each migration)
+**Tables-and-owners matrix** (updated each migration — 2026-05-merged-v1.sql)
 
-| Table | Created by | Phase | Owner |
-|---|---|---|---|
-| `teachers` | TM original | Pre-merger | TM (RSO from Phase 2) |
-| `class_history` | TM original | Pre-merger | TM |
-| `user_profiles` | TM original | Pre-merger | TM |
-| `audit_log` | TM original | Pre-merger | TM |
-| `trainee_bookings` | TM changelog 2026-04-05 | Pre-merger | TM |
-| `cover_requests` | CM stage 1 | Pre-merger | CM |
-| `cover_candidates` | CM | Pre-merger | CM |
-| `cover_notifications` | CM | Pre-merger | CM |
-| `whatsapp_channels` | CM stage 1 | Pre-merger | CM |
-| `whatsapp_messages` | CM | Pre-merger | CM |
-| `whatsapp_monitor_runs` | CM | Pre-merger | CM |
-| `system_config` | CM stage 1 | Pre-merger | CM |
-| `discipline_mappings` | CM | Pre-merger | CM → superseded by `disciplines` in Phase 1 |
-| `disciplines` | RSO | Phase 1 | RSO |
-| `studios` | RSO | Phase 1 | RSO — seed data: Palm Beach (active), Robina (active), Mermaid (`is_active = false`, closed/retired) |
-| `momence_sessions` | RSO | Phase 1 (empty) / Phase 7 (filled) | RSO |
-| `momence_members` | RSO | Phase 1 (empty) / Phase 7 (filled) | RSO |
-| `momence_bookings` | RSO | Phase 1 (empty) / Phase 7 (filled) | RSO |
-| `momence_sync_runs` | RSO | Phase 1 | RSO |
-| LESSONS_LEARNED | RSO | `Ritual_Studio_Ops/docs/LESSONS_LEARNED.md` | active | |
-| Merger Plan v2 | RSO | `Ritual_Studio_Ops/docs/Ritual_Studio_Ops_Merger_Plan_v2.md` | active | |
-| .env template | RSO | `Ritual_Studio_Ops/.env.template` | active | Environment configuration template |
-| services/momence README | RSO | `Ritual_Studio_Ops/services/momence/README.md` | active | Momence code move instructions |
-| services/cover README | RSO | `Ritual_Studio_Ops/services/cover/README.md` | active | Cover pipeline move instructions (Phase 3) |
-
-**Tables-and-owners matrix** (updated each migration)
-
-| Table | Created by | Phase | Owner |
-|---|---|---|---|
-| `teachers` | TM original | Pre-merger | TM (RSO from Phase 2) |
-| `class_history` | TM original | Pre-merger | TM |
-| `user_profiles` | TM original | Pre-merger | TM |
-| `audit_log` | TM original | Pre-merger | TM |
-| `trainee_bookings` | TM changelog 2026-04-05 | Pre-merger | TM |
-| `cover_requests` | CM stage 1 | Pre-merger | CM |
-| `cover_candidates` | CM | Pre-merger | CM |
-| `cover_notifications` | CM | Pre-merger | CM |
-| `whatsapp_channels` | CM stage 1 | Pre-merger | CM |
-| `whatsapp_messages` | CM | Pre-merger | CM |
-| `whatsapp_monitor_runs` | CM | Pre-merger | CM |
-| `system_config` | CM stage 1 | Pre-merger | CM |
-| `discipline_mappings` | CM | Pre-merger | CM — superseded by `disciplines` in Phase 1 |
-| `disciplines` | RSO | Phase 1 | RSO |
-| `studios` | RSO | Phase 1 | RSO — seed data: Palm Beach (active), Robina (active), Mermaid (`is_active = false`, closed/retired) |
-| `momence_sessions` | RSO | Phase 1 (empty) / Phase 7 (filled) | RSO |
-| `momence_members` | RSO | Phase 1 (empty) / Phase 7 (filled) | RSO |
-| `momence_bookings` | RSO | Phase 1 (empty) / Phase 7 (filled) | RSO |
-| `momence_sync_runs` | RSO | Phase 1 | RSO |
+| Table | Created by | Phase | Owner | Notes |
+|---|---|---|---|---|
+| `teachers` | TM original | Pre-merger | TM (RSO from Phase 2) | 79 rows. RLS on. |
+| `class_history` | TM original | Pre-merger | TM | 0 rows. RLS on. |
+| `user_profiles` | TM original | Pre-merger | TM | 6 rows. RLS on. |
+| `audit_log` | TM original | Pre-merger | TM | 22 rows. RLS on. |
+| `permissions` | CM migration 2026-05-09 | Pre-merger | TM/CM shared | 26 rows. RLS on. |
+| `role_permissions` | CM migration 2026-05-09 | Pre-merger | TM/CM shared | 22 rows. RLS on. |
+| `training_courses` | TM (momence_courses_sync.py) | Pre-merger | TM | 6 rows. RLS off — review. |
+| `trainee_enrollments` | TM | Pre-merger | TM | 18 rows. RLS off — review. |
+| `timeslots` | TM | Pre-merger | TM | 12 rows. RLS off — review. |
+| `trainee_bookings` | TM changelog 2026-04-05 | Pre-merger | TM | 12 rows. RLS off — review. |
+| `cover_requests` | CM stage 1 | Pre-merger | CM | 70 rows. RLS off — review. |
+| `cover_candidates` | CM | Pre-merger | CM | 0 rows. RLS off — review. |
+| `cover_notifications` | CM | Pre-merger | CM | 0 rows. RLS off — review. |
+| `whatsapp_channels` | CM stage 1 | Pre-merger | CM | 4 rows. RLS off — review. |
+| `whatsapp_messages` | CM | Pre-merger | CM | 70 rows. RLS off — review. |
+| `whatsapp_monitor_runs` | CM | Pre-merger | CM | 204 rows. RLS off — review. |
+| `system_config` | CM stage 1 | Pre-merger | CM | 6 rows. RLS off — review. |
+| `discipline_mappings` | CM | Pre-merger | CM | 6 rows. Superseded by `disciplines`. Kept for backwards compat. |
+| `disciplines` | RSO | Phase 1 (2026-05-21) | RSO | Canonical taxonomy. 5 rows seeded. RLS on. |
+| `studios` | RSO | Phase 1 (2026-05-21) | RSO | Canonical studios. Seed: Palm Beach (active), Robina (active), Mermaid (`is_active = false`, closed/retired). RLS on. |
+| `momence_sessions` | CM (MIGRATION-momence-sessions-table-2026-05-11) | Pre-merger — **already populated** | RSO | 7,365 rows. RLS on. Phase 7 session sync is already running. |
+| `momence_members` | RSO | Phase 1 (2026-05-21) — empty placeholder | RSO | 0 rows. Filled in Phase 7. RLS on. |
+| `momence_bookings` | RSO | Phase 1 (2026-05-21) — empty placeholder | RSO | 0 rows. Filled in Phase 7. RLS on. |
+| `momence_sync_runs` | RSO | Phase 1 (2026-05-21) | RSO | Audit log for Phase 7 sync jobs. RLS on. |

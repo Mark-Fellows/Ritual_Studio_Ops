@@ -8,6 +8,32 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-21 | Ritual Studio Ops | Phase 1: Schema reconciliation
+
+Migration: `migrations/2026-05-merged-v1.sql` applied to Supabase (rfjygyqijwgkmxboddup).
+
+New tables (all additive, RLS on, authenticated read):
+- `disciplines` — 5 rows seeded: yoga, barre, reformer, mat_pilates, yin
+- `studios` — 3 rows seeded: Palm Beach (active), Robina (active), Mermaid (is_active=false)
+- `momence_members` — empty Phase 7 placeholder
+- `momence_bookings` — empty Phase 7 placeholder
+- `momence_sync_runs` — Phase 7 sync audit log
+
+New view:
+- `teacher_directory` — id, first_name, last_name (narrow identity view, gated by teachers RLS)
+
+Schema discoveries:
+- `momence_sessions` already exists with 7,365 rows (Phase 7 session sync already running via CM)
+- `anon_read_teacher_names` policy does not exist — already resolved, no action needed
+- 12 CM/TM tables have RLS disabled — flagged, not auto-fixed (requires policy design per table)
+- 5 tables not previously in DOCS_INDEX added: `training_courses`, `trainee_enrollments`, `timeslots`, `permissions`, `role_permissions`
+
+DOCS_INDEX updated: tables-and-owners matrix corrected and expanded to 24 tables.
+
+Files: `migrations/2026-05-merged-v1.sql`, `docs/DOCS_INDEX.md`
+
+---
+
 ## 2026-05-21 | Ritual Studio Ops | Phase 0: Project skeleton created
 
 First commit of the merged project. Folder structure, .env template, .gitignore, governance documents (DOCS_INDEX, CHANGELOG, LESSONS_LEARNED), README, services/momence stub, services/cover stub.
