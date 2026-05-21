@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Studio timetable</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --fg: #111827;
+    --fg-muted: #6b7280;
+    --bg: #ffffff;
+    --bg-soft: #f9fafb;
+    --border: #e5e7eb;
+    --accent: #2563eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 16px 64px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+    line-height: 1.4;
+    font-size: 13px;
+  }
+  header { max-width: 1400px; margin: 0 auto 8px; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+  .meta { color: var(--fg-muted); font-size: 12px; }
+  main { max-width: 1400px; margin: 0 auto; }
+
+  .toolbar {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 12px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .toolbar label.lbl { font-size: 12px; color: var(--fg-muted); margin-right: 4px; }
+  .toolbar select {
+    font-size: 13px; padding: 4px 8px; border: 1px solid var(--border);
+    border-radius: 6px; background: white; color: var(--fg);
+  }
+  .toolbar .group { display: flex; align-items: center; gap: 6px; }
+  .toolbar .pills { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; cursor: pointer; user-select: none;
+    border: 1px solid transparent;
+  }
+  .pill[aria-pressed="true"] { outline: 2px solid var(--accent); }
+  .pill[aria-pressed="false"] { opacity: 0.55; }
+  .gear-btn {
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 14px;
+  }
+  .gear-btn:hover { background: white; }
+  .settings-panel {
+    width: 100%;
+    padding: 8px 12px; margin-top: 8px;
+    background: white; border: 1px solid var(--border); border-radius: 6px;
+    display: none;
+  }
+  .settings-panel.open { display: block; }
+  .settings-panel label { display: inline-flex; align-items: center; gap: 4px; margin-right: 16px; cursor: pointer; }
+
+  section.studio { margin-bottom: 32px; }
+  section.studio h2 {
+    margin: 0 0 8px; font-size: 16px; font-weight: 500;
+    padding-bottom: 4px; border-bottom: 2px solid var(--border);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  section.studio h2 .stats { font-weight: 400; font-size: 12px; color: var(--fg-muted); }
+
+  .calendar {
+    display: grid;
+    grid-template-columns: 56px repeat(7, 1fr);
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: white;
+  }
+  .day-header {
+    background: var(--bg-soft);
+    text-align: center;
+    padding: 8px 4px;
+    font-weight: 600; font-size: 12px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .day-header:last-child { border-right: none; }
+  .corner {
+    background: var(--bg-soft);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .time-axis {
+    position: relative;
+    border-right: 1px solid var(--border);
+    background: var(--bg-soft);
+  }
+  .time-axis-tick {
+    position: absolute; left: 0; right: 0;
+    text-align: right; padding-right: 6px;
+    font-size: 10px; color: var(--fg-muted);
+    border-top: 1px solid var(--border);
+    height: 0;
+  }
+  .day-col {
+    position: relative;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+    min-height: 200px;
+  }
+  .day-col:last-child { border-right: none; }
+  .day-col .hour-line {
+    position: absolute; left: 0; right: 0; height: 0;
+    border-top: 1px dashed #f3f4f6;
+  }
+  .class-block {
+    position: absolute;
+    left: 2px; right: 2px;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 10.5px;
+    line-height: 1.2;
+    overflow: hidden;
+    cursor: default;
+    border-left: 3px solid transparent;
+  }
+  .class-block .cb-time { font-weight: 600; }
+  .class-block .cb-name { display: block; font-size: 10px; }
+  .class-block .cb-room { font-size: 9px; opacity: 0.85; }
+  .class-block .cb-cap { font-size: 9px; opacity: 0.9; }
+  .class-block .cb-teacher { font-size: 9px; opacity: 0.85; font-style: italic; }
+  .empty-state {
+    padding: 40px 12px; text-align: center; color: var(--fg-muted); font-style: italic;
+  }
+  .time-gap {
+    text-align: center;
+    font-size: 11px;
+    color: var(--fg-muted);
+    margin: 4px 0;
+    padding: 2px 0;
+    letter-spacing: 0.04em;
+  }
+  footer {
+    max-width: 1400px; margin: 32px auto 0;
+    color: var(--fg-muted); font-size: 11px;
+  }
+  @media print {
+    body { padding: 8px; font-size: 11px; }
+    .toolbar { position: static; }
+    section.studio { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Studio timetable</h1>
+  <div class="meta" id="meta-line"></div>
+</header>
+<main id="main"></main>
+<footer>
+  Source: <code>data/momence_classes_future.csv</code>.
+  Regenerate via <code>regenerate_timetable.bat</code>.
+</footer>
+
+<script id="payload" type="application/json">__PAYLOAD_JSON__</script>
+<script>
+__TIMETABLE_JS__
+</script>
+</body>
+</html>

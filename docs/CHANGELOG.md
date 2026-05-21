@@ -8,6 +8,30 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-22 | Ritual Studio Ops | Phase 3: Cover pipeline re-pointed to RSO
+
+All CM stage scripts (stages 1–7) copied to `services/cover/`. Original CM pipeline untouched — parallel-run safe.
+
+New file: `services/cover/config.py` — RSO edition. Resolves `.env` from `Ritual_Studio_Ops/` root (`_RSO_ROOT = _HERE.parent.parent`). Adds `services/momence/` to `sys.path` so `MomenceAPIClient` imports without hardcoded OneDrive paths. Identical public API to CM `config.py` plus `DISCIPLINE_CODES` (canonical Phase 1 codes), `MOMENCE_DATA_DIR` (env-var backed), and `WRITES_ENABLED` default.
+
+Hardcoded `_MOMENCE_DIR` OneDrive path hacks removed from: `stage1/momence_teacher_sync.py`, `stage3/enrich_resolved_classes_from_momence.py`, `stage6/cancellation_workflow.py`, `stage6/momence_updater.py`. Each now imports from `config`.
+
+New feature: `--insert-new` flag in `stage1/momence_teacher_sync.py`. When set, unmatched Momence teachers are inserted to Supabase via `sb_post` rather than being silently skipped. Inserted rows carry `INITIAL_TEACHER_GRADE` and auto-generated `notes`.
+
+`.env.template` extended with Phase 3 variables: `ANTHROPIC_API_KEY`, `NLP_MODEL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `INITIAL_TEACHER_GRADE`, `SYNC_LOOKBACK_DAYS`, `WHATSAPP_LOOKBACK_HOURS`, `NLP_CONFIDENCE_THRESHOLD`, `SMTP_*`, `CHROME_DEBUG_PORT`, `CHROME_PATH`.
+
+Test suite: `scripts/test_phase3.py` — 65 checks covering directory structure, file existence, config.py conventions, import-hack removal, `--insert-new` flag, `.env.template` completeness, parallel-run safety.
+
+Files: `services/cover/` (all stage files + `config.py`), `.env.template`, `scripts/test_phase3.py`
+
+---
+
+## 2026-05-22 | Ritual Studio Ops | Cloudflare Pages project created
+
+`ritual-studio-ops` Pages project created via `npx wrangler pages project create ritual-studio-ops`. Production branch: `master`. Staging URL reserved: `https://ritual-studio-ops.pages.dev/`. No deployment yet — first deploy deferred to Phase 4. Wrangler version 4.82.2 used (4.93.1 available).
+
+---
+
 ## 2026-05-22 | Ritual Studio Ops | Phase 2: Read-only merged shell
 
 New file: `app/ritual-studio-ops-v1.html` — single-file HTML/JS merged shell.
