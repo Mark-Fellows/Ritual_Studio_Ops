@@ -8,3 +8,6 @@ Thumbs.db
 logs/
 node_modules/
 .pytest_cache/
+
+# Wrangler generated cache
+.wrangler/
