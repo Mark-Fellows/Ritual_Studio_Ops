@@ -8,6 +8,24 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-22 | Ritual Studio Ops | Phase 2: Read-only merged shell
+
+New file: `app/ritual-studio-ops-v1.html` — single-file HTML/JS merged shell.
+
+Conventions: `sbClient`/`window.sbClient`, `onAuthStateChange`, direct REST + cached JWT, `WRITES_ENABLED = false`.
+
+Teachers view: all six TM tabs lifted verbatim (Overview, Class History, Availability, Allocation Check, Grades ✎, Audit Trail). Five-role RBAC preserved. All TM modals and trainee flows included.
+
+Cover view (new): Cover Requests table (reads `cover_requests` with correct column names: `class_name_raw`, `discipline_code`, `requesting_teacher_name_raw`, `coverage_type`). Teacher Portal panel (reads `cover_candidates` filtered to signed-in teacher's profile). All action buttons disabled with Phase 2 tooltip.
+
+Schema fix: corrected cover_requests column references after live schema audit — `requesting_teacher_name_raw` not `requesting_teacher_name`; `class_name_raw` not `class_name`; `discipline_code` not `discipline`; no `cover_teacher_name` column exists.
+
+Test suite: `scripts/test_phase2.py` — 37 checks covering conventions, tab renderers, RBAC roles, REST schema (skipped in sandboxed environments).
+
+Files: `app/ritual-studio-ops-v1.html`, `scripts/test_phase2.py`
+
+---
+
 ## 2026-05-21 | Ritual Studio Ops | Phase 1: Schema reconciliation
 
 Migration: `migrations/2026-05-merged-v1.sql` applied to Supabase (rfjygyqijwgkmxboddup).
