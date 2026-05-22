@@ -8,6 +8,24 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-22 | Ritual Studio Ops | Phase 4: Write-enabled shell
+
+`WRITES_ENABLED` flipped to `true`. All TM write operations were already wired; Cover and Portal writes added.
+
+New write operations: `approveCoverRequest(requestId)` — PATCHes `cover_requests` status to `approved`, sets `reviewed_by` / `reviewed_at`. `assignCoverRequest(requestId, className)` — prompts for notes, PATCHes status to `covered`. `acceptCoverOpportunity(candidateId, requestId)` — PATCHes `cover_candidates` response to `accepted`. `declineCoverOpportunity(candidateId, requestId)` — confirms, PATCHes to `declined`. All call `writeAudit`.
+
+Audit origin: `writeAudit` now prefixes every description with `[RSO]` so writes from this app are distinguishable from legacy-app writes in `audit_log`.
+
+Legacy banners added to `ritual-teacher-management31.html`, `public/cover_dashboard.html`, and `public/teacher_portal.html` — fixed bar linking to `ritual-studio-ops.pages.dev`, text: "Read-only recommended — use Ritual Studio Ops for all edits."
+
+Version comment, build stamp, and Settings section updated to Phase 4.
+
+Test suite: `scripts/test_phase4.py` — 24 checks (sandbox) covering WRITES_ENABLED, [RSO] prefix, write functions, onclick wiring, no hardcoded disabled buttons, legacy banners.
+
+Files: `app/ritual-studio-ops-v1.html`, `scripts/test_phase4.py`, `Ritual_Teacher_Management/ritual-teacher-management31.html`, `Ritual_Cover_Management/public/cover_dashboard.html`, `Ritual_Cover_Management/public/teacher_portal.html`
+
+---
+
 ## 2026-05-22 | Ritual Studio Ops | Phase 3: Cover pipeline re-pointed to RSO
 
 All CM stage scripts (stages 1–7) copied to `services/cover/`. Original CM pipeline untouched — parallel-run safe.

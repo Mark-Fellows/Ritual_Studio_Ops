@@ -1,4 +1,4 @@
-<!-- RSO v1 — Phase 2: read-only shell -->
+<!-- RSO v1 — Phase 4: write-enabled shell -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -281,7 +281,7 @@
             <div class="header-logo">Ritual <span>Studios</span></div>
             <div class="header-sep"></div>
             <div class="header-subtitle">Studio Ops</div>
-            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v1 Phase 2">v1 &middot; Phase 2</div>
+            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v1 Phase 4">v1 &middot; Phase 4</div>
             <div class="header-sep" style="margin-left:8px;"></div>
             <button class="nav-btn" id="navTeachers" onclick="switchView('teachers')">Teachers</button>
             <button class="nav-btn" id="navCover" onclick="switchView('cover')">Cover</button>
@@ -518,7 +518,7 @@
         // ═══════════════════════════════════════════════════════════════════
         const SUPABASE_URL = 'https://rfjygyqijwgkmxboddup.supabase.co';
         const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmanlneXFpandna214Ym9kZHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDU5MjksImV4cCI6MjA4NzMyMTkyOX0.g40IEOLPDTWnbFYybWL01wZMiE_f2_yor_DKuaSCajU';
-        const WRITES_ENABLED = false;
+        const WRITES_ENABLED = true;
 
         // ═══════════════════════════════════════════════════════════════════
         // CONSTANTS
@@ -693,7 +693,7 @@
             return await res.json();
         }
         async function dbPost(path, payload) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); throw new Error('WRITES_DISABLED'); }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); throw new Error('WRITES_DISABLED'); }
             const res = await fetch(apiUrl(path), { method:'POST', headers:authHeaders(), body:JSON.stringify(payload) });
             const text = await res.text();
             let json = null; try { json = text ? JSON.parse(text) : null; } catch(e) { json = text; }
@@ -701,13 +701,13 @@
             return json;
         }
         async function dbPatch(path, payload) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); throw new Error('WRITES_DISABLED'); }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); throw new Error('WRITES_DISABLED'); }
             const res = await fetch(apiUrl(path), { method:'PATCH', headers:authHeaders(), body:JSON.stringify(payload) });
             if (!res.ok) throw new Error(`PATCH ${path} failed: ${res.status}`);
             return await res.json();
         }
         async function dbDelete(path) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); throw new Error('WRITES_DISABLED'); }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); throw new Error('WRITES_DISABLED'); }
             const res = await fetch(apiUrl(path), { method:'DELETE', headers:authHeaders() });
             if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
             return await res.json();
@@ -928,6 +928,16 @@
             const tableRows = filtered.map(r => {
                 const dateStr = r.class_date ? r.class_date : '—';
                 const timeStr = r.class_time ? r.class_time.slice(0,5) : '—';
+                const isTerminal = ['covered','cancelled','no_cover_needed','expired'].includes(r.status);
+                const isAlreadyApproved = r.status === 'approved';
+                const rid = r.cover_request_id;
+                const clsName = esc(r.class_name_raw || '');
+                const approveBtn = can('canApprove')
+                    ? `<button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;${isTerminal||isAlreadyApproved?'opacity:0.45;':''}" ${isTerminal||isAlreadyApproved?'disabled':''} onclick="approveCoverRequest('${rid}')">Approve</button>`
+                    : '';
+                const assignBtn = can('canApprove')
+                    ? `<button class="btn btn-primary" style="font-size:10px;padding:4px 10px;margin-left:4px;${isTerminal?'opacity:0.45;':''}" ${isTerminal?'disabled':''} onclick="assignCoverRequest('${rid}','${clsName}')">Assign</button>`
+                    : '';
                 return `<tr>
                     <td>${esc(dateStr)} ${esc(timeStr)}</td>
                     <td>${esc(r.class_name_raw || '—')}</td>
@@ -936,10 +946,7 @@
                     <td>${esc(r.requesting_teacher_name_raw || '—')}</td>
                     <td>${coverStatusBadge(r.status)}</td>
                     <td>${esc(r.coverage_type || '—')}</td>
-                    <td style="text-align:right;">
-                        <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;opacity:0.5;" disabled title="Phase 2: read-only">Approve</button>
-                        <button class="btn btn-primary" style="font-size:10px;padding:4px 10px;opacity:0.5;margin-left:4px;" disabled title="Phase 2: read-only">Assign</button>
-                    </td>
+                    <td style="text-align:right;">${approveBtn}${assignBtn}</td>
                 </tr>`;
             }).join('');
 
@@ -953,7 +960,7 @@
                         <button class="btn btn-secondary" style="font-size:11px;" onclick="loadCoverData()">↺ Refresh</button>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;font-style:italic;">Phase 2: read-only. Action buttons are disabled.</div>
+                ${!can('canApprove') ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;font-style:italic;">View-only — coordinator or administrator role required to approve or assign.</div>' : ''}
                 ${filtered.length === 0
                     ? '<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No cover requests found.</div></div>'
                     : `<div class="scrollable-table-wrap">
@@ -982,6 +989,15 @@
                 const req = c.cover_requests || {};
                 const dateStr = req.class_date || '—';
                 const timeStr = req.class_time ? req.class_time.slice(0,5) : '—';
+                const alreadyResponded = c.response && c.response !== 'no_response';
+                const cid = c.cover_candidate_id;
+                const rid = c.cover_request_id;
+                const acceptBtn = alreadyResponded
+                    ? `<button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;background:#D1FAE5;color:#065F46;opacity:0.45;" disabled>Accept</button>`
+                    : `<button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;background:#D1FAE5;color:#065F46;" onclick="acceptCoverOpportunity('${cid}','${rid}')">Accept</button>`;
+                const declineBtn = alreadyResponded
+                    ? `<button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;opacity:0.45;margin-left:4px;" disabled>Decline</button>`
+                    : `<button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;margin-left:4px;" onclick="declineCoverOpportunity('${cid}','${rid}')">Decline</button>`;
                 return `<tr>
                     <td>${esc(dateStr)} ${esc(timeStr)}</td>
                     <td>${esc(req.class_name || req.class_name_raw || '—')}</td>
@@ -989,10 +1005,7 @@
                     <td>${esc(req.discipline || req.discipline_code || '—')}</td>
                     <td>${coverStatusBadge(req.status)}</td>
                     <td>${esc(c.response || 'pending')}</td>
-                    <td style="text-align:right;">
-                        <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;background:#D1FAE5;color:#065F46;opacity:0.5;" disabled title="Phase 2: read-only">Accept</button>
-                        <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;opacity:0.5;margin-left:4px;" disabled title="Phase 2: read-only">Decline</button>
-                    </td>
+                    <td style="text-align:right;">${acceptBtn}${declineBtn}</td>
                 </tr>`;
             }).join('');
 
@@ -1001,7 +1014,7 @@
                     <div class="section-title">Your Cover Opportunities</div>
                     <button class="btn btn-secondary" style="font-size:11px;" onclick="loadCoverData()">↺ Refresh</button>
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;font-style:italic;">Phase 2: read-only. Accept/Decline buttons are disabled.</div>
+                ${!currentUserProfile?.teacher_id ? '' : ''}
                 ${coverCandidates.length === 0
                     ? '<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No cover opportunities found for your profile.</div></div>'
                     : `<div class="scrollable-table-wrap">
@@ -1014,6 +1027,68 @@
                         </table>
                        </div>`}
             `;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // COVER REQUEST WRITE OPERATIONS (Phase 4)
+        // ═══════════════════════════════════════════════════════════════════
+        async function approveCoverRequest(requestId) {
+            if (!can('canApprove')) { showToast('Insufficient permissions', 'error'); return; }
+            try {
+                await dbPatch(`cover_requests?cover_request_id=eq.${requestId}`, {
+                    status: 'approved',
+                    reviewed_by: currentUserEmail,
+                    reviewed_at: new Date().toISOString(),
+                });
+                await writeAudit(null, `Cover request ${requestId} approved by ${currentUserEmail}`);
+                showToast('Cover request approved.');
+                await loadCoverData();
+            } catch(e) { showToast('Error approving: ' + e.message, 'error'); }
+        }
+
+        async function assignCoverRequest(requestId, className) {
+            if (!can('canApprove')) { showToast('Insufficient permissions', 'error'); return; }
+            const notes = window.prompt(`Mark "${className || requestId}" as covered.\n\nEnter cover teacher name or notes (optional):`);
+            if (notes === null) return; // cancelled
+            try {
+                await dbPatch(`cover_requests?cover_request_id=eq.${requestId}`, {
+                    status: 'covered',
+                    admin_notes: notes || null,
+                    reviewed_by: currentUserEmail,
+                    reviewed_at: new Date().toISOString(),
+                });
+                await writeAudit(null, `Cover request ${requestId} marked covered by ${currentUserEmail}${notes ? ': ' + notes : ''}`);
+                showToast('Marked as covered.');
+                await loadCoverData();
+            } catch(e) { showToast('Error assigning: ' + e.message, 'error'); }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // TEACHER PORTAL WRITE OPERATIONS (Phase 4)
+        // ═══════════════════════════════════════════════════════════════════
+        async function acceptCoverOpportunity(candidateId, requestId) {
+            try {
+                await dbPatch(`cover_candidates?cover_candidate_id=eq.${candidateId}`, {
+                    response: 'accepted',
+                    responded_at: new Date().toISOString(),
+                });
+                await writeAudit(null, `Cover candidate ${candidateId} accepted (request ${requestId}) by ${currentUserEmail}`);
+                showToast('Cover opportunity accepted.');
+                await loadCoverData();
+            } catch(e) { showToast('Error accepting: ' + e.message, 'error'); }
+        }
+
+        async function declineCoverOpportunity(candidateId, requestId) {
+            if (!confirm('Decline this cover opportunity?')) return;
+            try {
+                await dbPatch(`cover_candidates?cover_candidate_id=eq.${candidateId}`, {
+                    response: 'declined',
+                    responded_at: new Date().toISOString(),
+                });
+                await writeAudit(null, `Cover candidate ${candidateId} declined (request ${requestId}) by ${currentUserEmail}`);
+                showToast('Cover opportunity declined.');
+                await loadCoverData();
+            } catch(e) { showToast('Error declining: ' + e.message, 'error'); }
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -1410,7 +1485,7 @@
         }
 
         async function saveAvailability(teacherId) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             const btn = document.getElementById('saveAvailBtn');
             if (btn) { btn.disabled=true; btn.textContent='Saving...'; }
             const slots = {};
@@ -1492,7 +1567,7 @@
         }
 
         async function saveGrades(teacherId) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             const t = teachers.find(x=>x.id===teacherId); if (!t) return;
             const newGrades = {};
             DISCIPLINES.forEach(d => { const input=document.getElementById(`gradeInput_${d.key}`); newGrades[d.key]=parseInt(input?.value||0); });
@@ -1513,7 +1588,7 @@
         // ═══════════════════════════════════════════════════════════════════
         async function writeAudit(teacherId, description) {
             try {
-                await fetch(apiUrl('audit_log'), { method:'POST', headers:authHeaders(), body:JSON.stringify({ teacher_id:teacherId, actor_email:currentUserEmail, actor_role:currentUserRole, description, created_at:new Date().toISOString() }) });
+                await fetch(apiUrl('audit_log'), { method:'POST', headers:authHeaders(), body:JSON.stringify({ teacher_id:teacherId, actor_email:currentUserEmail, actor_role:currentUserRole, description:'[RSO] '+description, created_at:new Date().toISOString() }) });
             } catch(e) { console.warn('Audit write failed:', e.message); }
         }
 
@@ -1537,13 +1612,13 @@
         // ADD / EDIT TEACHER MODAL
         // ═══════════════════════════════════════════════════════════════════
         function openAddTeacher() {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             editingTeacherId=null; document.getElementById('modalTitle').textContent='Add Teacher';
             clearModal(); document.getElementById('teacherModal').classList.add('open');
         }
 
         function openEditTeacher(id) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             const t=teachers.find(x=>x.id===id); if (!t) return;
             editingTeacherId=id; document.getElementById('modalTitle').textContent='Edit Teacher';
             populateModal(t);
@@ -1562,7 +1637,7 @@
             const bookingId=pendingRejectBookingId; closeRejectModal(); await _rejectBooking(bookingId, reason);
         }
         async function _rejectBooking(bookingId, reason) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             showLoading('Rejecting...');
             try {
                 try { await dbPatch(`trainee_bookings?id=eq.${bookingId}`, { status:'rejected', rejection_reason:reason||null }); }
@@ -1610,7 +1685,7 @@
         }
 
         async function saveTeacher() {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             const data=collectModal();
             if (!data.first_name||!data.last_name) { showToast('First and last name are required.','error'); return; }
             if (!data.email) { showToast('Email is required.','error'); return; }
@@ -1654,7 +1729,7 @@
         // DELETE TEACHER
         // ═══════════════════════════════════════════════════════════════════
         function askDeleteTeacher(id) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             const t=teachers.find(x=>x.id===id); if (!t) return;
             pendingDeleteId=id;
             document.getElementById('deleteConfirmText').textContent=`Permanently delete ${t.first_name} ${t.last_name}? This cannot be undone.`;
@@ -1662,7 +1737,7 @@
         }
 
         async function confirmDelete() {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             if (!pendingDeleteId) return;
             showLoading('Deleting…');
             try {
@@ -1679,7 +1754,7 @@
         // CSV IMPORT
         // ═══════════════════════════════════════════════════════════════════
         function openImportModal() {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             pendingImport=[];
             document.getElementById('importPreview').style.display='none'; document.getElementById('importStats').textContent='';
             document.getElementById('importConfirmBtn').disabled=true; document.getElementById('csvFileInput').value='';
@@ -1713,7 +1788,7 @@
         }
 
         async function confirmImport() {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             if (!pendingImport.length) return;
             showLoading(`Importing ${pendingImport.length} teachers…`); let added=0;
             try {
@@ -1748,11 +1823,11 @@
     <div class="settings-section">
       <div class="settings-section-title">My Account</div>
       <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">${esc(currentUserEmail)}</div><div class="settings-row-desc">Signed-in account</div></div><span class="role-badge role-${currentUserRole}">${ROLES[currentUserRole]?.label}</span></div>
-      <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Application Version</div></div><span style="font-size:12px;color:var(--text-muted);">RSO v1 · Phase 2</span></div>
+      <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Application Version</div></div><span style="font-size:12px;color:var(--text-muted);">RSO v1 · Phase 4</span></div>
     </div>
     <div class="settings-section">
-      <div class="settings-section-title">Phase 2 Note</div>
-      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">This is a read-only shell. All write operations (POST, PATCH, DELETE) are disabled. <code>WRITES_ENABLED = false</code>.</p>
+      <div class="settings-section-title">Phase 4 — Write-Enabled</div>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">All write operations are enabled. All writes originate from this app and are tagged <code>[RSO]</code> in the audit log. Legacy apps (Teacher Management, Cover Management) are in read-only recommended mode — use this app for all edits.</p>
     </div>
     <div class="settings-section">
       <div class="settings-section-title">Admin Tools</div>
@@ -1835,7 +1910,7 @@
         }
 
         async function addNonTeacherUser() {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             const email=document.getElementById('nuEmail')?.value?.trim(); const password=document.getElementById('nuPassword')?.value;
             const role=document.getElementById('nuRole')?.value; const firstName=document.getElementById('nuFirstName')?.value?.trim()||''; const lastName=document.getElementById('nuLastName')?.value?.trim()||'';
             if (!email) { showToast('Email is required.','error'); return; }
@@ -1851,7 +1926,7 @@
         }
 
         async function deleteUser(profileId, email) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
             if (!confirm(`Delete user profile for ${email}?`)) return;
             showLoading('Deleting…');
             try { await dbDelete(`user_profiles?id=eq.${profileId}`); showToast(`Profile for ${email} deleted.`); await loadUserProfiles(); }
@@ -1860,7 +1935,7 @@
         }
 
         async function updateUserRole(profileId, oldRole, newRole, selectEl) {
-            if (!WRITES_ENABLED) { showToast('Writes not yet enabled in Phase 2', 'error'); if (selectEl) selectEl.value=oldRole; return; }
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); if (selectEl) selectEl.value=oldRole; return; }
             const label=ROLES[newRole]?.label||newRole;
             if (!confirm(`Change this user's role to "${label}"?`)) { if (selectEl) selectEl.value=oldRole; return; }
             try { await dbPatch(`user_profiles?id=eq.${profileId}`, { role:newRole }); showToast('Role updated to '+label+'.'); }
