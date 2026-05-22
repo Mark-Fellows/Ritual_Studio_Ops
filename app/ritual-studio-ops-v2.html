@@ -1,4 +1,4 @@
-<!-- RSO v1 — Phase 4: write-enabled shell -->
+<!-- RSO v2 — Phase 5: manual cover request entry -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -281,7 +281,7 @@
             <div class="header-logo">Ritual <span>Studios</span></div>
             <div class="header-sep"></div>
             <div class="header-subtitle">Studio Ops</div>
-            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v1 Phase 4">v1 &middot; Phase 4</div>
+            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 5">v2 &middot; Phase 5</div>
             <div class="header-sep" style="margin-left:8px;"></div>
             <button class="nav-btn" id="navTeachers" onclick="switchView('teachers')">Teachers</button>
             <button class="nav-btn" id="navCover" onclick="switchView('cover')">Cover</button>
@@ -463,6 +463,15 @@
                     <button class="btn btn-primary" onclick="saveTimeslot()">Save Timeslot</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- MANUAL COVER REQUEST MODAL -->
+    <div class="modal-overlay" id="manualRequestModal">
+        <div class="modal" style="width:620px;max-height:90vh;overflow-y:auto;">
+            <button class="modal-close" onclick="closeManualRequestModal()">&#x2715;</button>
+            <div class="modal-title">New Manual Cover Request</div>
+            <div id="manualReqBody"></div>
         </div>
     </div>
 
@@ -957,7 +966,8 @@
                         <select class="filter-select" style="width:auto;" onchange="coverStatusFilter=this.value;renderCoverRequests();">
                             ${statusOptions}
                         </select>
-                        <button class="btn btn-secondary" style="font-size:11px;" onclick="loadCoverData()">↺ Refresh</button>
+                        <button class="btn btn-secondary" style="font-size:11px;" onclick="loadCoverData()">&#x21BA; Refresh</button>
+                        ${can('canApprove') ? '<button class="btn btn-primary" style="font-size:11px;" onclick="openManualRequestModal()">&#xFF0B; New Manual Request</button>' : ''}
                     </div>
                 </div>
                 ${!can('canApprove') ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;font-style:italic;">View-only — coordinator or administrator role required to approve or assign.</div>' : ''}
@@ -2734,8 +2744,209 @@ CREATE TABLE IF NOT EXISTS audit_log (
                 else if(timeslotModal&&timeslotModal.classList.contains('open')){closeTimeslotModal();}
                 else if(deleteModal&&deleteModal.classList.contains('open')){deleteModal.classList.remove('open');}
                 else if(importModal&&importModal.classList.contains('open')){closeImportModal();}
+                else if(document.getElementById('manualRequestModal')?.classList.contains('open')){closeManualRequestModal();}
             }
         });
+        // ═══════════════════════════════════════════════════════════════════
+        // MANUAL COVER REQUEST
+        // ═══════════════════════════════════════════════════════════════════
+        let manualRequestStep = 1;
+        let manualParsedFields = {};
+
+        function openManualRequestModal() {
+            manualRequestStep = 1;
+            manualParsedFields = {};
+            renderManualStep();
+            document.getElementById('manualRequestModal').classList.add('open');
+        }
+
+        function closeManualRequestModal() {
+            document.getElementById('manualRequestModal').classList.remove('open');
+        }
+
+        function renderManualStep() {
+            const body = document.getElementById('manualReqBody');
+            body.innerHTML = `
+                <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:14px 16px;margin-bottom:18px;font-size:12px;color:#1E40AF;line-height:1.7;">
+                    <strong>Include in your message:</strong><br>
+                    Teacher name &nbsp;&middot;&nbsp; Start date (day, month, year) &nbsp;&middot;&nbsp; Class time &nbsp;&middot;&nbsp;
+                    Studio (Palm Beach or Robina) &nbsp;&middot;&nbsp; Discipline (yoga, barre, reformer&hellip;) &nbsp;&middot;&nbsp;
+                    Temporary or permanent cover
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paste or type the message</label>
+                    <textarea class="form-control" id="manualReqText" rows="6"
+                        placeholder="e.g. Hi Mark, Anna here. I can't make my Tuesday 9:15am yoga at Palm Beach on 10 June. Can someone cover? It's just the one class."></textarea>
+                </div>
+                <div id="manualReqError" style="color:var(--danger);font-size:12px;min-height:18px;margin-bottom:4px;"></div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                    <button class="btn btn-secondary" onclick="closeManualRequestModal()">Cancel</button>
+                    <button class="btn btn-primary" id="manualParseBtn" onclick="parseManualRequest()">Parse with AI &rarr;</button>
+                </div>
+            `;
+        }
+
+        async function parseManualRequest() {
+            const text = (document.getElementById('manualReqText')?.value || '').trim();
+            const errEl = document.getElementById('manualReqError');
+            if (!text) { errEl.textContent = 'Please enter a message before parsing.'; return; }
+
+            const btn = document.getElementById('manualParseBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Parsing…'; }
+            errEl.textContent = '';
+
+            try {
+                const teacherNames = (teachers || []).map(t => `${t.first_name} ${t.last_name}`);
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-cover-request`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${cachedSession?.access_token}`,
+                        'apikey': SUPABASE_ANON,
+                    },
+                    body: JSON.stringify({
+                        text,
+                        teachers: teacherNames,
+                        disciplines: DISCIPLINES.map(d => ({ key: d.key, label: d.label })),
+                        studios: (studios || []),
+                    }),
+                });
+                if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t}`); }
+                const data = await res.json();
+                manualParsedFields = data.fields || {};
+                manualRequestStep = 2;
+                renderManualStep2(data.questions || []);
+            } catch (e) {
+                errEl.textContent = 'AI parse failed: ' + (e.message || String(e));
+                if (btn) { btn.disabled = false; btn.textContent = 'Parse with AI →'; }
+            }
+        }
+
+        function renderManualStep2(questions) {
+            const f = manualParsedFields;
+            const body = document.getElementById('manualReqBody');
+
+            const disciplineOptions = DISCIPLINES.map(d =>
+                `<option value="${esc(d.key)}" ${f.discipline_code === d.key ? 'selected' : ''}>${esc(d.label)}</option>`
+            ).join('');
+
+            const studioOptions = (studios || []).map(s =>
+                `<option value="${esc(s)}" ${f.studio === s ? 'selected' : ''}>${esc(s)}</option>`
+            ).join('');
+
+            const questionsHtml = questions.length === 0 ? '' : `
+                <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:14px 16px;margin-bottom:18px;">
+                    <div style="font-size:12px;font-weight:600;color:#92400E;margin-bottom:10px;">Clarifying questions &mdash; please answer before submitting</div>
+                    ${questions.map((q, i) => `
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label class="form-label" style="color:#92400E;">${esc(q)}</label>
+                            <input class="form-control" id="manualQ_${i}" style="font-size:12px;" placeholder="Your answer&hellip;">
+                        </div>`).join('')}
+                </div>`;
+
+            body.innerHTML = `
+                ${questionsHtml}
+                <div class="modal-grid" style="gap:12px;">
+                    <div class="form-group">
+                        <label class="form-label">Teacher Name <span style="color:var(--danger)">*</span></label>
+                        <input class="form-control" id="mr_teacher" value="${esc(f.requesting_teacher_name_raw || '')}" placeholder="Teacher name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Class Date <span style="color:var(--danger)">*</span></label>
+                        <input class="form-control" id="mr_date" type="date" value="${esc(f.class_date || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Class Time</label>
+                        <input class="form-control" id="mr_time" type="time" value="${esc(f.class_time || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Class Name</label>
+                        <input class="form-control" id="mr_class" value="${esc(f.class_name_raw || '')}" placeholder="e.g. Tuesday Flow">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Studio <span style="color:var(--danger)">*</span></label>
+                        <select class="form-control" id="mr_studio">
+                            <option value="">&mdash; select &mdash;</option>
+                            ${studioOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Discipline <span style="color:var(--danger)">*</span></label>
+                        <select class="form-control" id="mr_discipline">
+                            <option value="">&mdash; select &mdash;</option>
+                            ${disciplineOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Coverage Type</label>
+                        <select class="form-control" id="mr_coverage">
+                            <option value="">&mdash; select &mdash;</option>
+                            <option value="temporary" ${f.coverage_type === 'temporary' ? 'selected' : ''}>Temporary (one-off)</option>
+                            <option value="permanent" ${f.coverage_type === 'permanent' ? 'selected' : ''}>Permanent (ongoing)</option>
+                            <option value="both" ${f.coverage_type === 'both' ? 'selected' : ''}>Both</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column:1/-1;">
+                        <label class="form-label">Admin Notes (optional)</label>
+                        <input class="form-control" id="mr_notes" placeholder="Source, context, anything extra&hellip;">
+                    </div>
+                </div>
+                <div id="manualReqError" style="color:var(--danger);font-size:12px;min-height:18px;margin-bottom:4px;"></div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                    <button class="btn btn-secondary" onclick="manualRequestStep=1;renderManualStep();">&larr; Back</button>
+                    <button class="btn btn-secondary" onclick="closeManualRequestModal()">Cancel</button>
+                    <button class="btn btn-primary" id="manualSubmitBtn" onclick="submitManualRequest()">Submit Request</button>
+                </div>
+            `;
+        }
+
+        async function submitManualRequest() {
+            const teacher  = (document.getElementById('mr_teacher')?.value  || '').trim();
+            const date     = (document.getElementById('mr_date')?.value      || '').trim();
+            const studio   = (document.getElementById('mr_studio')?.value    || '').trim();
+            const disc     = (document.getElementById('mr_discipline')?.value || '').trim();
+            const errEl    = document.getElementById('manualReqError');
+
+            const missing = [];
+            if (!teacher) missing.push('Teacher name');
+            if (!date)    missing.push('Class date');
+            if (!studio)  missing.push('Studio');
+            if (!disc)    missing.push('Discipline');
+            if (missing.length) { errEl.textContent = 'Required: ' + missing.join(', '); return; }
+
+            const btn = document.getElementById('manualSubmitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+            errEl.textContent = '';
+
+            try {
+                const extraNotes = (document.getElementById('mr_notes')?.value || '').trim();
+                const adminNotes = `[RSO] Manual entry by ${currentUserEmail}` + (extraNotes ? '. ' + extraNotes : '');
+
+                await dbPost('cover_requests', {
+                    requesting_teacher_name_raw: teacher,
+                    class_date:     date,
+                    class_time:     document.getElementById('mr_time')?.value    || null,
+                    class_name_raw: (document.getElementById('mr_class')?.value || '').trim() || null,
+                    studio:         studio,
+                    discipline_code: disc,
+                    coverage_type:  document.getElementById('mr_coverage')?.value || null,
+                    status:         'pending',
+                    source:         'manual',
+                    admin_notes:    adminNotes,
+                });
+
+                await writeAudit(null, `Manual cover request created: ${teacher} — ${date} — ${disc} at ${studio}`);
+
+                closeManualRequestModal();
+                showToast('Cover request created. It will be picked up by the pipeline on its next run.');
+                await loadCoverData();
+            } catch (e) {
+                errEl.textContent = 'Save failed: ' + (e.message || String(e));
+                if (btn) { btn.disabled = false; btn.textContent = 'Submit Request'; }
+            }
+        }
+
+
     </script>
 </body>
 </html>

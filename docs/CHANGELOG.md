@@ -8,6 +8,30 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-22 | Ritual Studio Ops | Manual cover request entry — v2 app, Edge Function, schema
+
+New feature: administrators and coordinators can now manually create a cover request from the Cover Requests tab without it going through the WhatsApp pipeline. Handles privately messaged requests.
+
+**Schema (applied via Supabase MCP):** `cover_requests.source TEXT DEFAULT 'whatsapp'` added. Manual entries carry `source = 'manual'`; existing WhatsApp pipeline records keep the default.
+
+**Edge Function:** `parse-cover-request` deployed to Supabase (project rfjygyqijwgkmxboddup). Accepts raw message text plus teacher/discipline/studio context. Calls Claude Haiku via Anthropic API. Returns structured fields (teacher name, date, time, class name, studio, discipline, coverage type) and a list of clarifying questions for anything ambiguous or missing. JWT-verified; uses ANTHROPIC_API_KEY from Supabase secrets.
+
+**App v2 (`ritual-studio-ops-v2.html`):**
+- Version comment and build stamp updated from v1/Phase 4 to v2/Phase 5.
+- "New Manual Request" button added to Cover Requests tab header (visible to developer, administrator, coordinator roles only).
+- Two-step modal: Step 1 — instruction reminder + free-text area + "Parse with AI" button. Step 2 — pre-filled editable fields (teacher, date, time, class name, studio dropdown, discipline dropdown, coverage type dropdown) plus inline clarifying question inputs from the AI response. Submit writes to `cover_requests` with `status = pending`, `source = manual`, and an `admin_notes` field recording the creating user. `writeAudit` called with `[RSO]` prefix.
+- Escape key handler updated to close the new modal.
+- `detectSessionInUrl` corrected from `false` to `true` (magic link login fix).
+
+**Deploy bat:** `rso_deploy.bat` updated to copy v2 not v1 to the staging folder.
+
+Files: `app/ritual-studio-ops-v2.html`, `migrations/2026-05-22-add-source-to-cover-requests.sql`, `docs/CHANGELOG.md`
+(Edge Function deployed directly via Supabase MCP — no local file.)
+
+---
+
+---
+
 ## 2026-05-22 | Ritual Studio Ops | Docs update — all governance documents brought to Phase 5
 
 DOCS_INDEX.md: updated `Last updated` to Phase 5, fixed Merger Plan v2 location (was still pointing to TM folder), corrected TM v31 status to `Legacy` (RSO Phase 4 banner added), added all Phase 2-5 RSO deliverables to section 7 (app/ritual-studio-ops-v1.html, test_phase2-5.py, reconcile.py, reconcile_reports/).
