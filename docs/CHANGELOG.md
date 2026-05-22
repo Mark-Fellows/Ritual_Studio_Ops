@@ -8,6 +8,28 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-22 | Ritual Studio Ops | Phase 5: Reconciliation script
+
+New file: `scripts/reconcile.py` — daily parallel-run health check. Run once per day during the two-week Phase 5 soak period.
+
+Checks performed on each run: (1) Audit log origin split — counts `[RSO]`-prefixed vs non-prefixed entries in the last 24h; any non-RSO entries trigger a P1 flag indicating a legacy app is still making writes. (2) Cover requests by status — reports current distribution and flags if total count drops (unexpected deletion). (3) Trainee bookings by status — flags unusual growth in pending count. (4) Teacher record count — flags any unexpected drop.
+
+Snapshot mechanism: current state saved to `scripts/reconcile_state.json` after each run; compared against yesterday's snapshot on the next run to detect drift between runs.
+
+Report output: plain-text report written to `scripts/reconcile_reports/YYYY-MM-DD.txt` and stdout. Exit code 0 = green, exit code 1 = P1 issue detected.
+
+Usage: `python scripts/reconcile.py [--days N] [--no-save]`
+
+Graceful degradation: all Supabase queries wrapped in `safe_get()`; network failures produce WARN not P1 (so the script never crashes the scheduled task).
+
+Test suite: `scripts/test_phase5.py` — 28 checks.
+
+Operational note: "two green weeks" and "Dashboard parity confirmation" are manual sign-off steps performed by the studio team, not automated. Run `reconcile.py --no-save` at any time for a spot-check without disturbing the snapshot.
+
+Files: `scripts/reconcile.py`, `scripts/test_phase5.py`, `scripts/reconcile_reports/.gitkeep`
+
+---
+
 ## 2026-05-22 | Ritual Studio Ops | Phase 4: Write-enabled shell
 
 `WRITES_ENABLED` flipped to `true`. All TM write operations were already wired; Cover and Portal writes added.
