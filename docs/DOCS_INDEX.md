@@ -4,7 +4,7 @@
 
 A document is not considered created until this index is updated. If a document is not listed here, it does not officially exist. Two entries for the same topic means one is a duplicate — mark the older as `superseded` and consolidate.
 
-Last updated: 2026-05-21 (Phase 0 scaffold)
+Last updated: 2026-05-22 (Phase 5 complete)
 Maintained by: Ritual Studio Ops project (Claude as PM)
 
 ---
@@ -23,7 +23,7 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 
 | Document | Owner | Location | Status | Notes |
 |---|---|---|---|---|
-| Merger Plan v2 | Ritual Studio Ops | `Ritual_Teacher_Management/Ritual_Studio_Ops_Merger_Plan_v2.md` | active | Move to `Ritual_Studio_Ops/docs/` after Phase 0 git setup |
+| Merger Plan v2 | Ritual Studio Ops | `Ritual_Studio_Ops/docs/Ritual_Studio_Ops_Merger_Plan_v2.md` | active | Moved from TM folder 2026-05-21 |
 | Merger Plan v1 | Ritual Studio Ops | `Ritual_Teacher_Management/Ritual_Studio_Ops_Merger_Plan_v1.md` | superseded | Superseded by v2 same day (2026-05-14) |
 | DOCS_INDEX (this file) | Ritual Studio Ops | `Ritual_Studio_Ops/docs/DOCS_INDEX.md` | active | Master index for all four projects |
 | CHANGELOG | Ritual Studio Ops | `Ritual_Studio_Ops/docs/CHANGELOG.md` | active | Master changelog for all four projects |
@@ -60,7 +60,7 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 
 | Version | File | Status |
 |---|---|---|
-| v31 | `Ritual_Teacher_Management/ritual-teacher-management31.html` | **Canonical** — use for Phase 2 lift-across |
+| v31 | `Ritual_Teacher_Management/ritual-teacher-management31.html` | Legacy — RSO Phase 4 legacy banner added; superseded by RSO v1 |
 | v30 | `Ritual_Teacher_Management/ritual-teacher-management30.html` | Legacy |
 | v30 (copy) | `Ritual_Teacher_Management/ritual-teacher-management30 - Copy.html` | Legacy |
 
@@ -188,8 +188,15 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | LESSONS_LEARNED | RSO | `Ritual_Studio_Ops/docs/LESSONS_LEARNED.md` | active | |
 | Merger Plan v2 | RSO | `Ritual_Studio_Ops/docs/Ritual_Studio_Ops_Merger_Plan_v2.md` | active | Moved from TM folder 2026-05-21 |
 | .env template | RSO | `Ritual_Studio_Ops/.env.template` | active | Environment configuration template |
+| Merged app (RSO v1) | RSO | `Ritual_Studio_Ops/app/ritual-studio-ops-v1.html` | active | Single-file merged shell; Phase 4 write-enabled |
 | services/momence README | RSO | `Ritual_Studio_Ops/services/momence/README.md` | active | Momence code move instructions |
 | services/cover README | RSO | `Ritual_Studio_Ops/services/cover/README.md` | active | Cover pipeline move instructions (Phase 3) |
+| Test suite Phase 2 | RSO | `Ritual_Studio_Ops/scripts/test_phase2.py` | active | 37 checks — merged shell conventions |
+| Test suite Phase 3 | RSO | `Ritual_Studio_Ops/scripts/test_phase3.py` | active | 65 checks — cover pipeline re-point |
+| Test suite Phase 4 | RSO | `Ritual_Studio_Ops/scripts/test_phase4.py` | active | 24 checks — write-enable and legacy banners |
+| Test suite Phase 5 | RSO | `Ritual_Studio_Ops/scripts/test_phase5.py` | active | 28 checks — reconcile script |
+| Reconcile script | RSO | `Ritual_Studio_Ops/scripts/reconcile.py` | active | Daily parallel-run health check; run once per day during Phase 5 soak |
+| Reconcile reports | RSO | `Ritual_Studio_Ops/scripts/reconcile_reports/` | active | Daily plain-text reports written by reconcile.py |
 
 **Tables-and-owners matrix** (updated each migration — 2026-05-merged-v1.sql)
 

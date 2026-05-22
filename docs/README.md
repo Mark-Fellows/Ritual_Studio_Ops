@@ -45,7 +45,7 @@ There are four Ritual technology projects. This project merges two of them. The 
 ## This project (Ritual Studio Ops)
 
 **Where it lives:** `C:\Users\markj\OneDrive\Desktop\Ritual_Apps\Ritual_Studio_Ops\` *(this folder)*
-**Target URL:** `https://ritual-studio-ops.pages.dev` *(to be created)*
+**Target URL:** `https://ritual-studio-ops.pages.dev` *(Cloudflare Pages project created 2026-05-22)*
 **Database:** Same Supabase project as TM and CM — no new Supabase project.
 
 ### Directory structure
@@ -53,7 +53,7 @@ There are four Ritual technology projects. This project merges two of them. The 
 ```
 Ritual_Studio_Ops/
 ├── app/                          # Merged HTML/JS app (Phase 2+)
-│   └── ritual-teacher-management31.html   # v31 TM app (Phase 2 starting point)
+│   └── ritual-studio-ops-v1.html          # RSO merged app (Phase 2+, write-enabled Phase 4)
 ├── services/
 │   ├── cover/                    # CM Python pipeline (Phase 3)
 │   └── momence/                  # Momence_data code (Phase 0 — copy pending)
@@ -88,16 +88,16 @@ Ritual_Studio_Ops/
 
 | Phase | Name | Weeks | Status |
 |---|---|---|---|
-| 0 | Mobilisation | 1 | **In progress** |
-| 1 | Schema reconciliation | 2–3 | Pending |
-| 2 | Unified shell, read-only | 4–5 | Pending |
-| 3 | Pipeline re-pointing | 6–7 | Pending |
-| 4 | Write-enable and admin parity | 8–9 | Pending |
-| 5 | Parallel run and reconciliation | 10–11 | Pending |
+| 0 | Mobilisation | 1 | **Complete** (2026-05-21) |
+| 1 | Schema reconciliation | 2–3 | **Complete** (2026-05-21) |
+| 2 | Unified shell, read-only | 4–5 | **Complete** (2026-05-22) |
+| 3 | Pipeline re-pointing | 6–7 | **Complete** (2026-05-22) |
+| 4 | Write-enable and admin parity | 8–9 | **Complete** (2026-05-22) |
+| 5 | Parallel run and reconciliation | 10–11 | **In progress** — two-week soak; run `reconcile.py` daily |
 | 6 | Cutover and retirement | 12 | Pending |
 | 7 | Momence-in-Supabase | 13–18 | Pending (post-cutover) |
 
-Full phase detail: `docs/` → Merger Plan v2 (currently in `Ritual_Teacher_Management/Ritual_Studio_Ops_Merger_Plan_v2.md`; move here once git is set up).
+Full phase detail: `docs/Ritual_Studio_Ops_Merger_Plan_v2.md`.
 
 ### Database: tables at a glance
 
@@ -128,7 +128,7 @@ Mermaid appears in historical Momence data. It is included in the `studios` tabl
 |---|---|
 | Supabase project | `rfjygyqijwgkmxboddup.supabase.co` |
 | TM production URL | `https://ritual-teacher-management.pages.dev` |
-| RSO target URL | `https://ritual-studio-ops.pages.dev` *(create in Phase 0)* |
+| RSO target URL | `https://ritual-studio-ops.pages.dev` |
 | Momence data path | `C:\Users\markj\OneDrive - MFPL\Documents\Customer Projects\Ritual\Momence_data\` |
 
 ---

@@ -302,3 +302,74 @@ Source: `Momence_data_scraping_wisdom.md` (consolidation pending MFPL OneDrive m
 **Fix (Phase 1):** Include Mermaid in the `studios` reference table with `is_active = false`. Do not remove historical records that reference it. All new cover requests, teacher availability, and class records should reference only active studios.
 
 **Applies to:** Phase 1 `studios` table design; CM NLP parser ACTIVE_STUDIOS list; Dashboard filters.
+
+---
+
+### L-MG-04 -- Write tool truncates files on OneDrive mounts; use bash heredoc
+
+**Problem:** The Write tool silently truncated files when writing to the mounted OneDrive share.
+
+**Cause:** The sandboxed Linux environment writes to OneDrive shares via a FUSE-like mount. The Write tool buffers output and cuts off mid-stream for larger files. The truncation is silent -- no error is returned.
+
+**Fix:** For any file that needs to be written or rewritten on an OneDrive mount, use a bash heredoc:
+  cat > "/path/to/file" << 'EOF'
+  ...content...
+  EOF
+Confirm the byte count with `wc -c` after writing. Use ASCII characters only in section headers (see L-MG-05).
+
+**Applies to:** Any Write tool call targeting OneDrive mounts. Read and Edit tools are not affected.
+
+---
+
+### L-MG-05 -- UTF-8 box-drawing characters in files cause silent truncation on OneDrive
+
+**Problem:** The `.env.template` file was written with Unicode box-drawing characters in section headers. The file was silently truncated at byte 0x803, mid-UTF-8 sequence.
+
+**Cause:** The OneDrive FUSE mount does not correctly handle multi-byte UTF-8 sequences at certain file offsets, causing the write to stop mid-character.
+
+**Fix:** Use ASCII characters only in any file written to an OneDrive mount. Replace box-drawing section headers with plain ASCII dashes. Confirmed working at 2343 bytes with all-ASCII content.
+
+**Applies to:** `.env.template`, any documentation or configuration file written via bash heredoc to OneDrive mounts.
+
+---
+
+### L-MG-06 -- Test string matching must target the assignment operator, not just the substring
+
+**Problem:** `test_phase3.py` check `"_MOMENCE_DIR" not in cfg` produced a false positive failure. The test failed when `_MOMENCE_DIR` appeared only in a comment in `config.py`, not as a variable assignment.
+
+**Cause:** The check tested for substring presence anywhere in the file, including comments. `config.py` contained the comment `# Replaces the hardcoded _MOMENCE_DIR sys.path.insert in each stage file.` which matched the substring.
+
+**Fix:** When testing that a hardcoded variable has been removed, match the assignment form, not the bare name:
+  assert "_MOMENCE_DIR =" not in cfg and "_MOMENCE_DIR=" not in cfg
+This correctly identifies a variable declaration while ignoring comments and prose that mention the name.
+
+**Applies to:** All test scripts that check for removal of hardcoded variables or paths.
+
+---
+
+### L-MG-07 -- Desktop Commander cmd shell: `cd /d` fails with space-containing paths
+
+**Problem:** Running `cd /d "C:\Users\markj\OneDrive\Desktop\Ritual_Apps\Ritual_Studio_Ops"` in a Desktop Commander cmd shell returned "The filename, directory name, or volume label syntax is incorrect."
+
+**Cause:** The Desktop Commander shell does not correctly handle `cd /d` with a quoted path containing spaces in this Windows environment.
+
+**Fix:** Never use `cd /d` for git operations from Desktop Commander. Instead, write a `.bat` file that uses the `git -C "path"` flag, which specifies the working directory as a git option rather than a shell working directory change:
+  set RSO=C:\Users\markj\OneDrive\Desktop\Ritual_Apps\Ritual_Studio_Ops
+  "%GIT%" -C "%RSO%" commit -m "message"
+This avoids any `cd` operation entirely.
+
+**Applies to:** All git operations run from Desktop Commander on this machine.
+
+---
+
+### L-MG-08 -- Phase-specific .bat files prevent stale commit messages
+
+**Problem:** `rso_git.bat` was reused across phases. When Phase 3 work was committed, the bat file still contained the Phase 2 commit message, producing a misleading git log entry that had to be amended.
+
+**Cause:** The batch file was updated for Phase 2 but not updated before the Phase 3 commit.
+
+**Fix:** Write a new `.bat` file for each commit containing a phase-specific commit message. Never reuse a bat file with an old message. When a wrong message is committed, fix immediately with:
+  "%GIT%" -C "%RSO%" commit --amend -m "correct message"
+then run `git log --oneline -4` to confirm.
+
+**Applies to:** All git commit batch files across the RSO project.

@@ -8,6 +8,18 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-22 | Ritual Studio Ops | Docs update — all governance documents brought to Phase 5
+
+DOCS_INDEX.md: updated `Last updated` to Phase 5, fixed Merger Plan v2 location (was still pointing to TM folder), corrected TM v31 status to `Legacy` (RSO Phase 4 banner added), added all Phase 2-5 RSO deliverables to section 7 (app/ritual-studio-ops-v1.html, test_phase2-5.py, reconcile.py, reconcile_reports/).
+
+README.md: phase status table updated (Phases 0-4 Complete, Phase 5 In progress), RSO target URL updated from `*(to be created)*` to active Pages URL, directory structure updated from ritual-teacher-management31.html to ritual-studio-ops-v1.html, Merger Plan v2 location reference corrected, key contacts table updated.
+
+LESSONS_LEARNED.md: five new lessons added (L-MG-04 through L-MG-08) covering Write tool truncation on OneDrive mounts, UTF-8 box-drawing character truncation, test string matching against variable assignments not substrings, Desktop Commander `cd /d` failure with space-containing paths, and phase-specific .bat file discipline for git commits.
+
+Files: `docs/DOCS_INDEX.md`, `docs/README.md`, `docs/LESSONS_LEARNED.md`, `docs/CHANGELOG.md`
+
+---
+
 ## 2026-05-22 | Ritual Studio Ops | Phase 5: Reconciliation script
 
 New file: `scripts/reconcile.py` — daily parallel-run health check. Run once per day during the two-week Phase 5 soak period.
