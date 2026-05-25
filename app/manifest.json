@@ -1,0 +1,25 @@
+{
+  "name": "Ritual Portal",
+  "short_name": "Ritual Portal",
+  "description": "Ritual Studios Management Portal — internal tools and external platforms.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#2D5016",
+  "background_color": "#F4F6F8",
+  "icons": [
+    {
+      "src": "./images/ritual-logo.png",
+      "sizes": "2048x2048",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./images/ritual-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
