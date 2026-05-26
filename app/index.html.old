@@ -514,16 +514,6 @@
           <div class="card-host">ritual-dashboard2.pages.dev</div>
         </a>
 
-        <a class="card" data-perm="index.tile.ritual_campaigns"
-           href="https://e1cff12b.ritual-campaign-planning.pages.dev" target="_blank" rel="noopener"
-           title="Plan and manage marketing campaigns, track approval workflows and monitor campaign status.">
-          <span class="card-tag">Marketing</span>
-          <div class="card-icon" aria-hidden="true">&#128227;</div>
-          <h2>Ritual Campaigns</h2>
-          <p>Plan and manage marketing campaigns, approvals and campaign status.</p>
-          <div class="card-host">ritual-campaign-planning.pages.dev</div>
-        </a>
-
       </div>
     </div>
 
