@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ritual Management Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* --- Design Tokens --- */
+    :root {
+      --cream:        #F8F4EE;
+      --warm-white:   #FDFAF6;
+      --sand:         #E8DDD0;
+      --stone:        #C4B5A0;
+      --earth:        #8B7355;
+      --bark:         #5C4A32;
+      --deep:         #2C2118;
+      --gold:         #B8975A;
+      --gold-light:   #D4B87A;
+      --muted-green:  #7A8C6E;
+      --text-primary: #2C2118;
+      --text-secondary:#6B5B47;
+      --text-muted:   #9C8B78;
+      --border:       #DDD4C8;
+      --border-light: #EDE6DC;
+      --radius-sm:    6px;
+      --radius-md:    10px;
+      --radius-lg:    14px;
+      --shadow-sm:    0 2px 8px rgba(44,33,24,0.08);
+      --shadow-md:    0 8px 32px rgba(44,33,24,0.12);
+      --shadow-lg:    0 24px 64px rgba(44,33,24,0.18);
+      --transition:   0.15s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      background: var(--cream);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* --- Auth screen --- */
+    #authScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--deep);
+    }
+
+    .auth-card {
+      background: var(--warm-white);
+      border-radius: var(--radius-lg);
+      padding: 48px 40px;
+      width: 400px;
+      max-width: 92vw;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .auth-wordmark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--deep);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .auth-wordmark span { font-style: italic; color: var(--gold); font-weight: 300; }
+
+    .auth-subtitle {
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      background: var(--warm-white);
+      color: var(--text-primary);
+      transition: border-color var(--transition);
+      outline: none;
+    }
+    .form-control:focus { border-color: var(--gold); }
+
+    .btn-gold {
+      width: 100%;
+      padding: 11px;
+      background: var(--gold);
+      color: var(--warm-white);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background var(--transition);
+    }
+    .btn-gold:hover { background: var(--bark); }
+    .btn-gold:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn-ghost-small {
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--earth);
+      cursor: pointer;
+      padding: 4px 0;
+      text-decoration: underline;
+    }
+    .btn-ghost-small:hover { color: var(--bark); }
+
+    .auth-error {
+      background: rgba(192,57,43,0.08);
+      border: 1px solid rgba(192,57,43,0.25);
+      color: #c0392b;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-success {
+      background: rgba(122,140,110,0.12);
+      border: 1px solid rgba(122,140,110,0.3);
+      color: var(--muted-green);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* --- App shell --- */
+    #appShell { display: none; min-height: 100vh; flex-direction: column; }
+
+    /* Header */
+    .portal-header {
+      background: var(--deep);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-wordmark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cream);
+    }
+    .header-wordmark span { font-style: italic; color: var(--gold); font-weight: 300; }
+    .header-sep { flex: 1; }
+    .header-tag {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--stone);
+    }
+
+    /* User menu */
+    .user-menu-wrap { position: relative; }
+    .user-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition);
+      color: var(--cream);
+    }
+    .user-menu-btn:hover { background: rgba(255,255,255,0.08); }
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--warm-white);
+      flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; }
+
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      min-width: 220px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      z-index: 200;
+    }
+    .user-dropdown.open { display: block; }
+
+    .dropdown-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--sand);
+    }
+    .dropdown-name  { font-weight: 500; font-size: 13px; color: var(--deep); }
+    .dropdown-role  { font-size: 11px; color: var(--earth); margin-top: 2px; }
+    .dropdown-email { font-size: 11px; color: var(--stone); margin-top: 2px; }
+
+    .dropdown-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--earth);
+      padding: 11px 18px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .dropdown-item:hover { background: var(--sand); }
+    .dropdown-item + .dropdown-item { border-top: 1px solid var(--border-light); }
+
+    /* --- Main content --- */
+    .portal-main {
+      flex: 1;
+      padding: 48px 40px;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .portal-greeting {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 300;
+      color: var(--deep);
+      margin-bottom: 6px;
+    }
+    .portal-subheading {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+    }
+
+    .tiles-section-label {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .app-tile {
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 26px;
+      cursor: pointer;
+      transition: box-shadow var(--transition), border-color var(--transition), transform 0.12s ease;
+      text-decoration: none;
+      display: block;
+      color: inherit;
+    }
+    .app-tile:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--gold);
+      transform: translateY(-2px);
+    }
+
+    .tile-icon  { font-size: 28px; margin-bottom: 14px; display: block; }
+    .tile-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 19px;
+      font-weight: 500;
+      color: var(--deep);
+      margin-bottom: 6px;
+    }
+    .tile-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+    .tile-arrow { margin-top: 18px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+
+    /* --- Modal --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(44,33,24,0.45);
+      backdrop-filter: blur(3px);
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-card {
+      background: var(--warm-white);
+      border-radius: var(--radius-lg);
+      width: 420px;
+      max-width: 100%;
+      box-shadow: var(--shadow-lg);
+    }
+    .modal-head {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid var(--sand);
+    }
+    .modal-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--deep);
+    }
+    .modal-body   { padding: 24px 28px; display: flex; flex-direction: column; gap: 16px; }
+    .modal-footer { padding: 8px 28px 24px; display: flex; justify-content: flex-end; gap: 10px; }
+
+    .btn-secondary {
+      padding: 9px 20px;
+      background: transparent;
+      border: 1px solid var(--stone);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--earth);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .btn-secondary:hover { background: var(--sand); border-color: var(--earth); }
+
+    .btn-primary {
+      padding: 9px 20px;
+      background: var(--gold);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--warm-white);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .btn-primary:hover { background: var(--bark); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .msg-error {
+      background: rgba(192,57,43,0.08);
+      color: #c0392b;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+    }
+    .msg-success {
+      background: rgba(122,140,110,0.12);
+      color: var(--muted-green);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--deep);
+      color: var(--cream);
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-wordmark">Ritual <span>Studios</span></div>
+    <div class="auth-subtitle">Management Portal</div>
+
+    <!-- Sign-in form -->
+    <div id="signInForm">
+      <div class="auth-error" id="signInError"></div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-control" id="signInEmail" type="email" placeholder="you@ritual.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-control" id="signInPassword" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
+      </div>
+      <button class="btn-gold" id="signInBtn" onclick="doSignIn()">Sign In</button>
+      <div style="text-align:center; margin-top:14px;">
+        <button class="btn-ghost-small" onclick="showForgotForm()">Forgot your password?</button>
+      </div>
+    </div>
+
+    <!-- Forgot password form -->
+    <div id="forgotForm" style="display:none;">
+      <div class="auth-error"   id="forgotError"></div>
+      <div class="auth-success" id="forgotSuccess"></div>
+      <p style="font-size:13px; color:var(--text-secondary); margin-bottom:20px; line-height:1.6;">
+        Enter your email address and we&rsquo;ll send you a link to reset your password.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-control" id="forgotEmail" type="email" placeholder="you@ritual.com" autocomplete="email" />
+      </div>
+      <button class="btn-gold" id="forgotBtn" onclick="doForgotPassword()">Send Reset Link</button>
+      <div style="text-align:center; margin-top:14px;">
+        <button class="btn-ghost-small" onclick="showSignInForm()">Back to sign in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell" style="display:none; min-height:100vh; flex-direction:column;">
+
+  <!-- Header -->
+  <header class="portal-header">
+    <div class="header-wordmark">Ritual <span>Studios</span></div>
+    <div class="header-tag">Management Portal</div>
+    <div class="header-sep"></div>
+    <div class="user-menu-wrap" id="userMenuWrap">
+      <button class="user-menu-btn" onclick="toggleUserMenu()" id="userMenuBtn">
+        <div class="user-avatar" id="userAvatar">&#x2014;</div>
+        <span class="user-name" id="userNameLabel"></span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="opacity:0.6">
+          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="dropdown-header">
+          <div class="dropdown-name"  id="dropdownName"></div>
+          <div class="dropdown-role"  id="dropdownRole"></div>
+          <div class="dropdown-email" id="dropdownEmail"></div>
+        </div>
+        <button class="dropdown-item" onclick="openChangePwd()">Change Password</button>
+        <button class="dropdown-item" onclick="doSignOut()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="portal-main">
+    <div class="portal-greeting" id="portalGreeting">Welcome back</div>
+    <div class="portal-subheading">Select an application below to get started.</div>
+    <div class="tiles-section-label">Applications</div>
+    <div class="tiles-grid" id="tilesGrid"></div>
+  </main>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="changePwdOverlay" onclick="overlayClick(event,'changePwdOverlay')">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Change Password</div>
+    </div>
+    <div class="modal-body">
+      <div id="changePwdMsg" style="display:none;"></div>
+      <div id="changePwdFields">
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input class="form-control" id="newPw" type="password" placeholder="Min. 8 characters" />
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Confirm Password</label>
+          <input class="form-control" id="confirmPw" type="password" placeholder="Re-enter new password" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" id="changePwdFooter">
+      <button class="btn-secondary" onclick="closeChangePwd()">Cancel</button>
+      <button class="btn-primary" id="changePwdSubmit" onclick="doChangePassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  /* --- Supabase --- */
+  const SUPABASE_URL  = 'https://rfjygyqijwgkmxboddup.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmanlneXFpandna214Ym9kZHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDU5MjksImV4cCI6MjA4NzMyMTkyOX0.g40IEOLPDTWnbFYybWL01wZMiE_f2_yor_DKuaSCajU';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  /* --- Role display labels --- */
+  const ROLE_LABELS = {
+    developer:       'Developer',
+    administrator:   'Administrator',
+    coordinator:     'Coordinator',
+    adjudicator:     'Adjudicator',
+    teacher:         'Teacher',
+    trainee:         'Trainee',
+    guest:           'Guest',
+    studio_owner:    'Studio Owner',
+    studio_manager:  'Studio Manager',
+    lead_instructor: 'Lead Instructor',
+    finance_reviewer:'Finance Reviewer',
+  };
+
+  /* --- App tiles --- */
+  const APPS = [
+    {
+      icon:  '&#x1F3EB;',
+      title: 'Teacher Management',
+      desc:  'Manage teacher profiles, grades, class history, availability and trainee scheduling.',
+      url:   'https://ritual-teacher-management.pages.dev',
+    },
+    {
+      icon:  '&#x1F4E3;',
+      title: 'Ritual Campaigns',
+      desc:  'Plan and manage marketing campaigns, track approval workflows and monitor campaign status.',
+      url:   'https://e1cff12b.ritual-campaign-planning.pages.dev',
+    },
+  ];
+
+  /* --- State --- */
+  let currentSession = null;
+  let currentProfile = null;
+
+  /* --- Auth --- */
+  sb.auth.onAuthStateChange(async (event, session) => {
+    currentSession = session;
+    if (session) {
+      await loadProfile(session.user);
+      showApp(session.user);
+    } else {
+      showAuth();
+    }
+  });
+
+  async function loadProfile(user) {
+    try {
+      const { data } = await sb
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      currentProfile = data;
+    } catch (_) { currentProfile = null; }
+  }
+
+  /* --- Helpers --- */
+  function initials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  function displayName(user, profile) {
+    if (profile && (profile.first_name || profile.last_name)) {
+      return ((profile.first_name || '') + ' ' + (profile.last_name || '')).trim();
+    }
+    return user.email.split('@')[0];
+  }
+
+  function overlayClick(e, id) {
+    if (e.target === e.currentTarget) document.getElementById(id).classList.remove('open');
+  }
+
+  /* --- Screen switching --- */
+  function showAuth() {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('appShell').style.display   = 'none';
+  }
+
+  function showApp(user) {
+    document.getElementById('authScreen').style.display = 'none';
+    const shell = document.getElementById('appShell');
+    shell.style.display = 'flex';
+
+    const name  = displayName(user, currentProfile);
+    const role  = (currentProfile && (currentProfile.role || currentProfile.campaign_role)) || '';
+    const label = ROLE_LABELS[role] || role;
+
+    document.getElementById('userAvatar').textContent    = initials(name);
+    document.getElementById('userNameLabel').textContent = name.split('@')[0];
+    document.getElementById('dropdownName').textContent  = name;
+    document.getElementById('dropdownRole').textContent  = label;
+    document.getElementById('dropdownEmail').textContent = user.email;
+
+    const hour  = new Date().getHours();
+    const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    document.getElementById('portalGreeting').textContent =
+      greet + ', ' + name.split(' ')[0] + '.';
+
+    buildTiles(currentSession);
+  }
+
+  /* --- Tiles --- */
+  function buildTiles(session) {
+    const grid = document.getElementById('tilesGrid');
+    grid.innerHTML = APPS.map(function(app) {
+      var href = app.url;
+      if (session && session.access_token) {
+        href += '#access_token=' + session.access_token +
+                '&refresh_token=' + session.refresh_token +
+                '&token_type=bearer';
+      }
+      return '<a class="app-tile" href="' + href + '" target="_blank" rel="noopener">' +
+               '<span class="tile-icon">' + app.icon + '</span>' +
+               '<div class="tile-title">' + app.title + '</div>' +
+               '<div class="tile-desc">'  + app.desc  + '</div>' +
+               '<div class="tile-arrow">Open &#x2192;</div>' +
+             '</a>';
+    }).join('');
+  }
+
+  /* --- Sign in --- */
+  function showSignInForm() {
+    document.getElementById('signInForm').style.display   = '';
+    document.getElementById('forgotForm').style.display   = 'none';
+    document.getElementById('signInError').style.display  = 'none';
+  }
+
+  function showForgotForm() {
+    document.getElementById('signInForm').style.display    = 'none';
+    document.getElementById('forgotForm').style.display    = '';
+    document.getElementById('forgotError').style.display   = 'none';
+    document.getElementById('forgotSuccess').style.display = 'none';
+    document.getElementById('forgotEmail').value =
+      document.getElementById('signInEmail').value;
+  }
+
+  async function doSignIn() {
+    var email = document.getElementById('signInEmail').value.trim();
+    var pw    = document.getElementById('signInPassword').value;
+    var errEl = document.getElementById('signInError');
+    var btn   = document.getElementById('signInBtn');
+    errEl.style.display = 'none';
+    if (!email || !pw) {
+      errEl.textContent = 'Please enter your email and password.';
+      errEl.style.display = ''; return;
+    }
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    var result = await sb.auth.signInWithPassword({ email: email, password: pw });
+    btn.disabled = false; btn.textContent = 'Sign In';
+    if (result.error) {
+      errEl.textContent = result.error.message;
+      errEl.style.display = '';
+    }
+  }
+
+  document.getElementById('signInPassword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doSignIn();
+  });
+
+  /* --- Forgot password --- */
+  async function doForgotPassword() {
+    var email = document.getElementById('forgotEmail').value.trim();
+    var errEl = document.getElementById('forgotError');
+    var okEl  = document.getElementById('forgotSuccess');
+    var btn   = document.getElementById('forgotBtn');
+    errEl.style.display = 'none';
+    okEl.style.display  = 'none';
+    if (!email) {
+      errEl.textContent = 'Please enter your email address.';
+      errEl.style.display = ''; return;
+    }
+    btn.disabled = true; btn.textContent = 'Sending...';
+    var result = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.href,
+    });
+    btn.disabled = false; btn.textContent = 'Send Reset Link';
+    if (result.error) {
+      errEl.textContent = result.error.message;
+      errEl.style.display = '';
+    } else {
+      okEl.textContent = 'A password reset link has been sent to ' + email +
+        '. Follow the link in the email to set a new password.';
+      okEl.style.display = '';
+    }
+  }
+
+  /* --- Sign out --- */
+  async function doSignOut() {
+    toggleUserMenu(false);
+    await sb.auth.signOut();
+  }
+
+  /* --- User menu --- */
+  function toggleUserMenu(force) {
+    var dd     = document.getElementById('userDropdown');
+    var isOpen = dd.classList.contains('open');
+    var next   = (force !== undefined) ? force : !isOpen;
+    dd.classList.toggle('open', next);
+  }
+
+  document.addEventListener('mousedown', function(e) {
+    var wrap = document.getElementById('userMenuWrap');
+    if (wrap && !wrap.contains(e.target)) toggleUserMenu(false);
+  });
+
+  /* --- Change password modal --- */
+  function openChangePwd() {
+    toggleUserMenu(false);
+    document.getElementById('newPw').value       = '';
+    document.getElementById('confirmPw').value   = '';
+    document.getElementById('changePwdMsg').style.display    = 'none';
+    document.getElementById('changePwdFields').style.display = '';
+    document.getElementById('changePwdFooter').style.display = 'flex';
+    document.getElementById('changePwdSubmit').disabled      = false;
+    document.getElementById('changePwdSubmit').textContent   = 'Update Password';
+    document.getElementById('changePwdOverlay').classList.add('open');
+    setTimeout(function() { document.getElementById('newPw').focus(); }, 50);
+  }
+
+  function closeChangePwd() {
+    document.getElementById('changePwdOverlay').classList.remove('open');
+  }
+
+  async function doChangePassword() {
+    var pw      = document.getElementById('newPw').value;
+    var confirm = document.getElementById('confirmPw').value;
+    var msgEl   = document.getElementById('changePwdMsg');
+    var btn     = document.getElementById('changePwdSubmit');
+
+    msgEl.style.display = 'none';
+
+    if (pw.length < 8) {
+      msgEl.className   = 'msg-error';
+      msgEl.textContent = 'Password must be at least 8 characters.';
+      msgEl.style.display = ''; return;
+    }
+    if (pw !== confirm) {
+      msgEl.className   = 'msg-error';
+      msgEl.textContent = 'Passwords do not match.';
+      msgEl.style.display = ''; return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Saving...';
+    var result = await sb.auth.updateUser({ password: pw });
+    btn.disabled = false; btn.textContent = 'Update Password';
+
+    if (result.error) {
+      msgEl.className   = 'msg-error';
+      msgEl.textContent = result.error.message;
+      msgEl.style.display = '';
+    } else {
+      document.getElementById('changePwdFields').style.display = 'none';
+      document.getElementById('changePwdFooter').style.display = 'none';
+      msgEl.className   = 'msg-success';
+      msgEl.textContent = 'Password updated successfully.';
+      msgEl.style.display = '';
+      setTimeout(closeChangePwd, 2500);
+    }
+  }
+</script>
+</body>
+</html>
