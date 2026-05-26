@@ -1046,6 +1046,25 @@
         if (ev.target === modal) modal.classList.remove('visible');
       });
     });
+
+    // ---------------------------------------------------------------------
+    // SSO: pass current Supabase session to Campaign Planning app so the
+    // user is not prompted to log in again.
+    // ---------------------------------------------------------------------
+    document.getElementById('campaign-tile').addEventListener('click', async function(e) {
+      e.preventDefault();
+      let href = 'https://ritual-campaign-planning.pages.dev/';
+      try {
+        const { data } = await sb.auth.getSession();
+        const s = data && data.session;
+        if (s && s.access_token) {
+          href += '#access_token=' + encodeURIComponent(s.access_token) +
+                  '&refresh_token=' + encodeURIComponent(s.refresh_token) +
+                  '&token_type=bearer';
+        }
+      } catch(_) {}
+      window.open(href, '_blank', 'noopener');
+    });
   </script>
 </body>
 </html>
