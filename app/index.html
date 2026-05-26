@@ -514,7 +514,15 @@
           <div class="card-host">ritual-dashboard2.pages.dev</div>
         </a>
 
-        <a class="card" data-perm="index.tile.ritual_campaigns"
+        <!--
+          IMPORTANT — Ritual Campaigns tile must NOT have a data-perm attribute.
+          The permission code "index.tile.ritual_campaigns" does NOT exist in the
+          v_role_permissions_resolved view, so adding data-perm would immediately
+          apply the .disabled class (greying the tile for all users).
+          The campaign app has its own Supabase auth — no portal-level gate needed.
+          See docs/PORTAL-DEVELOPER.md §Tile permissions for full explanation.
+        -->
+        <a class="card" id="campaign-tile"
            href="https://e1cff12b.ritual-campaign-planning.pages.dev" target="_blank" rel="noopener"
            title="Plan and manage marketing campaigns, track approval workflows and monitor campaign status.">
           <span class="card-tag">Marketing</span>
