@@ -409,3 +409,15 @@ then run `git log --oneline -4` to confirm.
 **Fix:** Drop the `CURRENT_DATE` condition from the index predicate. Keep only truly immutable conditions such as `deleted_at IS NULL`. The date filter is applied at query-plan time anyway, so the index still correctly serves upcoming-absences queries — it just covers a slightly wider range of rows.
 
 **Applies to:** All Supabase/Postgres partial index definitions across this project. Any attempt to use `now()`, `CURRENT_DATE`, `CURRENT_TIMESTAMP`, or `CURRENT_USER` in an index predicate will produce the same error.
+
+---
+
+### L-MG-12 -- Edit tool with non-ASCII characters in old_string/new_string truncates files on OneDrive mounts
+
+**Problem:** After applying 11 Edit tool calls to `ritual-studio-ops-v2.html`, the file was truncated -- `</html>` was missing and the file ended mid-function. L-MG-04 stated "Read and Edit tools are not affected" by the OneDrive mount truncation issue, but this was incorrect for non-ASCII content.
+
+**Cause:** One of the Edit operations contained a non-ASCII character (the graduation cap emoji, U+1F393, in the `old_string` parameter). The OneDrive FUSE mount mishandles multi-byte UTF-8 sequences during Edit operations, causing silent truncation at the point of the non-ASCII character.
+
+**Fix:** Never include non-ASCII characters (emoji, box-drawing characters, curly quotes, en-dashes, etc.) in `old_string` or `new_string` parameters when editing files on OneDrive mounts. Replace non-ASCII characters with their HTML entity equivalents (e.g. `&#127962;` instead of the graduation emoji) before constructing the Edit call. If truncation has already occurred, reconstruct the file from git: use `git show HEAD:path/to/file` to recover the pre-edit version, identify the cut point, then append the missing tail.
+
+**Applies to:** All Edit tool calls targeting files on OneDrive mounts. Update L-MG-04 caveat: Edit tool is safe for ASCII-only content only.

@@ -8,6 +8,16 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-27 | Ritual Studio Ops | Teacher absence tracking — per-teacher panel, global view, on-leave sidebar pill, CRUD modal, soft-delete archive, five RLS policies; migration applied via Supabase MCP | app/ritual-studio-ops-v2.html, migrations/2026-05-27-teacher-absences.sql
+
+---
+
+## 2026-05-27 | Ritual Dashboard | Footer badge standard applied to all dashboard pages | 18 files in Ritual Dashboard/dashboard/ and Ritual Dashboard/
+
+Added the standard copyable footer badge (`data-file-id="rso-file-footer"`) to all 18 eligible HTML files in the Ritual Dashboard folder. Badge shows logical file path, version, and description; click-to-copy enabled. Files: `dashboard/campaigns.html`, `courses.html`, `financial.html`, `fitness-passport.html`, `index.html`, `leads.html`, `marketing.html`, `membership-tracker.html`, `memberships.html`, `projects.html`, `sales-tracker-rds.html`, `settings.html`, `studio-ops.html`, `targets.html`, `asana_cleaner.html`, `membership_attendance.html`, `momence_pipeline_swimlane.html`, `skill-eval-review.html`.
+
+---
+
 ## 2026-05-27 | Ritual Studio Ops | Portal & access fixes — Cover Dashboard deep-link, magic-link auth redirect, footer badge standard
 
 **Cover Dashboard deep-link (`index.html` + `ritual-studio-ops-v2.html`):**
