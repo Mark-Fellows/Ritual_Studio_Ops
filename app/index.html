@@ -482,12 +482,13 @@
       <div class="cards">
 
         <a class="card" data-perm="index.tile.cover_dashboard"
-           href="./ritual-studio-ops-v2.html" target="_blank" rel="noopener"
+           href="https://ritual-cover-management.pages.dev/cover_dashboard.html" target="_blank" rel="noopener"
            title="Review pending cover requests, approve or cancel classes, and mark covers complete.">
           <span class="card-tag">Admin</span>
           <div class="card-icon" aria-hidden="true">&#128203;</div>
           <h2>Cover Dashboard</h2>
           <p>Triage WhatsApp cover requests and track teacher responses.</p>
+          <div class="card-host">ritual-cover-management.pages.dev</div>
         </a>
 
         <a class="card" data-perm="index.tile.teacher_portal"
@@ -928,7 +929,7 @@
       try {
         const { error } = await sb.auth.signInWithOtp({
           email,
-          options: { emailRedirectTo: window.location.origin + window.location.pathname }
+          options: { emailRedirectTo: 'https://ritual-studio-ops.pages.dev' }
         });
         if (error) throw error;
         localStorage.setItem('rmp_last_email', email);
@@ -1072,6 +1073,6 @@
       window.open(href, '_blank', 'noopener');
     });
   </script>
-<div data-file-id="rso-file-footer" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;pointer-events:none;letter-spacing:0.02em;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new)</div>
+<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new)</div>
 </body>
 </html>
