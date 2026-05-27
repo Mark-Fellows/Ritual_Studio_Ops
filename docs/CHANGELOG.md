@@ -8,6 +8,23 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-27 | Ritual Studio Ops | Portal & access fixes — Cover Dashboard deep-link, magic-link auth redirect, footer badge standard
+
+**Cover Dashboard deep-link (`index.html` + `ritual-studio-ops-v2.html`):**
+The Cover Dashboard portal tile was pointing to `./ritual-studio-ops-v2.html` with no hash, so the merged app always opened on the Teachers view. Per `NAVIGATION.md`, both portal tiles correctly resolve to the merged app — the fix was to add `#cover` to the Cover Dashboard tile href and add a three-line hash check in `onSignedIn`: `if (window.location.hash === '#cover') switchView('cover');`. Teacher Portal tile unchanged at `./ritual-studio-ops-v2.html`.
+
+An earlier incorrect intermediate fix had linked the tile to `https://ritual-cover-management.pages.dev/cover_dashboard.html` (the legacy read-only site). That link was reverted.
+
+**Magic-link `emailRedirectTo` (`index.html`):**
+`emailRedirectTo` was `window.location.origin + window.location.pathname`. When the Supabase Site URL was still set to `ritual-cover-management.pages.dev` (not yet updated after the merger), Supabase ignored the dynamic value and sent magic-link emails to the wrong domain. Fixed to hardcoded `'https://ritual-studio-ops.pages.dev'`. Supabase Auth → URL Configuration → Site URL and Allowed Redirect URLs must also be updated to `https://ritual-studio-ops.pages.dev`.
+
+**Footer badge standard (all 7 portal pages):**
+All `data-file-id="rso-file-footer"` divs across all apps had `pointer-events:none`, making the filename unselectable and uncopable. Replaced with `cursor:pointer; user-select:text;` and added an `onclick` click-to-copy handler (copies path to clipboard, briefly shows "Copied!"). `cover_dashboard.html` footer now includes the version string `v1.3.22`.
+
+Files: `Ritual_Studio_Ops/app/index.html`, `Ritual_Studio_Ops/app/ritual-studio-ops-v2.html`, `Ritual_Cover_Management/public/cover_dashboard.html`, `Ritual_Cover_Management/public/index.html`, `Ritual_Cover_Management/public/studio_timetable.html`, `Ritual_Cover_Management/public/teacher_portal.html`, `Ritual marketing/campaign-planning.html`
+
+---
+
 ## 2026-05-27 | Teacher Management | Teacher absence tracking implemented — per-teacher panel, global Absences view, on-leave sidebar pill, availability banner, soft-delete archive, five RLS policies; migration applied via Supabase MCP
 
 Files: `Ritual_Teacher_Management/ritual-teacher-management31.html`, `Ritual_Teacher_Management/migrations/2026-05-26-teacher-absences.sql`, `Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Absences_Design.md`

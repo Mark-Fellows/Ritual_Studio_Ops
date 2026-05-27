@@ -805,6 +805,8 @@
             badge.className = `role-badge role-${currentUserRole}`;
             renderActionButtons();
             await loadData();
+            // Deep-link: if the portal launched this page with #cover, switch to the Cover view.
+            if (window.location.hash === '#cover') switchView('cover');
         }
 
         // ═══════════════════════════════════════════════════════════════════

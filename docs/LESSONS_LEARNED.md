@@ -376,6 +376,30 @@ then run `git log --oneline -4` to confirm.
 
 ---
 
+### L-MG-10 -- Both portal tiles link to the merged app, not to the legacy cover site
+
+**Problem:** The Cover Dashboard portal tile was changed to link to `ritual-cover-management.pages.dev/cover_dashboard.html` after it appeared to be going to the wrong place.
+
+**Cause:** The merged app (`ritual-studio-ops-v2.html`) defaults to the Teachers view, so clicking Cover Dashboard appeared to open Teacher Management. This was misread as a wrong URL, when the URL was correct but the wrong tab was shown.
+
+**Fix:** Per `NAVIGATION.md` — both Cover Dashboard and Teacher Portal tiles correctly resolve to `./ritual-studio-ops-v2.html`. Add `#cover` to the Cover Dashboard href and read `window.location.hash` inside `onSignedIn` to call `switchView('cover')` after data loads. Never link a portal tile back to a legacy `ritual-cover-management.pages.dev` URL.
+
+**Applies to:** `Ritual_Studio_Ops/app/index.html` tile hrefs; any future portal tiles that need to deep-link into the merged app.
+
+---
+
+### L-MG-11 -- Magic-link emailRedirectTo must be hardcoded to the production URL
+
+**Problem:** Magic-link emails were delivered to `ritual-cover-management.pages.dev` (the legacy site) instead of the portal, so the auth code was never exchanged and login failed.
+
+**Cause:** `emailRedirectTo` was set to `window.location.origin + window.location.pathname`. Supabase silently ignores this value if the domain is not in its Allowed Redirect URLs list and falls back to the configured Site URL. The Site URL had not been updated from the old cover management domain after the merger.
+
+**Fix:** Hardcode `emailRedirectTo: 'https://ritual-studio-ops.pages.dev'`. Also update Supabase Auth → URL Configuration: set Site URL to `https://ritual-studio-ops.pages.dev` and add it to Allowed Redirect URLs.
+
+**Applies to:** `Ritual_Studio_Ops/app/index.html` signInWithOtp call; any app that sends magic links after a domain migration.
+
+---
+
 ### L-MG-09 -- Postgres partial index predicates must use only IMMUTABLE functions; CURRENT_DATE is not allowed
 
 **Problem:** Creating an index with `WHERE deleted_at IS NULL AND end_date >= CURRENT_DATE` on the `teacher_absences` table failed with `ERROR: 42P17: functions in index predicate must be marked IMMUTABLE`.
