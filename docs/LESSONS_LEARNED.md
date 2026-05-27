@@ -421,3 +421,15 @@ then run `git log --oneline -4` to confirm.
 **Fix:** Never include non-ASCII characters (emoji, box-drawing characters, curly quotes, en-dashes, etc.) in `old_string` or `new_string` parameters when editing files on OneDrive mounts. Replace non-ASCII characters with their HTML entity equivalents (e.g. `&#127962;` instead of the graduation emoji) before constructing the Edit call. If truncation has already occurred, reconstruct the file from git: use `git show HEAD:path/to/file` to recover the pre-edit version, identify the cut point, then append the missing tail.
 
 **Applies to:** All Edit tool calls targeting files on OneDrive mounts. Update L-MG-04 caveat: Edit tool is safe for ASCII-only content only.
+
+---
+
+### L-MG-13 -- L-TM-01 applies to index.html too: never use sb.from() for data queries in the portal
+
+**Problem:** Clicking the Cover Dashboard or Teacher Portal tiles in `index.html` opened `ritual-studio-ops-v2.html` in a new tab, which showed its login screen instead of the main app. The v2 app was never broken; the portal was.
+
+**Cause:** `loadProfileAndPerms` in `index.html` used `sb.from('user_profiles')` and `sb.from('v_role_permissions_resolved')` -- Supabase JS client data queries. The Supabase JS client holds `navigator.locks` for the duration of these calls. When the v2 app opened in a second tab on the same origin, its Supabase client tried to acquire the same lock for `INITIAL_SESSION` processing and deadlocked. The v2 app fired `INITIAL_SESSION` with null and showed its auth screen.
+
+**Fix:** Converted both queries in `loadProfileAndPerms` to direct `fetch()` REST calls using the `Authorization: Bearer` header built from `session.access_token`. The function signature changed from `(user)` to `(user, accessToken)` and the call site in `handleSession` passes `session.access_token`. The Supabase JS client in `index.html` is now used exclusively for `sb.auth.*` calls (auth state, signOut, signInWithOtp), which is the L-TM-01 requirement.
+
+**Applies to:** `app/index.html`. Any future portal page that initialises a Supabase JS client and also uses `sb.from()` for queries will reproduce this deadlock when the v2 app is open in a second tab.

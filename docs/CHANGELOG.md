@@ -8,6 +8,14 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-28 | Ritual Studio Ops | Fix Cover Dashboard and Teacher Portal tiles opening login screen | app/index.html
+
+Root cause: `loadProfileAndPerms` in `index.html` used `sb.from()` Supabase JS client calls for data queries, violating L-TM-01. These calls hold `navigator.locks`, blocking the v2 app from detecting its session when opened in a new tab on the same origin. Result: v2 app fired `INITIAL_SESSION` with null and showed its login screen.
+
+Fix: converted both data queries (user_profiles lookup and v_role_permissions_resolved lookup) to direct `fetch()` REST calls using the session access token. The Supabase JS client in `index.html` is now used exclusively for auth state (`sb.auth.*`), as required by L-TM-01. See L-MG-13 in LESSONS_LEARNED.md.
+
+---
+
 ## 2026-05-27 | Ritual Studio Ops | Teacher absence tracking — per-teacher panel, global view, on-leave sidebar pill, CRUD modal, soft-delete archive, five RLS policies; migration applied via Supabase MCP | app/ritual-studio-ops-v2.html, migrations/2026-05-27-teacher-absences.sql
 
 ---

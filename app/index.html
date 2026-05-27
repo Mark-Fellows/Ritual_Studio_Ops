@@ -801,13 +801,30 @@
       console.info('[auth]', msg);
     }
 
-    async function loadProfileAndPerms(user) {
+    async function loadProfileAndPerms(user, accessToken) {
       dbg('loadProfileAndPerms start uid=' + user.id + ' email=' + user.email);
-      const { data: profile, error: pErr } = await sb
-        .from('user_profiles')
-        .select('email, role, first_name, last_name, teacher_id')
-        .eq('user_id', user.id)
-        .single();
+      // Direct REST fetch calls (not sb.from) — required by L-TM-01.
+      // Using sb.from() here holds navigator.locks, which deadlocks the v2 app
+      // when it tries to detect its session in a new tab on the same origin.
+      const restHeaders = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + accessToken,
+        'Content-Type': 'application/json'
+      };
+
+      let profile = null, pErr = null;
+      try {
+        const pRes = await fetch(
+          SUPABASE_URL + '/rest/v1/user_profiles?user_id=eq.' + user.id +
+          '&select=email,role,first_name,last_name,teacher_id&limit=1',
+          { headers: restHeaders }
+        );
+        if (!pRes.ok) { pErr = { message: 'HTTP ' + pRes.status }; }
+        else {
+          const pRows = await pRes.json();
+          profile = pRows && pRows.length > 0 ? pRows[0] : null;
+        }
+      } catch (e) { pErr = { message: e.message || String(e) }; }
 
       dbg('user_profiles: ' + (pErr ? 'ERROR ' + pErr.message : 'OK role=' + (profile && profile.role)));
 
@@ -818,10 +835,16 @@
         return { error: 'Your profile has no role assigned. Please contact an administrator.' };
       }
 
-      const { data: rows, error: rErr } = await sb
-        .from('v_role_permissions_resolved')
-        .select('permission_code')
-        .eq('role', profile.role);
+      let rows = [], rErr = null;
+      try {
+        const rRes = await fetch(
+          SUPABASE_URL + '/rest/v1/v_role_permissions_resolved?role=eq.' + profile.role +
+          '&select=permission_code',
+          { headers: restHeaders }
+        );
+        if (!rRes.ok) { rErr = { message: 'HTTP ' + rRes.status }; }
+        else { rows = await rRes.json(); }
+      } catch (e) { rErr = { message: e.message || String(e) }; }
 
       dbg('permissions: ' + (rErr ? 'ERROR ' + rErr.message : 'OK count=' + (rows && rows.length)));
 
@@ -864,7 +887,7 @@
           return;
         }
         _authHandled = true;
-        const result = await loadProfileAndPerms(session.user);
+        const result = await loadProfileAndPerms(session.user, session.access_token);
         dbg('loadProfileAndPerms result.error=' + (result.error || 'none'));
         if (result.error) {
           try { await sb.auth.signOut(); } catch (e) { /* noop */ }
