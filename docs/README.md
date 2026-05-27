@@ -4,6 +4,23 @@
 
 ---
 
+## Where to look first
+
+This project has several governance documents. Pick the one that matches your question:
+
+| If you want to ... | Read |
+|---|---|
+| Know which file backs a given screen, and whether you might be editing the wrong copy | `docs/SOURCE_OF_TRUTH.md` |
+| See how the portals, dashboards and external platforms link to each other | `docs/NAVIGATION.md` |
+| Find any document across all four Ritual projects | `docs/DOCS_INDEX.md` |
+| See the most recent changes to schema, code or docs | `docs/CHANGELOG.md` |
+| Avoid known pitfalls before touching code | `docs/LESSONS_LEARNED.md` |
+| Understand the merger plan and phases | `docs/Ritual_Studio_Ops_Merger_Plan_v2.md` |
+| Review the latest setup audit and outstanding issues | `docs/AUDIT-RSO-2026-05-24.md` |
+| Orient yourself as a new starter | continue reading this document |
+
+---
+
 ## The four-project landscape
 
 There are four Ritual technology projects. This project merges two of them. The other two continue unchanged.

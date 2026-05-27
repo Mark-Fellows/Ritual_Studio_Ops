@@ -373,3 +373,15 @@ This avoids any `cd` operation entirely.
 then run `git log --oneline -4` to confirm.
 
 **Applies to:** All git commit batch files across the RSO project.
+
+---
+
+### L-MG-09 -- Postgres partial index predicates must use only IMMUTABLE functions; CURRENT_DATE is not allowed
+
+**Problem:** Creating an index with `WHERE deleted_at IS NULL AND end_date >= CURRENT_DATE` on the `teacher_absences` table failed with `ERROR: 42P17: functions in index predicate must be marked IMMUTABLE`.
+
+**Cause:** Postgres requires all functions in a partial index predicate to be `IMMUTABLE` (same output for same input, forever). `CURRENT_DATE` is `STABLE` (consistent within a single transaction, but varies between transactions), so it is rejected.
+
+**Fix:** Drop the `CURRENT_DATE` condition from the index predicate. Keep only truly immutable conditions such as `deleted_at IS NULL`. The date filter is applied at query-plan time anyway, so the index still correctly serves upcoming-absences queries — it just covers a slightly wider range of rows.
+
+**Applies to:** All Supabase/Postgres partial index definitions across this project. Any attempt to use `now()`, `CURRENT_DATE`, `CURRENT_TIMESTAMP`, or `CURRENT_USER` in an index predicate will produce the same error.

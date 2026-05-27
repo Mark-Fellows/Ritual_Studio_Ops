@@ -8,6 +8,12 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-27 | Teacher Management | Teacher absence tracking implemented — per-teacher panel, global Absences view, on-leave sidebar pill, availability banner, soft-delete archive, five RLS policies; migration applied via Supabase MCP
+
+Files: `Ritual_Teacher_Management/ritual-teacher-management31.html`, `Ritual_Teacher_Management/migrations/2026-05-26-teacher-absences.sql`, `Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Absences_Design.md`
+
+---
+
 ## 2026-05-22 | Ritual Studio Ops | Manual cover request entry — v2 app, Edge Function, schema
 
 New feature: administrators and coordinators can now manually create a cover request from the Cover Requests tab without it going through the WhatsApp pipeline. Handles privately messaged requests.

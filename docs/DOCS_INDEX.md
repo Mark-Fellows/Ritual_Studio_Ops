@@ -4,7 +4,7 @@
 
 A document is not considered created until this index is updated. If a document is not listed here, it does not officially exist. Two entries for the same topic means one is a duplicate — mark the older as `superseded` and consolidate.
 
-Last updated: 2026-05-22 (Phase 5 complete)
+Last updated: 2026-05-24 (Phase 5 in progress; cleanup pass)
 Maintained by: Ritual Studio Ops project (Claude as PM)
 
 ---
@@ -47,6 +47,7 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Recommendations re id | TM | `Ritual_Teacher_Management/Recommendations re id.md` | legacy | Design note; content absorbed into LESSONS_LEARNED |
 | Booking flow test | TM | `Ritual_Teacher_Management/BOOKING_FLOW_TEST.md` | active | Test plan for trainee booking flow |
 | Booking test results | TM | `Ritual_Teacher_Management/BOOKING_TEST_RESULTS.md` | active | Execution results of above |
+| Teacher Absences design spec | TM | `Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Absences_Design.md` | active | Full design spec: data model, RLS, API pattern, UI layout, migration plan. Approved and implemented 2026-05-27. |
 | Merger plan prompt | TM | `Ritual_Teacher_Management/prompts/find_skills_for_merger.md` | legacy | Working note from merger planning; superseded by this programme |
 
 **Migrations (TM)**
@@ -55,6 +56,7 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 |---|---|---|
 | 2026-04-05: add teacher photo and momence fields | `Ritual_Teacher_Management/migrations/2026-04-05-add-teacher-photo-and-momence.sql` | Yes |
 | 2026-04-07: add trainee-bookings user_id | `Ritual_Teacher_Management/migrations/2026-04-07-add-trainee-bookings-user-id.sql` | Yes |
+| 2026-05-26: teacher_absences table, indexes, RLS | `Ritual_Teacher_Management/migrations/2026-05-26-teacher-absences.sql` | Yes — applied via Supabase MCP 2026-05-27 |
 
 **App versions (TM)**
 
@@ -188,7 +190,9 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | LESSONS_LEARNED | RSO | `Ritual_Studio_Ops/docs/LESSONS_LEARNED.md` | active | |
 | Merger Plan v2 | RSO | `Ritual_Studio_Ops/docs/Ritual_Studio_Ops_Merger_Plan_v2.md` | active | Moved from TM folder 2026-05-21 |
 | .env template | RSO | `Ritual_Studio_Ops/.env.template` | active | Environment configuration template |
-| Merged app (RSO v1) | RSO | `Ritual_Studio_Ops/app/ritual-studio-ops-v1.html` | active | Single-file merged shell; Phase 4 write-enabled |
+| Merged app v2 (LIVE) | RSO | `Ritual_Studio_Ops/app/ritual-studio-ops-v2.html` | active | Teachers + Cover; Phase 5 build with manual cover request and emblem badge. The live merged app. |
+| Management Portal (LIVE) | RSO | `Ritual_Studio_Ops/app/index.html` | active | Launcher hub for the new system; carries the emblem badge. Adapted from the legacy CM portal 2026-05-24. |
+| Merged app v1 | RSO | `Ritual_Apps/RSO_archived_duplicates_2026-05-24/ritual-studio-ops-v1.html` | archived | Superseded by v2; truncated/corrupt. Moved to the archive folder on 2026-05-24. |
 | services/momence README | RSO | `Ritual_Studio_Ops/services/momence/README.md` | active | Momence code move instructions |
 | services/cover README | RSO | `Ritual_Studio_Ops/services/cover/README.md` | active | Cover pipeline move instructions (Phase 3) |
 | Test suite Phase 2 | RSO | `Ritual_Studio_Ops/scripts/test_phase2.py` | active | 37 checks — merged shell conventions |
@@ -197,6 +201,11 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Test suite Phase 5 | RSO | `Ritual_Studio_Ops/scripts/test_phase5.py` | active | 28 checks — reconcile script |
 | Reconcile script | RSO | `Ritual_Studio_Ops/scripts/reconcile.py` | active | Daily parallel-run health check; run once per day during Phase 5 soak |
 | Reconcile reports | RSO | `Ritual_Studio_Ops/scripts/reconcile_reports/` | active | Daily plain-text reports written by reconcile.py |
+| Source-of-truth map | RSO | `Ritual_Studio_Ops/docs/SOURCE_OF_TRUTH.md` | active | Which file backs which screen. Read before requesting changes to any dashboard or portal. |
+| Navigation map | RSO | `Ritual_Studio_Ops/docs/NAVIGATION.md` | active | Diagram of how portals, dashboards and external platforms link, plus the Phase 6 Pages consolidation plan. |
+| Setup audit (2026-05-24) | RSO | `Ritual_Studio_Ops/docs/AUDIT-RSO-2026-05-24.md` | active | Latest setup audit with severity-rated findings. |
+| Migration 2026-05-22: source on cover_requests | RSO | `Ritual_Studio_Ops/migrations/2026-05-22-add-source-to-cover-requests.sql` | active | Adds the `source` column distinguishing whatsapp vs manual cover requests. |
+| Edge Function: parse-cover-request | RSO | Supabase project rfjygyqijwgkmxboddup (deployed via MCP) | active | Called by the v2 Manual Cover Request modal. JWT-verified. No local source file in the repo. |
 
 **Tables-and-owners matrix** (updated each migration — 2026-05-merged-v1.sql)
 
@@ -226,3 +235,10 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | `momence_members` | RSO | Phase 1 (2026-05-21) — empty placeholder | RSO | 0 rows. Filled in Phase 7. RLS on. |
 | `momence_bookings` | RSO | Phase 1 (2026-05-21) — empty placeholder | RSO | 0 rows. Filled in Phase 7. RLS on. |
 | `momence_sync_runs` | RSO | Phase 1 (2026-05-21) | RSO | Audit log for Phase 7 sync jobs. RLS on. |
+| `teacher_absences` | TM | 2026-05-27 (migration 2026-05-26-teacher-absences.sql) | TM | 0 rows. RLS on (5 policies). Soft-delete via `deleted_at`. |
+| `membership_types` | external workstream (Data workbook, 2026-05-22) | Pre-existing | Unassigned - RSO Settings -> Reference Data | 187 rows. RLS on. Comment references the Data workbook for Ritual analysis. Needs documented owner. |
+| `class_group_mappings` | external workstream (Data workbook, 2026-05-22) | Pre-existing | Unassigned | 87 rows. RLS on. Class-name to coarse-group mapping. Needs documented owner. |
+| `locations` | external workstream | Pre-existing | Unassigned | 3 rows. RLS on. Overlaps conceptually with `studios` - taxonomy reconciliation pending. |
+| `rooms` | external workstream | Pre-existing | Unassigned | 5 rows. RLS on. |
+| `location_aliases` | external workstream | Pre-existing | Unassigned | 8 rows. RLS on. |
+| `teacher_pay_rate_tiers` | external workstream | Pre-existing | Unassigned | 8 rows. RLS on. |

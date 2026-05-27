@@ -1,14 +1,15 @@
 {
-  "date": "2026-05-26",
+  "date": "2026-05-27",
   "audit_24h": {
     "total": 0,
     "rso": 0,
     "legacy": 0
   },
   "cover_requests": {
-    "approved": 2,
+    "approved": 3,
+    "cancelled": 1,
     "covered": 42,
-    "duplicate_of": 17,
+    "duplicate_of": 18,
     "no_cover_needed": 9,
     "pending_review": 1
   },
