@@ -6,6 +6,15 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-05-28 | Ritual Studio Ops | Fix Cover Dashboard tile: restore link to legacy cover app -- Phase 11 | app/index.html
+
+Cover Dashboard tile in index.html was opening ritual-studio-ops-v2.html#cover (the v2 Studio Ops cover view) instead of the legacy ritual-cover-management.pages.dev/cover_dashboard.html. The tile href and its click-listener override were both changed to v2 during Phase 7 when the session relay was introduced.
+
+Fixes applied to app/index.html:
+1. Restored tile href to https://ritual-cover-management.pages.dev/cover_dashboard.html.
+2. Removed the click-listener override that called _openV2Relay('cover') -- no relay is needed because ritual-cover-management.pages.dev is a different origin and has its own authentication. The <a> tag with target="_blank" rel="noopener" opens the URL directly.
+3. Updated the _openV2Relay comment block to clarify it now serves Teacher Portal only.
+
 ## 2026-05-28 | Ritual Studio Ops | Fix v2 always showing login screen: remove 737-line duplicate code block -- Phase 10 | app/ritual-studio-ops-v2.html
 
 Root cause of v2 always showing its login/auth screen when opened via portal tiles: a 737-line duplicate block of JavaScript had been accidentally inserted into ritual-studio-ops-v2.html starting at line 3033. The duplicated block contained a second declaration of `let pendingBookingPayload = null;` (originally declared at line 2559). Because `let` cannot be re-declared in the same scope, the JavaScript engine threw an uncaught SyntaxError on page load, halting all script execution before the Supabase auth client could initialise. With no `onAuthStateChange` listener registered, `onSignedIn()` never ran, `#authScreen` (CSS default: `display:flex`) remained visible permanently, and the app appeared stuck on the login screen regardless of session state.

@@ -508,3 +508,18 @@ Added localStorage diagnostic logging to _openV2Relay in index.html (visible in 
 **Diagnostic rule:** If v2's console shows no `Auth state change` events after a page load, the Supabase client never initialised. Check for SyntaxErrors first -- they silently abort all script execution. `let`/`const` re-declaration is the most common cause in large single-file apps.
 
 **Applies to:** app/ritual-studio-ops-v2.html. Any large single-file app: always check for duplicate `let`/`const` declarations if the auth listener never fires.
+
+
+---
+
+### L-MG-18 -- Session relay cannot cross origins; direct link is correct for external apps
+
+**Problem:** After Phase 10 fixed the v2 SyntaxError, the Cover Dashboard tile opened ritual-studio-ops-v2.html#cover instead of the legacy Ritual Cover Management app (ritual-cover-management.pages.dev/cover_dashboard.html).
+
+**Cause:** During Phase 7, when the session relay was introduced for the Teacher Portal tile, the Cover Dashboard tile was also redirected through _openV2Relay('cover') on the assumption that v2 would eventually host the cover view. The tile href and its click listener were both changed to target v2. The legacy cover dashboard was never the intended destination after that change -- but the user expected it to remain so.
+
+**Fix (Phase 11):** Restored the Cover Dashboard tile href to https://ritual-cover-management.pages.dev/cover_dashboard.html. Removed the click listener override. The <a> tag with target="_blank" rel="noopener" opens the legacy app directly. No session relay is needed or possible: localStorage is partitioned by origin, so a token written at ritual-studio-ops.pages.dev cannot be read at ritual-cover-management.pages.dev.
+
+**Rule:** Session relay via localStorage only works within the same origin. Tiles that link to a different Cloudflare Pages project (different subdomain) must let the target app handle its own authentication. Never route a cross-origin tile through _openV2Relay().
+
+**Applies to:** app/index.html. Any future portal tile linking to a different Pages project or external domain.

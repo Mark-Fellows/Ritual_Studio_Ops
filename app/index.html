@@ -482,7 +482,7 @@
       <div class="cards">
 
         <a class="card" data-perm="index.tile.cover_dashboard"
-           href="./ritual-studio-ops-v2.html#cover" target="_blank" rel="noopener"
+           href="https://ritual-cover-management.pages.dev/cover_dashboard.html" target="_blank" rel="noopener"
            title="Review pending cover requests, approve or cancel classes, and mark covers complete.">
           <span class="card-tag">Admin</span>
           <div class="card-icon" aria-hidden="true">&#128203;</div>
@@ -1091,23 +1091,18 @@
     });
 
     // -------------------------------------------------------------------------
-    // Cover Dashboard and Teacher Portal tiles -- relay session to v2 app.
+    // Teacher Portal tile -- relay session to v2 app.
     //
-    // Why: both index.html and v2 now use implicit flow (Phase 8 removed PKCE).
-    // Both clients share the same navigator.locks scope on this origin.  The
-    // PKCE client holds the global session lock while its INITIAL_SESSION
-    // listener runs; the v2 client cannot acquire that lock during its own
-    // initialisation and fires INITIAL_SESSION with null, showing the login
-    // screen.  Removing sb.from() calls (Phase 6 / L-MG-13) was necessary but
-    // insufficient -- the lock is held by the client itself, not only by data
-    // queries.
+    // The Cover Dashboard tile (index.tile.cover_dashboard) opens the legacy
+    // ritual-cover-management.pages.dev app directly -- different origin, so
+    // localStorage cannot be shared and no relay is used.  (Phase 10 / L-MG-18)
     //
-    // Fix (Phase 7 / L-MG-14): intercept the tile click, get the current
-    // session, and open v2-relay.html with the tokens in the URL hash.
-    // v2-relay.html calls setSession() to write the session to localStorage
-    // BEFORE v2 loads, so no lock race is possible.  For the Cover Dashboard,
-    // view=cover is included so the relay appends #cover when redirecting and
-    // v2's deep-link routing fires correctly.
+    // Why relay is needed for Teacher Portal: both index.html and v2 use
+    // implicit flow (Phase 8 removed PKCE) and share the same navigator.locks
+    // scope.  Fix (Phase 7 / L-MG-14, Phase 9 / L-MG-16): intercept the tile
+    // click, get the current session, and open v2-relay.html with the tokens in
+    // the URL hash.  v2-relay.html writes localStorage directly (lock-free) and
+    // redirects to ritual-studio-ops-v2.html.
     // -------------------------------------------------------------------------
     async function _openV2Relay(view) {
       // Diagnostic: show localStorage session state in the debug panel.
@@ -1143,11 +1138,9 @@
       window.open(href, '_blank', 'noopener');
     }
 
-    document.querySelector('[data-perm="index.tile.cover_dashboard"]')
-      .addEventListener('click', function (e) {
-        e.preventDefault();
-        _openV2Relay('cover');
-      });
+    // Cover Dashboard tile opens ritual-cover-management.pages.dev directly (different
+    // origin -- localStorage relay cannot cross origins).  No click override needed;
+    // the <a href> with target="_blank" handles it.  (Phase 10 / L-MG-18)
 
     document.querySelector('[data-perm="index.tile.teacher_portal"]')
       .addEventListener('click', function (e) {
