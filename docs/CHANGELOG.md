@@ -6,6 +6,14 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-05-28 | Ritual Studio Ops | Fix v2 always showing login screen: remove 737-line duplicate code block -- Phase 10 | app/ritual-studio-ops-v2.html
+
+Root cause of v2 always showing its login/auth screen when opened via portal tiles: a 737-line duplicate block of JavaScript had been accidentally inserted into ritual-studio-ops-v2.html starting at line 3033. The duplicated block contained a second declaration of `let pendingBookingPayload = null;` (originally declared at line 2559). Because `let` cannot be re-declared in the same scope, the JavaScript engine threw an uncaught SyntaxError on page load, halting all script execution before the Supabase auth client could initialise. With no `onAuthStateChange` listener registered, `onSignedIn()` never ran, `#authScreen` (CSS default: `display:flex`) remained visible permanently, and the app appeared stuck on the login screen regardless of session state.
+
+The duplicate block covered sections: TRAINEE PORTAL (LEGACY TM), BOOKING OWNER MATCH, TRAINEE AVAILABLE TIMESLOTS VIEW, TRAINEE BOOKINGS VIEW, RESOLVE TEACHER ID FOR CURRENT USER, CONFIRM BOOKING MODAL, APPROVALS VIEW, COURSE MANAGER, BACKFILL VIEW, TIMESLOT MANAGER, HELP MODAL, PASSWORD TOGGLES, USER MANAGEMENT (settings page). These sections already existed in the preceding 760 lines. The unique sections following the duplicate (ESCAPE KEY HANDLER, MANUAL COVER REQUEST) were preserved.
+
+Fix: deleted lines 3033-3769 (737 lines) from ritual-studio-ops-v2.html. No duplicate `let`/`const` declarations remain. File reduced from 3,995 to 3,258 lines.
+
 ## 2026-05-28 | Ritual Studio Ops | Fix magic-link login and session persistence -- Phase 8 implicit flow | app/index.html
 
 Root cause of all three reported symptoms (magic links always return to email-entry page when clicked; copy/paste workaround required; session never persists): `flowType: 'pkce'` in index.html's Supabase client. PKCE stores a code verifier in `sessionStorage` of the OTP-requesting tab. Email clients open magic links in a NEW tab with empty sessionStorage, so the PKCE code exchange always fails. The user's copy/paste workaround worked because pasting into the same tab preserved the verifier.

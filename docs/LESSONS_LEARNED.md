@@ -491,3 +491,20 @@ Added localStorage diagnostic logging to _openV2Relay in index.html (visible in 
 **Pattern:** Never create a Supabase JS client in an intermediate relay/trampoline page on the same origin as another Supabase client that may be active. Even a minimal client with autoRefreshToken:false triggers navigator.locks during _initialize() and setSession(). Use direct localStorage manipulation instead.
 
 **Applies to:** app/v2-relay.html (rewritten), app/index.html (_openV2Relay diagnostic). Any future relay or trampoline page on this origin should use localStorage directly rather than a Supabase client.
+
+
+---
+
+### L-MG-17 -- Duplicate code block causes SyntaxError that silently disables all auth
+
+**Problem:** After Phase 9, v2 still showed its login screen on every tile-click. The green portal debug panel confirmed the relay was working and the session was valid. The v2 console showed NO auth state change events -- just a single `Uncaught SyntaxError: Identifier 'pendingBookingPayload' has already been declared` at line 3318.
+
+**Cause:** A 737-line duplicate of the TRAINEE PORTAL / CONFIRM BOOKING MODAL / APPROVALS VIEW / COURSE MANAGER etc. sections had been accidentally pasted into ritual-studio-ops-v2.html starting at line 3033. The duplicated block re-declared `let pendingBookingPayload = null;` (first declared at line 2559). JavaScript `let` and `const` cannot be re-declared in the same scope -- a SyntaxError is thrown synchronously before execution reaches the Supabase auth client initialisation. With no `onAuthStateChange` listener ever registered, `onSignedIn()` never ran, `#authScreen` (CSS default: `display:flex`) stayed visible permanently.
+
+**Why it was hard to diagnose:** The green debug panel in the portal showed the relay running correctly and the session valid in localStorage. The relay itself succeeded. The issue was entirely inside v2 -- and only visible in v2's DevTools console, which showed no auth events at all (the decisive clue). All previous debugging focused on the relay and localStorage, not v2's own JavaScript.
+
+**Fix:** Deleted lines 3033-3769 (737 lines) from ritual-studio-ops-v2.html. Confirmed no duplicate `let`/`const` declarations remain. File reduced from 3,995 to 3,258 lines.
+
+**Diagnostic rule:** If v2's console shows no `Auth state change` events after a page load, the Supabase client never initialised. Check for SyntaxErrors first -- they silently abort all script execution. `let`/`const` re-declaration is the most common cause in large single-file apps.
+
+**Applies to:** app/ritual-studio-ops-v2.html. Any large single-file app: always check for duplicate `let`/`const` declarations if the auth listener never fires.
