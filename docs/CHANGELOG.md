@@ -8,6 +8,14 @@ Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
 ---
 
+## 2026-05-28 | Ritual Studio Ops | Fix Cover Dashboard/Teacher Portal tiles still showing login screen -- Phase 7 session relay | app/v2-relay.html, app/index.html
+
+Phase 6 fix (L-MG-13 -- removing sb.from() calls) was necessary but insufficient. The Supabase JS PKCE client in index.html holds navigator.locks during its INITIAL_SESSION listener execution (not only during data queries); the v2 implicit-flow client in the new tab cannot acquire that lock and fires INITIAL_SESSION with null.
+
+Fix: added app/v2-relay.html. The Cover Dashboard and Teacher Portal tile click handlers in index.html now call sb.auth.getSession(), build a relay URL with the session tokens in the URL hash, and open the relay instead of v2.html directly. The relay calls setSession() (autoRefreshToken:false, detectSessionInUrl:false) to write the session to localStorage before v2 ever loads -- no lock race is possible. For the Cover Dashboard, the relay appends #cover so v2's deep-link switchView('cover') fires correctly. See L-MG-14 in LESSONS_LEARNED.md.
+
+---
+
 ## 2026-05-28 | Ritual Studio Ops | Fix Cover Dashboard and Teacher Portal tiles opening login screen | app/index.html
 
 Root cause: `loadProfileAndPerms` in `index.html` used `sb.from()` Supabase JS client calls for data queries, violating L-TM-01. These calls hold `navigator.locks`, blocking the v2 app from detecting its session when opened in a new tab on the same origin. Result: v2 app fired `INITIAL_SESSION` with null and showed its login screen.

@@ -433,3 +433,24 @@ then run `git log --oneline -4` to confirm.
 **Fix:** Converted both queries in `loadProfileAndPerms` to direct `fetch()` REST calls using the `Authorization: Bearer` header built from `session.access_token`. The function signature changed from `(user)` to `(user, accessToken)` and the call site in `handleSession` passes `session.access_token`. The Supabase JS client in `index.html` is now used exclusively for `sb.auth.*` calls (auth state, signOut, signInWithOtp), which is the L-TM-01 requirement.
 
 **Applies to:** `app/index.html`. Any future portal page that initialises a Supabase JS client and also uses `sb.from()` for queries will reproduce this deadlock when the v2 app is open in a second tab.
+
+---
+
+### L-MG-14 -- navigator.locks deadlock persists after L-MG-13 fix; resolve with a session relay page
+
+**Problem:** After applying the Phase 6 fix (L-MG-13 -- converting `loadProfileAndPerms` from `sb.from()` to direct `fetch()` REST calls), the Cover Dashboard and Teacher Portal tiles in `index.html` still opened `ritual-studio-ops-v2.html` showing a login screen. The fix was correct but insufficient.
+
+**Cause:** The Supabase JS v2 PKCE client in `index.html` holds the global `navigator.locks` session lock not only during `sb.from()` data queries (fixed in L-MG-13) but also for the entire duration of its `onAuthStateChange` listener callback. `index.html` registers an async listener that `await`s `handleSession` --> `loadProfileAndPerms`. Supabase awaits all registered listener callbacks before releasing the lock. During this window (typically 200-600ms after page load, and briefly again on each token refresh), the v2 implicit-flow Supabase client in the new tab cannot acquire the same lock to run its own `_initialize()` / `INITIAL_SESSION` processing. It either times out or returns null, triggering `onSignedOut()` and showing the auth screen.
+
+**Fix:** Added `app/v2-relay.html`. The Cover Dashboard and Teacher Portal tile click handlers in `index.html` were changed from plain `<a>` links to JavaScript handlers that:
+1. Call `sb.auth.getSession()` to obtain the current session.
+2. Build a relay URL: `./v2-relay.html#access_token=...&refresh_token=...&token_type=bearer&view=cover`
+3. Open the relay in a new tab via `window.open(..., '_blank', 'noopener')`.
+
+The relay page creates a minimal Supabase client (`autoRefreshToken: false`, `detectSessionInUrl: false`) and calls `setSession()` to write the validated session to the shared localStorage key **before** v2.html loads. When v2.html loads after the relay's `window.location.replace()`, its Supabase client finds the session in localStorage during `INITIAL_SESSION` with no lock competition. For the Cover Dashboard, the relay appends `#cover` to the destination URL so `v2`'s `switchView('cover')` deep-link fires as expected.
+
+**Fallback:** If `getSession()` fails or returns no session, the handler falls back to opening v2.html directly (the pre-Phase-7 behaviour). The relay gracefully handles a missing or invalid token by skipping `setSession()` and redirecting anyway.
+
+**Pattern:** Whenever opening a same-origin Supabase app from another Supabase app that uses a different auth flow type (PKCE vs. implicit), always pass the session explicitly via a relay that calls `setSession()`. Do not rely on localStorage auto-detection when the opener tab may hold `navigator.locks`.
+
+**Applies to:** `app/v2-relay.html` (new file), `app/index.html` (click handlers for `index.tile.cover_dashboard` and `index.tile.teacher_portal`). Any future portal tile that links to a same-origin Supabase app should use this relay pattern.

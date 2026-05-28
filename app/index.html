@@ -1094,6 +1094,54 @@
       } catch(_) {}
       window.open(href, '_blank', 'noopener');
     });
+
+    // -------------------------------------------------------------------------
+    // Cover Dashboard and Teacher Portal tiles -- relay session to v2 app.
+    //
+    // Why: index.html uses flowType:'pkce'; v2 uses the default implicit flow.
+    // Both clients share the same navigator.locks scope on this origin.  The
+    // PKCE client holds the global session lock while its INITIAL_SESSION
+    // listener runs; the v2 client cannot acquire that lock during its own
+    // initialisation and fires INITIAL_SESSION with null, showing the login
+    // screen.  Removing sb.from() calls (Phase 6 / L-MG-13) was necessary but
+    // insufficient -- the lock is held by the client itself, not only by data
+    // queries.
+    //
+    // Fix (Phase 7 / L-MG-14): intercept the tile click, get the current
+    // session, and open v2-relay.html with the tokens in the URL hash.
+    // v2-relay.html calls setSession() to write the session to localStorage
+    // BEFORE v2 loads, so no lock race is possible.  For the Cover Dashboard,
+    // view=cover is included so the relay appends #cover when redirecting and
+    // v2's deep-link routing fires correctly.
+    // -------------------------------------------------------------------------
+    async function _openV2Relay(view) {
+      // Default fallback: open v2 directly if no session available.
+      var href = './ritual-studio-ops-v2.html' + (view === 'cover' ? '#cover' : '');
+      try {
+        var sessionData = await sb.auth.getSession();
+        var s = sessionData && sessionData.data && sessionData.data.session;
+        if (s && s.access_token) {
+          href = './v2-relay.html' +
+                 '#access_token='  + encodeURIComponent(s.access_token)  +
+                 '&refresh_token=' + encodeURIComponent(s.refresh_token) +
+                 '&token_type=bearer' +
+                 (view ? '&view=' + encodeURIComponent(view) : '');
+        }
+      } catch (_) { /* fall through to direct href */ }
+      window.open(href, '_blank', 'noopener');
+    }
+
+    document.querySelector('[data-perm="index.tile.cover_dashboard"]')
+      .addEventListener('click', function (e) {
+        e.preventDefault();
+        _openV2Relay('cover');
+      });
+
+    document.querySelector('[data-perm="index.tile.teacher_portal"]')
+      .addEventListener('click', function (e) {
+        e.preventDefault();
+        _openV2Relay('');
+      });
   </script>
 <div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new)</div>
 </body>

@@ -1,0 +1,113 @@
+<!--
+  v2-relay.html -- Portal to v2 session relay (Phase 7)
+
+  Why this exists
+  ---------------
+  index.html uses flowType:'pkce'.  ritual-studio-ops-v2.html uses the default
+  implicit flow.  When index.html is open and the user clicks the Cover Dashboard
+  or Teacher Portal tile, both Supabase JS clients share the same localStorage
+  key (sb-rfjygyqijwgkmxboddup-auth-token) and the same navigator.locks scope.
+  The PKCE client holds the global session lock while its INITIAL_SESSION listener
+  runs; the v2 client cannot acquire that lock during its own initialisation and
+  fires INITIAL_SESSION with null, showing the login screen.
+
+  L-MG-13 (Phase 6) tried to fix this by removing sb.from() calls from
+  index.html.  That was necessary but insufficient -- the lock is held by the
+  Supabase client itself during auth-state listener execution, not just during
+  data queries.
+
+  L-MG-14 (Phase 7) -- the correct fix.
+
+  How this page works
+  -------------------
+  1. index.html's tile click handler calls sb.auth.getSession(), builds a URL:
+       ./v2-relay.html#access_token=...&refresh_token=...&token_type=bearer&view=cover
+  2. This page loads in the new tab, reads the tokens from the hash (not sent
+     to the server), creates a minimal Supabase client with autoRefreshToken:false
+     and detectSessionInUrl:false, and calls setSession().
+  3. setSession() writes the validated session to localStorage under the shared
+     key BEFORE the v2 app loads -- no lock race is possible.
+  4. window.location.replace() navigates to ritual-studio-ops-v2.html.
+     For the Cover Dashboard, #cover is appended so v2's deep-link routing fires.
+
+  See docs/LESSONS_LEARNED.md L-MG-14 for the full explanation.
+  See docs/SOURCE_OF_TRUTH.md before editing this file.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ritual Studios</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #2C2118;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid rgba(184, 151, 90, 0.25);
+      border-top-color: #B8975A;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <script>
+    (async function () {
+      'use strict';
+
+      var SUPABASE_URL = 'https://rfjygyqijwgkmxboddup.supabase.co';
+      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmanlneXFpandna' +
+        '214Ym9kZHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDU5MjksImV4cCI6MjA4NzMyMTkyOX0.' +
+        'g40IEOLPDTWnbFYybWL01wZMiE_f2_yor_DKuaSCajU';
+
+      // Tokens are passed in the URL hash so they are never sent to the server.
+      var params        = new URLSearchParams(window.location.hash.substring(1));
+      var accessToken   = params.get('access_token');
+      var refreshToken  = params.get('refresh_token');
+      var view          = params.get('view') || '';   // 'cover' or ''
+
+      if (accessToken && refreshToken) {
+        // Write the session to localStorage before v2 loads.
+        // autoRefreshToken: false  -- this client is discarded immediately after
+        // detectSessionInUrl: false -- we read the hash manually above
+        var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+          auth: {
+            persistSession:    true,
+            autoRefreshToken:  false,
+            detectSessionInUrl: false
+          }
+        });
+        try {
+          var result = await sb.auth.setSession({
+            access_token:  accessToken,
+            refresh_token: refreshToken
+          });
+          if (result.error) {
+            console.warn('[v2-relay] setSession error:', result.error.message);
+          }
+        } catch (e) {
+          console.warn('[v2-relay] setSession exception:', e && e.message ? e.message : String(e));
+        }
+      }
+
+      // Navigate to v2. Pass #cover for the Cover Dashboard deep-link so the
+      // app calls switchView('cover') after onSignedIn() completes.
+      // No auth tokens are in this hash, so the v2 Supabase client will not
+      // attempt to detect them from the URL -- it reads from localStorage only.
+      var dest = './ritual-studio-ops-v2.html' + (view === 'cover' ? '#cover' : '');
+      window.location.replace(dest);
+    })();
+  </script>
+<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/v2-relay.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/v2-relay.html &middot; Portal-to-v2 session relay</div>
+</body>
+</html>
