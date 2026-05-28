@@ -454,3 +454,40 @@ The relay page creates a minimal Supabase client (`autoRefreshToken: false`, `de
 **Pattern:** Whenever opening a same-origin Supabase app from another Supabase app that uses a different auth flow type (PKCE vs. implicit), always pass the session explicitly via a relay that calls `setSession()`. Do not rely on localStorage auto-detection when the opener tab may hold `navigator.locks`.
 
 **Applies to:** `app/v2-relay.html` (new file), `app/index.html` (click handlers for `index.tile.cover_dashboard` and `index.tile.teacher_portal`). Any future portal tile that links to a same-origin Supabase app should use this relay pattern.
+
+
+---
+
+### L-MG-15 -- PKCE flow is fundamentally incompatible with email magic links in multi-tab contexts
+
+**Problem:** After Phases 6 and 7 (navigator.locks fixes), magic links from email still never worked when clicked directly. Users had to manually copy the link URL and paste it into the portal tab. Sessions never persisted across visits. Root cause was not the v2 relay or locks -- it was the auth flow itself.
+
+**Cause:** `flowType: 'pkce'` (Proof Key for Code Exchange) stores a randomly generated code verifier in `sessionStorage` of the tab that called `signInWithOtp()`. When the magic link is clicked in an email client, the OS opens it in a NEW browser tab (or a new window). That new tab has empty `sessionStorage` -- the verifier is gone. The Supabase PKCE exchange sends the `?code=XXXX` parameter to the server but the server requires the verifier to complete the exchange; without it the exchange returns a `code verifier mismatch` error and the flow silently returns to the email-entry page. The user's copy/paste workaround succeeded only because pasting the URL into the SAME tab that generated the OTP preserved `sessionStorage`.
+
+**Fix:** Remove `flowType: 'pkce'` from `supabase.createClient()` in `index.html`. Supabase JS v2 defaults to implicit flow, where magic links contain `#access_token=XXXX&refresh_token=YYYY` directly in the URL hash. No verifier is required. `detectSessionInUrl: true` (already set) picks up the tokens from the hash in whatever tab the link opens in. Sessions persist in localStorage as normal.
+
+**Update `onAuthStateChange`:** With PKCE, `SIGNED_IN` was a deliberate no-op because the session was not ready for REST calls at that moment (the PKCE exchange was still async). With implicit flow, `SIGNED_IN` fires with a fully valid session. Add `event === 'SIGNED_IN'` to the handled events alongside `INITIAL_SESSION` and `TOKEN_REFRESHED`. Use the existing `_authHandled` boolean flag to prevent double-processing if both `SIGNED_IN` and `INITIAL_SESSION` fire for the same magic-link redirect.
+
+**Applies to:** `app/index.html` and any future portal page using `signInWithOtp()` for magic links. Never use `flowType: 'pkce'` with `signInWithOtp()` unless the login flow can guarantee the magic link is opened in the same browser tab (e.g., in-app link, same-origin redirect, custom scheme handler). For email magic links, always use implicit flow (default).
+
+
+---
+
+### L-MG-16 -- Relay using a Supabase JS client causes its own navigator.locks race
+
+**Problem:** After Phase 7 and Phase 8, the Cover Dashboard and Teacher Portal tiles still opened v2 showing a login screen, despite the relay running and the portal's green debug panel showing repeated SIGNED_IN events.
+
+**Cause:** The Phase 7 relay created a Supabase JS client inside the relay tab and called setSession(). In Supabase JS v2, setSession() acquires navigator.locks for the origin (shared across all tabs). This lock acquisition triggered a SIGNED_IN storage event in the portal tab, which caused the portal's onAuthStateChange listener to also briefly acquire the same lock. The v2 app (loading in the relay tab after window.location.replace) then had to wait for the portal to release the lock before its _initialize() could run. In some timing conditions, v2's INITIAL_SESSION fired before localStorage was in the expected state, resulting in a null session and the login screen.
+
+The repeated SIGNED_IN events visible in the portal's debug panel (at 05:07:32, 05:07:36, etc.) were caused by the relay's setSession() writing to localStorage -- confirming the relay WAS running, but also confirming the lock contention.
+
+**Fix (Phase 9):** Rewrote v2-relay.html to eliminate the Supabase JS client entirely:
+1. First checks localStorage for the session already stored by the portal's Phase 8 implicit-flow login. If valid, redirects to v2 immediately with NO writes and NO lock acquisition.
+2. If localStorage is empty or expired, decodes the access_token JWT payload (base64url, no libraries), constructs a minimal compatible session object, and calls localStorage.setItem() directly. This is synchronous and lock-free.
+3. Redirects to ritual-studio-ops-v2.html with the appropriate hash (#cover or empty).
+
+Added localStorage diagnostic logging to _openV2Relay in index.html (visible in green debug panel) to confirm session state at click time.
+
+**Pattern:** Never create a Supabase JS client in an intermediate relay/trampoline page on the same origin as another Supabase client that may be active. Even a minimal client with autoRefreshToken:false triggers navigator.locks during _initialize() and setSession(). Use direct localStorage manipulation instead.
+
+**Applies to:** app/v2-relay.html (rewritten), app/index.html (_openV2Relay diagnostic). Any future relay or trampoline page on this origin should use localStorage directly rather than a Supabase client.

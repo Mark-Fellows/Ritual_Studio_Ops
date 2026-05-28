@@ -404,7 +404,7 @@
 <body class="auth-pending">
 
   <!-- Temporary auth debug panel ------------------------------------------- -->
-  <div id="auth-debug" style="position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.88);color:#39ff14;font:11px/1.5 monospace;padding:6px 10px;max-height:180px;overflow-y:auto;z-index:99999;display:none;"></div>
+  <div id="auth-debug" style="position:fixed;bottom:0;left:0;width:560px;background:rgba(10,40,10,0.95);color:#88EE88;font:10px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:4px 8px;max-height:140px;overflow-y:auto;z-index:8888;border-top-right-radius:6px;border:1px solid rgba(80,180,80,0.3);border-left:none;" title="Auth diagnostics (Phase 8)"></div>
 
   <!-- Login overlay - shown until a Supabase session is available ---------- -->
   <div class="login-overlay" id="login-overlay">
@@ -648,7 +648,6 @@
       'g40IEOLPDTWnbFYybWL01wZMiE_f2_yor_DKuaSCajU';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
-        flowType: 'pkce',
         detectSessionInUrl: true,
         persistSession: true,
         autoRefreshToken: true
@@ -909,16 +908,12 @@
     sb.auth.onAuthStateChange(async (event, session) => {
       try {
         dbg('state change: ' + event + ' ' + (session && session.user && session.user.email || 'no-user'));
-        if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-          // SIGNED_IN is intentionally excluded: with PKCE the Supabase client
-          // is not ready to make authenticated REST calls when SIGNED_IN fires.
-          // Supabase serialises events, so returning here immediately allows
-          // INITIAL_SESSION to fire next — at that point the session is fully
-          // settled in localStorage and REST calls work correctly.
+        if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+          // SIGNED_IN is handled here (not deferred) because we use implicit flow
+          // (flowType:'pkce' removed in Phase 8). With implicit flow the session is
+          // complete when SIGNED_IN fires. _authHandled prevents double-processing
+          // if both SIGNED_IN and INITIAL_SESSION fire for the same magic-link.
           await handleSession(session);
-        } else if (event === 'SIGNED_IN') {
-          dbg('SIGNED_IN received — deferring to INITIAL_SESSION handler');
-          // Intentional no-op: INITIAL_SESSION fires right after this returns.
         } else if (event === 'SIGNED_OUT') {
           _authHandled = false;
           showLogin();
@@ -1098,7 +1093,7 @@
     // -------------------------------------------------------------------------
     // Cover Dashboard and Teacher Portal tiles -- relay session to v2 app.
     //
-    // Why: index.html uses flowType:'pkce'; v2 uses the default implicit flow.
+    // Why: both index.html and v2 now use implicit flow (Phase 8 removed PKCE).
     // Both clients share the same navigator.locks scope on this origin.  The
     // PKCE client holds the global session lock while its INITIAL_SESSION
     // listener runs; the v2 client cannot acquire that lock during its own
@@ -1115,7 +1110,21 @@
     // v2's deep-link routing fires correctly.
     // -------------------------------------------------------------------------
     async function _openV2Relay(view) {
-      // Default fallback: open v2 directly if no session available.
+      // Diagnostic: show localStorage session state in the debug panel.
+      try {
+        var lsRaw = localStorage.getItem('sb-rfjygyqijwgkmxboddup-auth-token');
+        if (lsRaw) {
+          var ls = JSON.parse(lsRaw);
+          var lsNow = Math.floor(Date.now() / 1000);
+          var lsMin = Math.round(((ls.expires_at || 0) - lsNow) / 60);
+          dbg('tile click: localStorage session=' + (ls.access_token ? 'present' : 'missing') +
+              ' user=' + (ls.user && ls.user.email) + ' exp_in=' + lsMin + 'min');
+        } else {
+          dbg('tile click: NO session in localStorage (sb-rfjygyqijwgkmxboddup-auth-token missing)');
+        }
+      } catch (lsErr) { dbg('tile click: localStorage diagnostic error: ' + lsErr.message); }
+
+      // Build relay URL (relay now writes to localStorage without a Supabase client).
       var href = './ritual-studio-ops-v2.html' + (view === 'cover' ? '#cover' : '');
       try {
         var sessionData = await sb.auth.getSession();
@@ -1126,8 +1135,11 @@
                  '&refresh_token=' + encodeURIComponent(s.refresh_token) +
                  '&token_type=bearer' +
                  (view ? '&view=' + encodeURIComponent(view) : '');
+          dbg('relay URL built with token for ' + (s.user && s.user.email));
+        } else {
+          dbg('no active session -- opening v2 directly (will show login)');
         }
-      } catch (_) { /* fall through to direct href */ }
+      } catch (relayErr) { dbg('getSession error: ' + relayErr.message); }
       window.open(href, '_blank', 'noopener');
     }
 

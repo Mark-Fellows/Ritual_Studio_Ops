@@ -6,6 +6,17 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-05-28 | Ritual Studio Ops | Fix magic-link login and session persistence -- Phase 8 implicit flow | app/index.html
+
+Root cause of all three reported symptoms (magic links always return to email-entry page when clicked; copy/paste workaround required; session never persists): `flowType: 'pkce'` in index.html's Supabase client. PKCE stores a code verifier in `sessionStorage` of the OTP-requesting tab. Email clients open magic links in a NEW tab with empty sessionStorage, so the PKCE code exchange always fails. The user's copy/paste workaround worked because pasting into the same tab preserved the verifier.
+
+Fixes applied to app/index.html:
+1. Removed `flowType: 'pkce'` from `supabase.createClient()` -- reverts to implicit flow, where magic links carry `#access_token=...&refresh_token=...` directly in the hash. Works in any tab.
+2. Updated `onAuthStateChange` to include `SIGNED_IN` in the handled events (previously a deliberate no-op because PKCE required deferring to INITIAL_SESSION). With implicit flow SIGNED_IN fires with a complete session. `_authHandled` flag prevents double-processing if both SIGNED_IN and INITIAL_SESSION fire for the same redirect.
+3. Re-enabled the green auth diagnostics panel (`div#auth-debug`, bottom-left of screen) to assist ongoing development.
+
+The Phase 7 session relay (v2-relay.html) is retained as belt-and-suspenders for the navigator.locks race, but with implicit flow now in both index.html and v2, the relay is no longer the critical path. See L-MG-15 in LESSONS_LEARNED.md.
+
 ---
 
 ## 2026-05-28 | Ritual Studio Ops | Fix Cover Dashboard/Teacher Portal tiles still showing login screen -- Phase 7 session relay | app/v2-relay.html, app/index.html

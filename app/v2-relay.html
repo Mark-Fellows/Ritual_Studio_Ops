@@ -1,37 +1,23 @@
 <!--
-  v2-relay.html -- Portal to v2 session relay (Phase 7)
+  v2-relay.html -- Portal to v2 session relay (Phase 7, revised Phase 9)
 
-  Why this exists
-  ---------------
-  index.html uses flowType:'pkce'.  ritual-studio-ops-v2.html uses the default
-  implicit flow.  When index.html is open and the user clicks the Cover Dashboard
-  or Teacher Portal tile, both Supabase JS clients share the same localStorage
-  key (sb-rfjygyqijwgkmxboddup-auth-token) and the same navigator.locks scope.
-  The PKCE client holds the global session lock while its INITIAL_SESSION listener
-  runs; the v2 client cannot acquire that lock during its own initialisation and
-  fires INITIAL_SESSION with null, showing the login screen.
+  How this page works (Phase 9 revision)
+  ---------------------------------------
+  The Phase 7 relay created a full Supabase JS client and called setSession(),
+  which held navigator.locks and triggered SIGNED_IN storage events in the portal
+  tab at the same time v2 was initialising -- creating a lock-race that prevented
+  v2 from getting a valid INITIAL_SESSION.
 
-  L-MG-13 (Phase 6) tried to fix this by removing sb.from() calls from
-  index.html.  That was necessary but insufficient -- the lock is held by the
-  Supabase client itself during auth-state listener execution, not just during
-  data queries.
+  Phase 9 fix: eliminate the Supabase client entirely.
+  1.  Read the session JSON that the portal's implicit-flow login already wrote to
+      localStorage (key: sb-rfjygyqijwgkmxboddup-auth-token).
+  2.  If it is valid (not expired), just redirect -- no write, no lock.
+  3.  If it is missing or expired, decode the access_token from the URL hash, parse
+      the JWT payload, construct a minimal session object, and write it directly to
+      localStorage.  This is lock-free (localStorage.setItem is synchronous).
+  4.  Redirect to ritual-studio-ops-v2.html with the correct hash (#cover or empty).
 
-  L-MG-14 (Phase 7) -- the correct fix.
-
-  How this page works
-  -------------------
-  1. index.html's tile click handler calls sb.auth.getSession(), builds a URL:
-       ./v2-relay.html#access_token=...&refresh_token=...&token_type=bearer&view=cover
-  2. This page loads in the new tab, reads the tokens from the hash (not sent
-     to the server), creates a minimal Supabase client with autoRefreshToken:false
-     and detectSessionInUrl:false, and calls setSession().
-  3. setSession() writes the validated session to localStorage under the shared
-     key BEFORE the v2 app loads -- no lock race is possible.
-  4. window.location.replace() navigates to ritual-studio-ops-v2.html.
-     For the Cover Dashboard, #cover is appended so v2's deep-link routing fires.
-
-  See docs/LESSONS_LEARNED.md L-MG-14 for the full explanation.
-  See docs/SOURCE_OF_TRUTH.md before editing this file.
+  See docs/LESSONS_LEARNED.md L-MG-14 / L-MG-15 / L-MG-16.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -39,15 +25,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ritual Studios</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #2C2118;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      gap: 16px;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
     }
     .spinner {
       width: 32px; height: 32px;
@@ -57,54 +45,105 @@
       animation: spin 0.75s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    #status {
+      color: #88EE88;
+      font-size: 11px;
+      max-width: 420px;
+      text-align: center;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    #status.error { color: #EE8888; }
   </style>
 </head>
 <body>
   <div class="spinner"></div>
+  <div id="status">Checking session...</div>
   <script>
     (async function () {
       'use strict';
 
-      var SUPABASE_URL = 'https://rfjygyqijwgkmxboddup.supabase.co';
-      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmanlneXFpandna' +
-        '214Ym9kZHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDU5MjksImV4cCI6MjA4NzMyMTkyOX0.' +
-        'g40IEOLPDTWnbFYybWL01wZMiE_f2_yor_DKuaSCajU';
-
-      // Tokens are passed in the URL hash so they are never sent to the server.
-      var params        = new URLSearchParams(window.location.hash.substring(1));
-      var accessToken   = params.get('access_token');
-      var refreshToken  = params.get('refresh_token');
-      var view          = params.get('view') || '';   // 'cover' or ''
-
-      if (accessToken && refreshToken) {
-        // Write the session to localStorage before v2 loads.
-        // autoRefreshToken: false  -- this client is discarded immediately after
-        // detectSessionInUrl: false -- we read the hash manually above
-        var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-          auth: {
-            persistSession:    true,
-            autoRefreshToken:  false,
-            detectSessionInUrl: false
-          }
-        });
-        try {
-          var result = await sb.auth.setSession({
-            access_token:  accessToken,
-            refresh_token: refreshToken
-          });
-          if (result.error) {
-            console.warn('[v2-relay] setSession error:', result.error.message);
-          }
-        } catch (e) {
-          console.warn('[v2-relay] setSession exception:', e && e.message ? e.message : String(e));
-        }
+      var STORAGE_KEY = 'sb-rfjygyqijwgkmxboddup-auth-token';
+      var $s = document.getElementById('status');
+      function log(msg, isError) {
+        $s.textContent = msg;
+        if (isError) $s.classList.add('error');
+        console.info('[v2-relay]', msg);
       }
 
-      // Navigate to v2. Pass #cover for the Cover Dashboard deep-link so the
-      // app calls switchView('cover') after onSignedIn() completes.
-      // No auth tokens are in this hash, so the v2 Supabase client will not
-      // attempt to detect them from the URL -- it reads from localStorage only.
+      // --- Parse view param from URL hash ---
+      var params   = new URLSearchParams(window.location.hash.substring(1));
+      var view     = params.get('view') || '';
+      var urlToken = params.get('access_token');
+      var urlRefresh = params.get('refresh_token');
       var dest = './ritual-studio-ops-v2.html' + (view === 'cover' ? '#cover' : '');
+
+      // --- Step 1: check if portal already stored a valid session ---
+      var now = Math.floor(Date.now() / 1000);
+      var stored = null;
+      try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch(e) {}
+
+      if (stored && stored.access_token && stored.expires_at && stored.expires_at > now - 30) {
+        var minLeft = Math.round((stored.expires_at - now) / 60);
+        log('Session OK (' + minLeft + ' min remaining). Opening v2...');
+        await new Promise(function(r) { setTimeout(r, 900); });
+        window.location.replace(dest);
+        return;
+      }
+
+      // --- Step 2: no valid session in localStorage -- try writing from URL tokens ---
+      log('No valid session in localStorage. Trying URL tokens...');
+
+      if (!urlToken || !urlRefresh) {
+        log('ERROR: No session and no tokens in URL.\nv2 will show its login screen.', true);
+        await new Promise(function(r) { setTimeout(r, 2500); });
+        window.location.replace(dest);
+        return;
+      }
+
+      // Decode JWT payload (base64url, no library needed)
+      function decodeJwt(token) {
+        try {
+          var b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+          var pad = b64.length % 4;
+          if (pad) b64 += '='.repeat(4 - pad);
+          return JSON.parse(atob(b64));
+        } catch(e) { return null; }
+      }
+
+      var payload = decodeJwt(urlToken);
+      if (!payload || !payload.sub) {
+        log('ERROR: Could not decode access_token JWT.\nv2 will show its login screen.', true);
+        await new Promise(function(r) { setTimeout(r, 2500); });
+        window.location.replace(dest);
+        return;
+      }
+
+      // Build minimal session compatible with Supabase JS v2 storage format
+      var sessionObj = {
+        access_token:  urlToken,
+        token_type:    'bearer',
+        expires_in:    payload.exp - now,
+        expires_at:    payload.exp,
+        refresh_token: urlRefresh,
+        user: {
+          id:             payload.sub,
+          aud:            payload.aud  || 'authenticated',
+          role:           payload.role || 'authenticated',
+          email:          payload.email || '',
+          app_metadata:   payload.app_metadata  || {},
+          user_metadata:  payload.user_metadata || {}
+        }
+      };
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionObj));
+        log('Session written from URL token. Opening v2...');
+      } catch(e) {
+        log('ERROR: localStorage.setItem failed: ' + e.message, true);
+      }
+
+      await new Promise(function(r) { setTimeout(r, 900); });
       window.location.replace(dest);
     })();
   </script>
