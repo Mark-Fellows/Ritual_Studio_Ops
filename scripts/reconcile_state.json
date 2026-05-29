@@ -1,5 +1,5 @@
 {
-  "date": "2026-05-29",
+  "date": "2026-05-30",
   "audit_24h": {
     "total": 0,
     "rso": 0,
@@ -12,11 +12,7 @@
     "no_cover_needed": 9,
     "cancelled": 1
   },
-  "trainee_bookings": {
-    "rejected": 9,
-    "approved": 2,
-    "cancelled": 1
-  },
+  "trainee_bookings": {},
   "teachers": {
     "count": 0
   }
