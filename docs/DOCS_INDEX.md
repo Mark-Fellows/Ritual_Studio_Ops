@@ -4,7 +4,7 @@
 
 A document is not considered created until this index is updated. If a document is not listed here, it does not officially exist. Two entries for the same topic means one is a duplicate — mark the older as `superseded` and consolidate.
 
-Last updated: 2026-05-24 (Phase 5 in progress; cleanup pass)
+Last updated: 2026-05-29 (Phase 6; Finance & Cashflow dashboard added)
 Maintained by: Ritual Studio Ops project (Claude as PM)
 
 ---
@@ -192,6 +192,7 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | .env template | RSO | `Ritual_Studio_Ops/.env.template` | active | Environment configuration template |
 | Merged app v2 (LIVE) | RSO | `Ritual_Studio_Ops/app/ritual-studio-ops-v2.html` | active | Teachers + Cover; Phase 5 build — teacher absence tracking, per-teacher panel, global absences view, on-leave sidebar pill, CRUD modal, soft-delete archive. The live merged app. |
 | Management Portal (LIVE) | RSO | `Ritual_Studio_Ops/app/index.html` | active | Launcher hub for the new system; carries the emblem badge. Adapted from the legacy CM portal 2026-05-24. |
+| Finance & Cashflow dashboard | RSO | `Ritual_Studio_Ops/app/finance-cashflow.html` | active | v1 (2026-05-29). Static client-side cashflow dashboard opened from the portal Finance tile. Embeds Xero Stripe-settlement actuals Jul 2025 - Feb 2026; 13-week rolling forecast with editable assumptions. No auth gate yet (see PORTAL-DEVELOPER.md security note). |
 | Merged app v1 | RSO | `Ritual_Apps/RSO_archived_duplicates_2026-05-24/ritual-studio-ops-v1.html` | archived | Superseded by v2; truncated/corrupt. Moved to the archive folder on 2026-05-24. |
 | services/momence README | RSO | `Ritual_Studio_Ops/services/momence/README.md` | active | Momence code move instructions |
 | services/cover README | RSO | `Ritual_Studio_Ops/services/cover/README.md` | active | Cover pipeline move instructions (Phase 3) |

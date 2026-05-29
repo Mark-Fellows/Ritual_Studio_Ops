@@ -6,6 +6,40 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-05-29 | Ritual Studio Ops | Add Finance & Cashflow tile + cashflow dashboard -- Phase 6 | app/index.html, app/finance-cashflow.html, app/_headers, docs/PORTAL-DEVELOPER.md, docs/DOCS_INDEX.md
+
+New tile "Finance & Cashflow" added to the Internal tools section of app/index.html (between Ritual Dashboard and Ritual Campaigns), opening a new same-origin dashboard app/finance-cashflow.html. Supports the "Fix Ritual cash flow" work.
+
+The tile intentionally has NO data-perm attribute (visible to all signed-in users), following the Ritual Campaigns tile pattern: the code "index.tile.finance" does not exist in v_role_permissions_resolved (confirmed via Supabase MCP before the change), so adding data-perm would grey the tile for every user. No schema migration was made.
+
+finance-cashflow.html (v1) is a self-contained, static, client-side dashboard - no Supabase, no live DB. It embeds the Xero Stripe-settlement actuals for Jul 2025 - Feb 2026 (cash-in) from the "Xero Backfill & Financial Model Update" session summary (25 Mar 2026) and provides: a KPI snapshot; an actuals chart comparing Stripe cash-in vs the overstated prior Momence sales figures; an editable-assumption 13-week rolling cashflow forecast (opening cash, monthly revenue + trend, instructor/rent/other-opex, AP, BAS, super) with a closing-balance line chart and negative-week shading; a week-by-week table; the data-quality flags (unexplained Xero Operating Expense bucket, unreconciled "Other Income", unknown opening balance, rent basis); and the outstanding-items checklist. Assumptions persist to browser localStorage only. Chart.js loaded from jsdelivr CDN. _headers updated with a no-cache rule for the new page.
+
+Note: the page has no auth gate of its own yet - it inherits no protection beyond the obscurity of its URL. Decision pending on whether to gate it (portal magic-link auth) before exposing sensitive financials. Not yet deployed or committed -- pending review.
+
+## 2026-05-28 | Cover Management (legacy) | NLP correction feedback loop — audit script, analyzer, few-shot injection | stage2/nlp_correction_audit.py, stage2/nlp_prompt_analyzer.py, stage2/nlp_parser.py, SCHEMA.md, DEVELOPER.md, setup_scheduled_tasks.ps1
+
+Three new components close the loop between manual classification corrections (made via the dashboard Edit Classification form) and the NLP classifier.
+
+nlp_correction_audit.py (daily 07:00): queries whatsapp_messages for rows where manual_type_override differs from message_type, upserts them into stage2/nlp_corrections.json, enforces a 25-active-entry cap (oldest excess entries marked superseded), and triggers the analyzer early if the cap is reached.
+
+nlp_prompt_analyzer.py (Monday 07:10, or early trigger): loads active corrections, groups them by misclassification pattern, calls Claude (Haiku) for a meta-analysis, and writes a proposal markdown file to stage2/nlp_prompt_proposals/nlp_proposal_YYYY-MM-DD.md for manual review. Does not auto-modify the system prompt.
+
+nlp_parser.py: new _load_active_corrections() method loads nlp_corrections.json at parser startup. _build_context() now accepts an active_corrections parameter and prepends human-verified few-shot examples to every Claude/Gemini API call, immediately improving classification without a prompt edit.
+
+SCHEMA.md: documented manual_type_override, override_by, override_note, override_at columns on whatsapp_messages; added invariant note that message_type is written once by the NLP parser and never overwritten. DEVELOPER.md: added full NLP Correction Feedback Loop section covering architecture, json structure, 25-entry cap rationale, scheduled task details, and manual promotion workflow. setup_scheduled_tasks.ps1 and two .bat wrappers added for the new tasks.
+
+## 2026-05-28 | Cover Management (legacy) | Dashboard v1.3.23 — Other tab, corrections filter, refresh fix, override_by audit trail | public/cover_dashboard.html, migrations/2026-05-28-add-override-by-whatsapp-messages.sql, stage2/nlp_parser.py
+
+Four improvements to the legacy cover dashboard and supporting NLP.
+
+Other tab: added a fifth message-type filter tab (Other) to the WhatsApp feed so messages classified as other are visible and filterable without navigating away.
+
+Corrections filter: added a Corrections dropdown (All / Corrected only / NLP only) alongside the existing Sort filter so admins can quickly isolate messages that have been manually reclassified versus those still showing the original NLP result.
+
+Refresh interval fix: the feed was refreshing every 60 seconds regardless of the value saved in Settings. startAutoRefresh() now reads refresh_interval from localStorage and restarts the timer whenever Settings are saved. Background refreshes no longer clear the container with a loading spinner or cause the page to jump — the scroll position is preserved on every background update.
+
+override_by audit trail: the Edit Classification form now writes the admin's initials (from the admin_initials localStorage setting, up to 5 chars) to the new override_by column on whatsapp_messages. The correction indicator on each message card shows the initials alongside the original and corrected type. Migration 2026-05-28-add-override-by-whatsapp-messages.sql adds the column (applied to shared Supabase project rfjygyqijwgkmxboddup). NLP REJECTION prompt expanded with informal/brief decline phrases (Can't, Nope, Clash, Away too, etc.) and a context rule that short replies in a cover channel must be classified as rejection unless clearly unrelated to cover.
+
 ## 2026-05-28 | Ritual Studio Ops | Fix Cover Dashboard tile: restore link to legacy cover app -- Phase 11 | app/index.html
 
 Cover Dashboard tile in index.html was opening ritual-studio-ops-v2.html#cover (the v2 Studio Ops cover view) instead of the legacy ritual-cover-management.pages.dev/cover_dashboard.html. The tile href and its click-listener override were both changed to v2 during Phase 7 when the session relay was introduced.
@@ -52,7 +86,7 @@ Fix: converted both data queries (user_profiles lookup and v_role_permissions_re
 
 ---
 
-## 2026-05-27 | Ritual Studio Ops | Teacher absence tracking — per-teacher panel, global view, on-leave sidebar pill, CRUD modal, soft-delete archive, five RLS policies; migration applied via Supabase MCP | app/ritual-studio-ops-v2.html, migrations/2026-05-27-teacher-absences.sql
+## 2026-05-27 | Teacher Management | Teacher absence tracking — per-teacher panel, global view, on-leave sidebar pill, CRUD modal, soft-delete archive, five RLS policies; migration applied via Supabase MCP | app/ritual-studio-ops-v2.html, migrations/2026-05-27-teacher-absences.sql
 
 ---
 
@@ -290,7 +324,7 @@ Sign-off: `SIGNOFF-coverage-type-2026-04-21.md`
 Fallback logic for sender name extraction when WhatsApp DOM heuristic fails.
 Source: `CHANGELOG-2026-04-13-nlp-sender-fallback.md`
 
-#### 2026-04-08 | CM | Stage 1 schema — initial CM schema
+#### 2026-04-08 | CM | Stage 1 schema - initial CM schema
 Created: `cover_requests`, `cover_candidates`, `cover_notifications`, `whatsapp_channels`, `whatsapp_monitor_runs`, `discipline_mappings`, `system_config`. Extended `teachers` with `whatsapp_phone` and `contact_preference`.
 Migration: `stage1/01_cover_schema.sql`
 
