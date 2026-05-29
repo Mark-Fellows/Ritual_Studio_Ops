@@ -56,6 +56,25 @@ is needed. A protective HTML comment in `app/index.html` repeats this warning.
 
 ---
 
+### The Finance & Cashflow tile — ungated by design
+
+**The Finance & Cashflow tile (`id="finance-tile"`) has NO `data-perm` attribute,
+for the same reason as the Campaigns tile.**
+
+The code `index.tile.finance` does not exist in `v_role_permissions_resolved`, so
+adding `data-perm` would grey the tile for every user. It is currently visible to all
+signed-in users. The tile opens `./finance-cashflow.html` (same origin). If the tile must
+be role-gated later, add `index.tile.finance` to `role_permissions` via a migration first,
+confirm it appears in `v_role_permissions_resolved`, and only then add the `data-perm`
+attribute. A protective HTML comment in `app/index.html` repeats this.
+
+**Security note - `finance-cashflow.html` has no auth gate.** v1 is a static client-side
+dashboard with figures embedded in the HTML; anyone with the URL can read them. Unlike the
+portal and the merged app, it does not require a Supabase login. Before treating the page as
+protected, either add the portal's magic-link auth gate (implicit flow - see L-MG-15) or
+move the financial figures behind an authenticated data source. A matching no-cache rule for
+`/finance-cashflow.html` exists in `app/_headers`.
+
 ## Cache headers (`app/_headers`)
 
 All HTML files must be served with `Cache-Control: no-cache, no-store, must-revalidate`
@@ -84,4 +103,5 @@ The `app/` directory is the deployment root.
 
 | Date       | Issue | Fix | Notes |
 |------------|-------|-----|-------|
-| 2026-05-26 | Campaigns tile greyed — `data-perm` code absent from DB view; no cache headers | Removed `data-perm`; added `app/_headers` with no-cache; added protective HTML comment | See `docs/CHANGELOG-2026-05-26-portal-campaign-tile.md` |
+| 2026-05-26 | Campaigns tile greyed - `data-perm` code absent from DB view; no cache headers | Removed `data-perm`; added `app/_headers` with no-cache; added protective HTML comment | See `docs/CHANGELOG-2026-05-26-portal-campaign-tile.md` |
+| 2026-05-29 | Finance tile added (no `data-perm`, Campaigns pattern); new `finance-cashflow.html` dashboard | Added tile + page + `_headers` rule; documented no-auth-gate security note | See CHANGELOG 2026-05-29 |

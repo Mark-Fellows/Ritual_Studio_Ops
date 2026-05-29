@@ -521,6 +521,25 @@
         </a>
 
         <!--
+          Finance &amp; Cashflow tile. Opens the same-origin cashflow dashboard finance-cashflow.html.
+          Intentionally has NO data-perm: the code "index.tile.finance" does NOT exist in
+          v_role_permissions_resolved, so adding data-perm would immediately grey the tile for
+          all users (the same trap as the Campaign tile below). Visible to all signed-in users
+          by design. If role-gating is required later, add "index.tile.finance" to role_permissions
+          via migration FIRST, confirm it appears in v_role_permissions_resolved, and only THEN add
+          the data-perm attribute. Note: finance-cashflow.html is a static client-side dashboard with
+          no auth gate of its own yet - see docs/PORTAL-DEVELOPER.md before exposing sensitive figures.
+        -->
+        <a class="card" id="finance-tile"
+           href="./finance-cashflow.html" target="_blank" rel="noopener"
+           title="Cashflow dashboard - Stripe-settled actuals and a 13-week rolling forecast for Ritual Studios.">
+          <span class="card-tag">Finance</span>
+          <div class="card-icon" aria-hidden="true">&#128176;</div>
+          <h2>Finance &amp; Cashflow</h2>
+          <p>Stripe-settled actuals and a 13-week rolling cash forecast.</p>
+        </a>
+
+        <!--
           IMPORTANT — Ritual Campaigns tile must NOT have a data-perm attribute.
           The permission code "index.tile.ritual_campaigns" does NOT exist in the
           v_role_permissions_resolved view, so adding data-perm would immediately
@@ -1149,5 +1168,8 @@
       });
   </script>
 <div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new)</div>
+</body>
+</html>
+index.html &middot; Management Portal (new)</div>
 </body>
 </html>

@@ -1,0 +1,405 @@
+<!--
+  LIVE FILE - Ritual Finance & Cashflow dashboard
+  URL:        https://ritual-studio-ops.pages.dev/finance-cashflow.html
+  Version:    v1 (2026-05-29) - first build. Opened from the portal "Finance & Cashflow" tile.
+  Data basis: Xero Stripe-settlement actuals Jul 2025 - Feb 2026 (cash-in), embedded.
+              Source: "Xero Backfill & Financial Model Update" session summary, 25 Mar 2026.
+  Note:       Static client-side tool. No Supabase / no live DB. Assumptions are editable
+              in-browser and are NOT persisted server-side (held in localStorage only).
+  Before editing, confirm with: docs/SOURCE_OF_TRUTH.md
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ritual Studios &mdash; Finance &amp; Cashflow</title>
+  <link rel="icon" type="image/png" href="./images/ritual-logo.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-dark:#2D5016; --green-mid:#4A7C59; --green-light:#8DB87F; --green-bg:#EEF5E9;
+      --bg:#F4F6F8; --card:#FFFFFF; --border:#E2E8F0; --text:#1A1A2E; --text-muted:#6B7280;
+      --red:#B91C1C; --red-bg:#FEE2E2; --amber:#92400E; --amber-bg:#FEF3C7; --blue:#1E3A8A;
+      --radius:14px; --shadow:0 2px 16px rgba(0,0,0,0.08);
+    }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:var(--bg); color:var(--text); min-height:100vh; }
+    .header { background:var(--green-dark); color:#fff; padding:20px; position:relative; }
+    .header h1 { font-size:18px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; }
+    .header p { font-size:12px; color:rgba(255,255,255,0.75); margin-top:4px; }
+    .header .back { position:absolute; right:20px; top:50%; transform:translateY(-50%);
+      color:#fff; text-decoration:none; font-size:12px; border:1px solid rgba(255,255,255,0.3);
+      padding:6px 12px; border-radius:999px; }
+    .header .back:hover { background:rgba(255,255,255,0.15); }
+    .main { max-width:1120px; margin:0 auto; padding:28px 20px 80px; }
+    .section { margin-bottom:30px; }
+    .section-title { font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.12em; color:var(--text-muted); margin-bottom:12px; padding-left:2px; }
+    /* KPI strip */
+    .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; }
+    .kpi { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:16px 16px 14px; }
+    .kpi .label { font-size:11px; text-transform:uppercase; letter-spacing:0.05em;
+      color:var(--text-muted); font-weight:700; }
+    .kpi .value { font-size:24px; font-weight:800; color:var(--green-dark); margin-top:6px; }
+    .kpi .sub { font-size:11px; color:var(--text-muted); margin-top:4px; }
+    .kpi.warn .value { color:var(--red); }
+    /* Cards / panels */
+    .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:20px; }
+    .grid-2 { display:grid; grid-template-columns:1.1fr 0.9fr; gap:18px; }
+    @media (max-width:860px){ .grid-2{ grid-template-columns:1fr; } }
+    .panel h3 { font-size:14px; font-weight:700; color:var(--green-dark); margin-bottom:4px; }
+    .panel .hint { font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.5; }
+    /* Assumptions form */
+    .assume { display:grid; grid-template-columns:1fr 1fr; gap:12px 16px; }
+    .assume .full { grid-column:1 / -1; }
+    .field label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;
+      color:var(--text-muted); font-weight:700; margin-bottom:4px; }
+    .field input { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px;
+      font-size:14px; font-family:inherit; }
+    .field input:focus { outline:none; border-color:var(--green-mid); box-shadow:0 0 0 3px var(--green-bg); }
+    .field .note { font-size:10px; color:var(--text-muted); margin-top:3px; line-height:1.35; }
+    .field .note.flag { color:var(--amber); font-weight:600; }
+    .btn-row { margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; }
+    .btn { padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--card);
+      color:var(--text); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
+    .btn.primary { background:var(--green-dark); color:#fff; border-color:var(--green-dark); }
+    .btn:hover { background:var(--green-bg); }
+    .btn.primary:hover { background:var(--green-mid); }
+    /* Tables */
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { padding:8px 10px; text-align:right; border-bottom:1px solid var(--border); }
+    th:first-child, td:first-child { text-align:left; }
+    thead th { font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted);
+      background:var(--green-bg); position:sticky; top:0; }
+    tbody tr.neg td { background:var(--red-bg); }
+    tbody td.bal { font-weight:700; }
+    tbody td.bal.negv { color:var(--red); }
+    .table-wrap { max-height:420px; overflow:auto; border:1px solid var(--border); border-radius:10px; }
+    /* Flags / lists */
+    .flagbox { border-left:4px solid var(--amber); background:var(--amber-bg); color:var(--amber);
+      padding:12px 14px; border-radius:8px; font-size:13px; line-height:1.55; margin-bottom:10px; }
+    .flagbox.red { border-left-color:var(--red); background:var(--red-bg); color:var(--red); }
+    .items { list-style:none; }
+    .items li { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; line-height:1.5; }
+    .items li:last-child { border-bottom:none; }
+    .pri { flex:0 0 auto; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+      padding:2px 7px; border-radius:6px; height:fit-content; }
+    .pri.high { background:var(--red-bg); color:var(--red); }
+    .pri.med { background:var(--amber-bg); color:var(--amber); }
+    .pri.low { background:var(--green-bg); color:var(--green-mid); }
+    .chart-box { position:relative; height:300px; }
+    .footer { text-align:center; padding:18px; font-size:11px; color:var(--text-muted); }
+    .legend-note { font-size:11px; color:var(--text-muted); margin-top:8px; line-height:1.5; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Finance &amp; Cashflow</h1>
+    <p>Ritual Studios &middot; cash-basis view (Xero Stripe settlements) &middot; FY2026</p>
+    <a class="back" href="./index.html">&larr; Portal</a>
+  </div>
+
+  <div class="main">
+
+    <!-- KPI STRIP -->
+    <div class="section">
+      <div class="section-title">Snapshot</div>
+      <div class="kpis" id="kpis"></div>
+    </div>
+
+    <!-- ACTUALS -->
+    <div class="section">
+      <div class="section-title">Actual cash-in (Jul 2025 - Feb 2026)</div>
+      <div class="panel">
+        <h3>Stripe settlements vs prior Momence figures</h3>
+        <p class="hint">Stripe settlements are the true cash received (deposits net of fees). The
+          prior Momence figures recorded <em>sales</em> at point of booking and overstated cash in
+          Dec-Feb, when multi-month memberships were sold but charged incrementally.</p>
+        <div class="chart-box"><canvas id="actualsChart"></canvas></div>
+        <p class="legend-note">8-month Stripe cash-in totals <strong id="totalIn"></strong>
+          (avg <strong id="avgIn"></strong>/mth). Trailing 3-month average
+          <strong id="t3In"></strong>/mth is the basis for the forecast revenue default.</p>
+      </div>
+    </div>
+
+    <!-- FORECAST + ASSUMPTIONS -->
+    <div class="section">
+      <div class="section-title">13-week rolling cashflow forecast</div>
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Projected closing bank balance</h3>
+          <p class="hint">Driven by the assumptions on the right. Weeks where the balance falls
+            below zero are shaded red - that is the cash-runway warning.</p>
+          <div class="chart-box"><canvas id="forecastChart"></canvas></div>
+          <p class="legend-note" id="runwayNote"></p>
+        </div>
+        <div class="panel">
+          <h3>Assumptions</h3>
+          <p class="hint">Edit any figure; the forecast recalculates instantly. Saved to this
+            browser only.</p>
+          <div class="assume" id="assumeForm"></div>
+          <div class="btn-row">
+            <button class="btn primary" id="recalc">Recalculate</button>
+            <button class="btn" id="reset">Reset to defaults</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORECAST TABLE -->
+    <div class="section">
+      <div class="section-title">Week-by-week detail</div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table id="forecastTable">
+            <thead><tr>
+              <th>Week beginning</th><th>Cash in</th><th>Operating out</th>
+              <th>One-offs</th><th>Net</th><th>Closing balance</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA QUALITY FLAGS -->
+    <div class="section">
+      <div class="section-title">Data-quality flags - read before relying on these numbers</div>
+      <div class="panel">
+        <div class="flagbox red"><strong>Operating Expense bucket unexplained.</strong> Xero shows a
+          catch-all "Operating Expense" of $36k-$90k/month with no breakdown - this almost certainly
+          contains payroll/wages paid outside the Fitness Instructors bills account. The forecast's
+          "Other operating costs" line is a placeholder estimate until the bookkeeper provides an
+          account-level breakdown. Treat projected burn as indicative, not exact.</div>
+        <div class="flagbox red"><strong>Xero P&amp;L not yet meaningful.</strong> Most non-Stripe
+          income sits in "Other Income" lump sums ($300k-$554k/month) - likely unreconciled bank-feed
+          items (transfers, loan receipts), not trading income. A Stripe-to-Xero reconciliation
+          (Synder or A2X) is required before the Xero P&amp;L can be trusted. This dashboard
+          deliberately uses Stripe settlements only.</div>
+        <div class="flagbox"><strong>Opening cash balance unknown.</strong> The model starts from the
+          opening-cash assumption you enter. Obtain the actual Xero bank balance and set it - every
+          projected balance shifts by that amount.</div>
+        <div class="flagbox"><strong>Rent basis.</strong> Palm Beach rent $9,438 confirmed (unknown
+          whether gross or net of body corporate/rates/water). Both-studios months show ~$12,800;
+          Robina adds ~$3,360. Confirm against the lease.</div>
+      </div>
+    </div>
+
+    <!-- OUTSTANDING ITEMS -->
+    <div class="section">
+      <div class="section-title">Outstanding items to close the model</div>
+      <div class="panel">
+        <ul class="items" id="outstanding"></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">Ritual Studios &middot; Finance &amp; Cashflow v1 &middot; cash-basis, Stripe-settled</div>
+
+  <div data-file-id="rso-file-footer" title="Click to copy path"
+    onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/finance-cashflow.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)"
+    style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/finance-cashflow.html &middot; Finance &amp; Cashflow (new)</div>
+
+  <script>
+  // ---- Embedded actuals: Xero Stripe settlements = cash in (AUD) ----
+  var ACTUALS = [
+    { m:'Jul 25', stripe:100364, momence:93784 },
+    { m:'Aug 25', stripe:84722,  momence:95385 },
+    { m:'Sep 25', stripe:77738,  momence:82947 },
+    { m:'Oct 25', stripe:79313,  momence:82167 },
+    { m:'Nov 25', stripe:84199,  momence:93259 },
+    { m:'Dec 25', stripe:72631,  momence:142224 },
+    { m:'Jan 26', stripe:78538,  momence:163648 },
+    { m:'Feb 26', stripe:62058,  momence:132469 }
+  ];
+  var totalIn = ACTUALS.reduce(function(s,r){return s+r.stripe;},0);
+  var avgIn = Math.round(totalIn/ACTUALS.length);
+  var t3 = ACTUALS.slice(-3);
+  var t3In = Math.round(t3.reduce(function(s,r){return s+r.stripe;},0)/3);
+
+  // ---- Default assumptions ----
+  var DEFAULTS = {
+    openingCash: 0,
+    monthlyRevenue: t3In,            // trailing 3-month Stripe average
+    monthlyGrowthPct: 0,             // optional revenue trend, % per month
+    instructorsMonthly: 26000,       // revised base from Xero bills (was $35k)
+    rentMonthly: 12800,              // both studios; Palm Beach alone ~9,438
+    otherOpexMonthly: 40000,         // PLACEHOLDER - unexplained Xero opex incl. likely payroll
+    apOutstanding: 37652,            // outstanding bills (AP), paid in week 2
+    basAmount: 18000, basDue: '2026-07-28',
+    superAmount: 11000, superDue: '2026-07-28'
+  };
+  var FIELDS = [
+    { k:'openingCash', label:'Opening cash balance ($)', note:'UNKNOWN - obtain actual Xero bank balance.', flag:true },
+    { k:'monthlyRevenue', label:'Monthly cash in ($)', note:'Default = trailing 3-month Stripe average.' },
+    { k:'monthlyGrowthPct', label:'Revenue trend (% / month)', note:'Compounding. Recent trend is negative; 0 = flat.' },
+    { k:'instructorsMonthly', label:'Instructor cost / month ($)', note:'Xero bills $23k-$29k; base $26k.' },
+    { k:'rentMonthly', label:'Rent / month ($)', note:'Both studios ~$12,800; PB alone ~$9,438.' },
+    { k:'otherOpexMonthly', label:'Other operating costs / month ($)', note:'PLACEHOLDER - unexplained Xero opex, likely payroll. Confirm.', flag:true },
+    { k:'apOutstanding', label:'Bills payable now / AP ($)', note:'Outstanding supplier bills, applied in week 2.' },
+    { k:'basAmount', label:'BAS / GST amount ($)', note:'Estimate ~$18k per quarter; confirm with bookkeeper/ATO.', flag:true },
+    { k:'basDue', label:'BAS due date', note:'Applied in the matching forecast week.', date:true },
+    { k:'superAmount', label:'Superannuation amount ($)', note:'Estimate ~$11k per quarter; confirm via ATO super.', flag:true },
+    { k:'superDue', label:'Super due date', note:'Applied in the matching forecast week.', date:true }
+  ];
+  var WEEKS = 13;
+  var LS_KEY = 'ritual_cashflow_assumptions_v1';
+
+  function loadAssumptions(){
+    var a = JSON.parse(JSON.stringify(DEFAULTS));
+    try { var s = localStorage.getItem(LS_KEY); if(s){ var o = JSON.parse(s); for(var k in o){ if(k in a) a[k]=o[k]; } } } catch(e){}
+    return a;
+  }
+  function saveAssumptions(a){ try { localStorage.setItem(LS_KEY, JSON.stringify(a)); } catch(e){} }
+  function readForm(){
+    var a = {};
+    FIELDS.forEach(function(f){
+      var el = document.getElementById('f_'+f.k);
+      if(f.date){ a[f.k] = el.value; }
+      else { var v = parseFloat(el.value); a[f.k] = isNaN(v)?0:v; }
+    });
+    return a;
+  }
+  var fmt = new Intl.NumberFormat('en-AU',{ style:'currency', currency:'AUD', maximumFractionDigits:0 });
+  function money(n){ return fmt.format(Math.round(n)); }
+
+  function mondayOf(d){ var x = new Date(d); var day = x.getDay(); var diff = (day===0?-6:1-day); x.setDate(x.getDate()+diff); x.setHours(0,0,0,0); return x; }
+  function fmtDate(d){ return d.toLocaleDateString('en-AU',{ day:'2-digit', month:'short' }); }
+
+  function buildForecast(a){
+    var start = mondayOf(new Date()); start.setDate(start.getDate()+7); // next week
+    var weeklyOpex = (a.instructorsMonthly + a.rentMonthly + a.otherOpexMonthly) * 12 / 52;
+    var basDue = a.basDue ? new Date(a.basDue) : null;
+    var superDue = a.superDue ? new Date(a.superDue) : null;
+    var rows = []; var bal = a.openingCash;
+    for(var i=0;i<WEEKS;i++){
+      var ws = new Date(start); ws.setDate(ws.getDate()+i*7);
+      var we = new Date(ws); we.setDate(we.getDate()+7);
+      var monthIndex = i/4.345;
+      var growth = Math.pow(1 + (a.monthlyGrowthPct/100), monthIndex);
+      var cashIn = (a.monthlyRevenue * 12 / 52) * growth;
+      var oneOff = 0; var labels = [];
+      if(i===1 && a.apOutstanding){ oneOff += a.apOutstanding; labels.push('AP bills'); }
+      if(basDue && basDue>=ws && basDue<we && a.basAmount){ oneOff += a.basAmount; labels.push('BAS'); }
+      if(superDue && superDue>=ws && superDue<we && a.superAmount){ oneOff += a.superAmount; labels.push('Super'); }
+      var net = cashIn - weeklyOpex - oneOff;
+      bal += net;
+      rows.push({ ws:ws, cashIn:cashIn, opex:weeklyOpex, oneOff:oneOff, labels:labels, net:net, bal:bal });
+    }
+    return rows;
+  }
+
+  var actualsChart, forecastChart;
+  function render(a){
+    // KPIs
+    var monthlyNet = a.monthlyRevenue - (a.instructorsMonthly + a.rentMonthly + a.otherOpexMonthly);
+    var kpis = [
+      { label:'Latest cash-in (Feb)', value:money(62058), sub:'Stripe settlements' },
+      { label:'Trailing 3-mo avg', value:money(t3In)+'/mo', sub:'Dec-Feb cash in' },
+      { label:'Modelled monthly net', value:money(monthlyNet)+'/mo', sub:'revenue minus opex', warn:(monthlyNet<0) },
+      { label:'Outstanding bills (AP)', value:money(a.apOutstanding), sub:'payable now' },
+      { label:'BAS + Super (est.)', value:money(a.basAmount+a.superAmount), sub:'per quarter, unconfirmed' }
+    ];
+    document.getElementById('kpis').innerHTML = kpis.map(function(k){
+      return '<div class="kpi'+(k.warn?' warn':'')+'"><div class="label">'+k.label+'</div>'+
+             '<div class="value">'+k.value+'</div><div class="sub">'+k.sub+'</div></div>';
+    }).join('');
+    document.getElementById('totalIn').textContent = money(totalIn);
+    document.getElementById('avgIn').textContent = money(avgIn);
+    document.getElementById('t3In').textContent = money(t3In);
+
+    // Forecast
+    var rows = buildForecast(a);
+    var tbody = document.querySelector('#forecastTable tbody');
+    tbody.innerHTML = rows.map(function(r){
+      var oneOffTxt = r.oneOff ? money(-r.oneOff)+(r.labels.length?' ('+r.labels.join(', ')+')':'') : '-';
+      return '<tr'+(r.bal<0?' class="neg"':'')+'>'+
+        '<td>'+fmtDate(r.ws)+'</td>'+
+        '<td>'+money(r.cashIn)+'</td>'+
+        '<td>'+money(-r.opex)+'</td>'+
+        '<td>'+oneOffTxt+'</td>'+
+        '<td>'+money(r.net)+'</td>'+
+        '<td class="bal'+(r.bal<0?' negv':'')+'">'+money(r.bal)+'</td></tr>';
+    }).join('');
+
+    var minBal = Math.min.apply(null, rows.map(function(r){return r.bal;}));
+    var firstNeg = rows.find(function(r){return r.bal<0;});
+    var rn = document.getElementById('runwayNote');
+    if(firstNeg){ rn.innerHTML = '<strong style="color:var(--red)">Cash runs negative</strong> in the week beginning '+fmtDate(firstNeg.ws)+'. Lowest projected balance '+money(minBal)+'.'; }
+    else { rn.innerHTML = 'Balance stays positive across 13 weeks. Lowest projected balance '+money(minBal)+'.'; }
+
+    // Charts
+    if(actualsChart) actualsChart.destroy();
+    actualsChart = new Chart(document.getElementById('actualsChart'), {
+      type:'bar',
+      data:{ labels:ACTUALS.map(function(r){return r.m;}),
+        datasets:[
+          { label:'Stripe cash in', data:ACTUALS.map(function(r){return r.stripe;}), backgroundColor:'#4A7C59' },
+          { label:'Prior Momence (sales)', data:ACTUALS.map(function(r){return r.momence;}), backgroundColor:'#D6E4CF' }
+        ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom' },
+          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+money(c.parsed.y); } } } },
+        scales:{ y:{ ticks:{ callback:function(v){ return '$'+(v/1000)+'k'; } } } } }
+    });
+    if(forecastChart) forecastChart.destroy();
+    forecastChart = new Chart(document.getElementById('forecastChart'), {
+      type:'line',
+      data:{ labels:rows.map(function(r){return fmtDate(r.ws);}),
+        datasets:[{ label:'Closing balance', data:rows.map(function(r){return Math.round(r.bal);}),
+          borderColor:'#2D5016', backgroundColor:'rgba(74,124,89,0.12)', fill:true, tension:0.25,
+          pointBackgroundColor:rows.map(function(r){return r.bal<0?'#B91C1C':'#2D5016';}) }]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false },
+          tooltip:{ callbacks:{ label:function(c){ return 'Balance: '+money(c.parsed.y); } } } },
+        scales:{ y:{ ticks:{ callback:function(v){ return '$'+(v/1000)+'k'; } },
+          grid:{ color:function(ctx){ return ctx.tick.value===0?'#B91C1C':'#E2E8F0'; } } } } }
+    });
+  }
+
+  // Outstanding items (from session summary)
+  var ITEMS = [
+    { p:'high', t:'Stripe-to-Xero reconciliation (Synder or A2X) - required before the Xero P&L is meaningful.' },
+    { p:'high', t:'Opening July 2025 cash balance - obtain actual from Xero bank; model currently starts from your entered figure.' },
+    { p:'high', t:'Palm Beach outgoings - $9,438 confirmed; verify gross vs net (body corporate, rates, water) against the lease.' },
+    { p:'high', t:'BAS / GST arrears - confirm actual position with bookkeeper / ATO (model estimates ~$18k per quarter).' },
+    { p:'high', t:'Superannuation arrears - confirm via ATO super portal (model estimates ~$11k per quarter).' },
+    { p:'med',  t:'Operating Expense bucket - request account-level breakdown; $36k-$90k/month likely includes payroll.' },
+    { p:'low',  t:'Studio tracking categories - if Robina and Palm Beach are Xero tracking categories, add for per-studio P&L.' }
+  ];
+  document.getElementById('outstanding').innerHTML = ITEMS.map(function(it){
+    return '<li><span class="pri '+it.p+'">'+it.p+'</span><span>'+it.t+'</span></li>';
+  }).join('');
+
+  // Build the assumptions form
+  function buildForm(a){
+    document.getElementById('assumeForm').innerHTML = FIELDS.map(function(f){
+      var val = a[f.k];
+      var type = f.date ? 'date' : 'number';
+      return '<div class="field"><label>'+f.label+'</label>'+
+        '<input id="f_'+f.k+'" type="'+type+'" value="'+val+'">'+
+        '<div class="note'+(f.flag?' flag':'')+'">'+f.note+'</div></div>';
+    }).join('');
+  }
+
+  var current = loadAssumptions();
+  buildForm(current);
+  render(current);
+
+  document.getElementById('recalc').addEventListener('click', function(){
+    current = readForm(); saveAssumptions(current); render(current);
+  });
+  document.getElementById('reset').addEventListener('click', function(){
+    current = JSON.parse(JSON.stringify(DEFAULTS)); saveAssumptions(current); buildForm(current); render(current);
+  });
+  document.getElementById('assumeForm').addEventListener('input', function(){
+    current = readForm(); saveAssumptions(current); render(current);
+  });
+  </script>
+</body>
+</html>

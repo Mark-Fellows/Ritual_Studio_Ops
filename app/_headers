@@ -1,4 +1,4 @@
-# Cloudflare Pages — explicit cache and security headers.
+# Cloudflare Pages - explicit cache and security headers.
 # Cache-Control: no-cache on HTML files ensures browsers and the CDN always
 # fetch a fresh copy after a deployment (prevents stale cached tiles).
 
@@ -8,6 +8,11 @@
   Cache-Control: no-cache, no-store, must-revalidate
 
 /index.html
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/finance-cashflow.html
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Cache-Control: no-cache, no-store, must-revalidate

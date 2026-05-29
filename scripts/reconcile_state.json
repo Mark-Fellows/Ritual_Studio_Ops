@@ -1,5 +1,5 @@
 {
-  "date": "2026-05-28",
+  "date": "2026-05-29",
   "audit_24h": {
     "total": 0,
     "rso": 0,
@@ -7,10 +7,9 @@
   },
   "cover_requests": {
     "duplicate_of": 18,
-    "covered": 44,
-    "approved": 2,
+    "covered": 47,
+    "approved": 3,
     "no_cover_needed": 9,
-    "pending_review": 2,
     "cancelled": 1
   },
   "trainee_bookings": {
