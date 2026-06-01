@@ -1,12 +1,23 @@
 {
-  "date": "2026-05-31",
+  "date": "2026-06-01",
   "audit_24h": {
     "total": 0,
     "rso": 0,
     "legacy": 0
   },
-  "cover_requests": {},
-  "trainee_bookings": {},
+  "cover_requests": {
+    "duplicate_of": 18,
+    "covered": 47,
+    "pending_review": 4,
+    "no_cover_needed": 9,
+    "approved": 3,
+    "cancelled": 1
+  },
+  "trainee_bookings": {
+    "rejected": 9,
+    "approved": 2,
+    "cancelled": 1
+  },
   "teachers": {
     "count": 0
   }
