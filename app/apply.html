@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<!-- Ritual Studios - Public Teacher Application form. v1 (Phase 6). -->
+<!-- Same origin as ritual-studio-ops.pages.dev. No Supabase JS client (calls Edge Functions by fetch). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teach at Ritual Studios - Application</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F8F4EE;--warm-white:#FDFAF6;--sand:#E8DDD0;--stone:#C4B5A0;--earth:#8B7355;
+    --bark:#5C4A32;--deep:#2C2118;--gold:#B8975A;--gold-light:#D4B87A;--muted-green:#7A8C6E;
+    --text-secondary:#6B5B47;--text-muted:#9C8B78;--border:#DDD4C8;--border-light:#EDE6DC;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream);color:var(--deep);font-family:'DM Sans',sans-serif;font-weight:300;font-size:14px;line-height:1.5;}
+  header{background:var(--deep);color:var(--cream);padding:22px 24px;}
+  header .logo{font-family:'Cormorant Garamond',serif;font-size:26px;letter-spacing:0.04em;}
+  header .logo i{color:var(--gold-light);}
+  header .sub{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--stone);margin-top:2px;}
+  .wrap{max-width:680px;margin:28px auto;padding:0 18px 60px;}
+  .card{background:var(--warm-white);border:1px solid var(--border-light);border-radius:14px;padding:26px;}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:30px;margin:0 0 6px;}
+  p.lead{color:var(--text-secondary);margin:0 0 22px;}
+  label{display:block;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin:18px 0 6px;}
+  .req:after{content:' *';color:var(--gold);}
+  input[type=text],input[type=email],input[type=tel],textarea,input[type=file]{
+    width:100%;padding:10px 12px;background:var(--cream);border:1px solid var(--border);border-radius:8px;
+    font-family:'DM Sans',sans-serif;font-size:14px;color:var(--deep);outline:none;transition:border-color .15s;}
+  input:focus,textarea:focus{border-color:var(--earth);}
+  textarea{min-height:96px;resize:vertical;}
+  .checks{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:4px;}
+  .checks label{display:flex;align-items:center;gap:7px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--deep);margin:0;font-weight:300;cursor:pointer;}
+  .checks input{width:auto;}
+  .hint{font-size:11px;color:var(--text-muted);margin-top:4px;}
+  .btn{display:inline-block;border:none;border-radius:9px;padding:12px 22px;font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:0.04em;cursor:pointer;transition:all .15s;}
+  .btn-gold{background:var(--gold);color:#fff;}.btn-gold:hover{background:var(--earth);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .msg{padding:11px 14px;border-radius:8px;font-size:13px;margin:14px 0;display:none;}
+  .msg.err{display:block;background:#F0D0C8;border:1px solid #D4A090;color:#7A2A1A;}
+  .msg.ok{display:block;background:#D6E8D2;border:1px solid #A8C89A;color:#2A5A2A;}
+  .step{display:none;}.step.active{display:block;}
+  .footer{text-align:center;color:var(--text-muted);font-size:11px;margin-top:18px;}
+  .code-input{letter-spacing:0.5em;text-align:center;font-size:20px;}
+</style>
+</head>
+<body>
+<header><div class="logo">Ritual <i>Studios</i></div><div class="sub">Teacher Application</div></header>
+<div class="wrap">
+
+  <!-- STEP 1: FORM -->
+  <div id="step1" class="step active">
+    <div class="card">
+      <h1>Teach at Ritual</h1>
+      <p class="lead">Tell us about you. After you submit, we will email you a code to confirm your address. Our team verifies your mobile separately.</p>
+      <div id="formMsg" class="msg"></div>
+
+      <label class="req" for="fName">Name</label>
+      <input type="text" id="fName" autocomplete="name">
+
+      <label class="req" for="fEmail">Email address</label>
+      <input type="email" id="fEmail" autocomplete="email">
+
+      <label class="req" for="fPhone">Telephone number</label>
+      <input type="tel" id="fPhone" autocomplete="tel">
+
+      <label class="req">Which disciplines do you have experience teaching?</label>
+      <div class="checks" id="fDisc">
+        <label><input type="checkbox" value="Reformer Pilates">Reformer Pilates</label>
+        <label><input type="checkbox" value="Mat Pilates">Mat Pilates</label>
+        <label><input type="checkbox" value="Barre">Barre</label>
+        <label><input type="checkbox" value="Yoga">Yoga</label>
+        <label><input type="checkbox" value="Yin">Yin</label>
+      </div>
+
+      <label for="fExp">Please give details of your experience and training</label>
+      <textarea id="fExp"></textarea>
+
+      <label for="fStyle">Please give details of your teaching style and technique</label>
+      <textarea id="fStyle"></textarea>
+
+      <label for="fVideo">Link to a video of you teaching a class (a trial class is fine)</label>
+      <input type="text" id="fVideo" placeholder="https://...">
+
+      <label for="fAvail">Give details of your availability</label>
+      <input type="text" id="fAvail">
+
+      <label class="req" for="fLocated">Where are you located?</label>
+      <input type="text" id="fLocated">
+
+      <label class="req">Which studio are you available to teach at?</label>
+      <div class="checks" id="fStudios">
+        <label><input type="checkbox" value="Palm Beach">Palm Beach</label>
+        <label><input type="checkbox" value="Robina">Robina</label>
+      </div>
+
+      <label class="req" for="fCv">Please upload your CV</label>
+      <input type="file" id="fCv" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      <div class="hint">PDF, DOC or DOCX. Maximum 1 MB.</div>
+
+      <div style="margin-top:24px;">
+        <button class="btn btn-gold" id="submitBtn" onclick="submitForm()">Submit application</button>
+      </div>
+    </div>
+    <div class="footer">Ritual Palm Beach &middot; Robina</div>
+  </div>
+
+  <!-- STEP 2: EMAIL VERIFICATION -->
+  <div id="step2" class="step">
+    <div class="card">
+      <h1>Confirm your email</h1>
+      <p class="lead">We sent a code to <strong id="vEmail"></strong>. Enter it below to confirm your application. Check your spam folder if it does not arrive within a minute.</p>
+      <div id="verifyMsg" class="msg"></div>
+      <label class="req" for="vCode">Verification code</label>
+      <input type="text" id="vCode" class="code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="8">
+      <div style="margin-top:20px;">
+        <button class="btn btn-gold" id="verifyBtn" onclick="verifyCode()">Confirm email</button>
+      </div>
+    </div>
+    <div class="footer">Ritual Palm Beach &middot; Robina</div>
+  </div>
+
+  <!-- STEP 3: DONE -->
+  <div id="step3" class="step">
+    <div class="card" style="text-align:center;">
+      <h1>Thank you</h1>
+      <p class="lead">Your application has been received and your email is confirmed. Our team will be in touch and will verify your mobile number directly. We look forward to meeting you.</p>
+    </div>
+    <div class="footer">Ritual Palm Beach &middot; Robina</div>
+  </div>
+
+</div>
+
+<script>
+  var SUPABASE_URL = 'https://rfjygyqijwgkmxboddup.supabase.co';
+  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmanlneXFpandna214Ym9kZHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDU5MjksImV4cCI6MjA4NzMyMTkyOX0.g40IEOLPDTWnbFYybWL01wZMiE_f2_yor_DKuaSCajU';
+  var state = { teacher_id:null, email:null };
+
+  function headers(){ return { 'Content-Type':'application/json', 'apikey':ANON, 'Authorization':'Bearer '+ANON }; }
+  function show(id){ ['step1','step2','step3'].forEach(function(s){ document.getElementById(s).classList.toggle('active', s===id); }); window.scrollTo(0,0); }
+  function msg(id, text, ok){ var el=document.getElementById(id); el.textContent=text; el.className='msg '+(ok?'ok':'err'); }
+  function clearMsg(id){ var el=document.getElementById(id); el.className='msg'; el.textContent=''; }
+  function checked(containerId){ return Array.prototype.slice.call(document.querySelectorAll('#'+containerId+' input:checked')).map(function(c){return c.value;}); }
+
+  function readFileBase64(file){
+    return new Promise(function(resolve,reject){
+      var r=new FileReader();
+      r.onload=function(){ var s=r.result.toString(); resolve(s.substring(s.indexOf(',')+1)); };
+      r.onerror=reject; r.readAsDataURL(file);
+    });
+  }
+
+  async function submitForm(){
+    clearMsg('formMsg');
+    var name=document.getElementById('fName').value.trim();
+    var email=document.getElementById('fEmail').value.trim();
+    var phone=document.getElementById('fPhone').value.trim();
+    var disciplines=checked('fDisc');
+    var studios=checked('fStudios');
+    var located=document.getElementById('fLocated').value.trim();
+    var cvFile=document.getElementById('fCv').files[0];
+
+    if(!name){ return msg('formMsg','Please enter your name.'); }
+    if(!email){ return msg('formMsg','Please enter your email address.'); }
+    if(!phone){ return msg('formMsg','Please enter your telephone number.'); }
+    if(!disciplines.length){ return msg('formMsg','Please select at least one discipline.'); }
+    if(!located){ return msg('formMsg','Please tell us where you are located.'); }
+    if(!studios.length){ return msg('formMsg','Please select at least one studio.'); }
+    if(!cvFile){ return msg('formMsg','Please upload your CV.'); }
+    if(cvFile.size>1048576){ return msg('formMsg','Your CV is larger than 1 MB. Please upload a smaller file.'); }
+
+    var parts=name.split(/\s+/);
+    var first_name=parts[0];
+    var last_name=parts.length>1?parts.slice(1).join(' '):'-';
+
+    var btn=document.getElementById('submitBtn'); btn.disabled=true; btn.textContent='Submitting...';
+    try{
+      var cv_base64=await readFileBase64(cvFile);
+      var payload={
+        first_name:first_name, last_name:last_name, email:email, phone:phone,
+        disciplines:disciplines, studios:studios,
+        experience_training:document.getElementById('fExp').value.trim(),
+        teaching_style:document.getElementById('fStyle').value.trim(),
+        video_url:document.getElementById('fVideo').value.trim(),
+        availability_text:document.getElementById('fAvail').value.trim(),
+        located_text:located,
+        cv_base64:cv_base64, cv_filename:cvFile.name, cv_contenttype:cvFile.type||'application/octet-stream'
+      };
+      var res=await fetch(SUPABASE_URL+'/functions/v1/submit-teacher-application',{ method:'POST', headers:headers(), body:JSON.stringify(payload) });
+      var j=await res.json();
+      if(!res.ok || !j.ok){ throw new Error(j.error||('Submission failed ('+res.status+').')); }
+      state.teacher_id=j.teacher_id; state.email=email;
+      document.getElementById('vEmail').textContent=email;
+      if(j.email_sent===false){ msg('verifyMsg','We saved your application but could not send the email automatically. Please contact the studio to confirm your address.', false); }
+      show('step2');
+    }catch(e){ msg('formMsg', e.message||'Something went wrong. Please try again.'); }
+    btn.disabled=false; btn.textContent='Submit application';
+  }
+
+  async function verifyCode(){
+    clearMsg('verifyMsg');
+    var code=document.getElementById('vCode').value.trim();
+    if(!code){ return msg('verifyMsg','Please enter the code from your email.'); }
+    var btn=document.getElementById('verifyBtn'); btn.disabled=true; btn.textContent='Confirming...';
+    try{
+      var res=await fetch(SUPABASE_URL+'/functions/v1/verify-application-otp',{ method:'POST', headers:headers(), body:JSON.stringify({ teacher_id:state.teacher_id, email:state.email, code:code }) });
+      var j=await res.json();
+      if(!res.ok || !j.ok){ throw new Error(j.error||'That code was not valid. Please try again.'); }
+      show('step3');
+    }catch(e){ msg('verifyMsg', e.message); }
+    btn.disabled=false; btn.textContent='Confirm email';
+  }
+</script>
+</body>
+</html>

@@ -48,6 +48,8 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Booking flow test | TM | `Ritual_Teacher_Management/BOOKING_FLOW_TEST.md` | active | Test plan for trainee booking flow |
 | Booking test results | TM | `Ritual_Teacher_Management/BOOKING_TEST_RESULTS.md` | active | Execution results of above |
 | Teacher Absences design spec | TM | `Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Absences_Design.md` | active | Full design spec: data model, RLS, API pattern, UI layout, migration plan. Approved and implemented 2026-05-27. |
+| Teacher Applications design spec | TM | `Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Applications_Design.md` | active | Public teacher-application intake + Applicants review. Data model (status flag), RLS, Edge Functions, WhatsApp paused, import plan. rev 3, 2026-06-01. |
+| Public application form | RSO | `Ritual_Studio_Ops/app/apply.html` | active | Public unauthenticated teacher application form + email-code verification. Calls submit-teacher-application and verify-application-otp. Deploy with Pages; link from website. |
 | Merger plan prompt | TM | `Ritual_Teacher_Management/prompts/find_skills_for_merger.md` | legacy | Working note from merger planning; superseded by this programme |
 
 **Migrations (TM)**
@@ -57,6 +59,8 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | 2026-04-05: add teacher photo and momence fields | `Ritual_Teacher_Management/migrations/2026-04-05-add-teacher-photo-and-momence.sql` | Yes |
 | 2026-04-07: add trainee-bookings user_id | `Ritual_Teacher_Management/migrations/2026-04-07-add-trainee-bookings-user-id.sql` | Yes |
 | 2026-05-27: teacher_absences table, indexes, RLS | `Ritual_Studio_Ops/migrations/2026-05-27-teacher-absences.sql` | Yes — applied via Supabase MCP 2026-05-27 |
+| 2026-06-01: teacher applications (columns, application_otps, config seed) | `Ritual_Studio_Ops/migrations/2026-06-01-teacher-applications.sql` | Yes — applied via Supabase MCP 2026-06-01 |
+| 2026-06-01: teacher-cvs storage bucket + read policy | `Ritual_Studio_Ops/migrations/2026-06-01-teacher-cvs-bucket.sql` | Yes — applied via Supabase MCP 2026-06-01 |
 
 **App versions (TM)**
 

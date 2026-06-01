@@ -6,6 +6,24 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-06-01 | Teacher Management | Public teacher applications: applicant intake model, Applicants review view, manual mobile verify, approve-and-provision, soft reject, duplicate flagging; 31 Asana applicants imported -- Phase 6 | app/ritual-studio-ops-v2.html, migrations/2026-06-01-teacher-applications.sql, Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Applications_Design.md
+
+Adds a public teacher-application capability using a status flag on the shared teachers table (status: active | applicant | rejected) rather than a separate table.
+
+Migration 2026-06-01-teacher-applications.sql (applied via Supabase MCP, additive only): adds status, experience_training, teaching_style, video_url, availability_text, located_text, cv_url, email_verified, phone_verified, applied_at, source, possible_duplicate, duplicate_notes, rejected_at, rejected_by to teachers; teachers_status_check constraint; idx_teachers_status and idx_teachers_email_lower; new application_otps table (RLS on, service-role only, email channel; whatsapp channel reserved); seeds system_config row whatsapp_new_teachers_invite_url. Existing 80 teachers backfilled to status='active' (verified: 0 non-active before import).
+
+v2 app (ritual-studio-ops-v2.html, bumped to Phase 6): loadData now splits fetched rows into teachers (active) and applicants (status='applicant'); applicants are excluded from the sidebar, counts, allocation check and availability. New "New Applicants (n)" button in the Management Suite opens renderApplicantsView -- a table with email/mobile verified badges, possible-duplicate warning, grade-2 discipline pills, locations, CV/video link, and an expandable experience/teaching-style/availability panel. Actions: markApplicantVerified (manual email/mobile verify, audited), approveApplicant (gated on both verified; provisions a teacher login via the existing create-user Edge Function then sets status='active'), rejectApplicant (soft status='rejected', records rejected_at/by). All gated on canEditTeachers and WRITES_ENABLED.
+
+Data import: 31 teacher applications from Recruitment.xlsx (Asana export, 2026 submissions only) inserted via Supabase MCP as status='applicant', email_verified=false, phone_verified=false, source='asana_recruitment_import'. Chosen disciplines set to grade 2; studios mapped to active locations (Mermaid dropped per L-MG-03); 2 flagged possible_duplicate; 3 surnames set to '(surname pending)'.
+
+WhatsApp mobile verification is deliberately NOT automated (paused pending WhatsApp Business activation); mobile is verified manually by an administrator.
+
+Public intake (built same day): app/apply.html (public, unauthenticated form + email-code step, no Supabase JS client). Edge Functions deployed via Supabase MCP with verify_jwt=false (no local source, per the create-user precedent): submit-teacher-application (validates, dedupe-checks, inserts applicant with grades=2, uploads CV, sends email OTP), verify-application-otp (confirms the email code, sets email_verified), approve-applicant (called by the v2 Approve action; reconciles the email-OTP auth user by setting password/role and upserting user_profiles). Private storage bucket teacher-cvs created (pdf/doc/docx, 1 MB; authenticated read policy) via migration 2026-06-01-teacher-cvs-bucket.sql. v2 Approve now calls approve-applicant and CV opens via a signed URL.
+
+Email verification uses Supabase Auth email OTP (signInWithOtp/verifyOtp), which creates a pending auth user at submit; approve-applicant finalises it on approval. CONFIG REQUIRED before public launch: the Supabase email OTP template must expose {{ .Token }} so applicants receive a 6-digit code, and apply.html must be deployed to Pages and linked from the website.
+
+Note: during this edit the OneDrive mount truncated ritual-studio-ops-v2.html via the Edit tool (see L-MG-19); the file was rebuilt from git HEAD with edits re-applied in-sandbox and written back with a byte-count/closing-tag verification.
+
 ## 2026-05-29 | Ritual Studio Ops | Add Finance & Cashflow tile + cashflow dashboard -- Phase 6 | app/index.html, app/finance-cashflow.html, app/_headers, docs/PORTAL-DEVELOPER.md, docs/DOCS_INDEX.md
 
 New tile "Finance & Cashflow" added to the Internal tools section of app/index.html (between Ritual Dashboard and Ritual Campaigns), opening a new same-origin dashboard app/finance-cashflow.html. Supports the "Fix Ritual cash flow" work.

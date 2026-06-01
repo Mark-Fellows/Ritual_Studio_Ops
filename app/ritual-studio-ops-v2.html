@@ -2,7 +2,10 @@
   LIVE FILE - Ritual Studio Ops, merged app (Teachers + Cover)
   URL:        https://ritual-studio-ops.pages.dev/ritual-studio-ops-v2.html
   Reached:    From the Management Portal cards
-  Identifier: emblem badge top-left, "v2 - Phase 5" stamp in header
+  Identifier: emblem badge top-left, "v2 - Phase 6" stamp in header
+  Phase 6: public teacher applications - applicant intake, Applicants review
+           view, manual mobile verify, approve-and-provision, reject (soft),
+           duplicate flagging; applicants excluded from the live roster.
   Before editing, confirm with: docs/SOURCE_OF_TRUTH.md
 -->
 <!-- RSO v2 — Phase 5: teacher absence tracking -->
@@ -336,7 +339,7 @@
             <div class="header-logo">Ritual <span>Studios</span></div>
             <div class="header-sep"></div>
             <div class="header-subtitle">Studio Ops</div>
-            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 5">v2 &middot; Phase 5</div>
+            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 6">v2 &middot; Phase 6</div>
             <div class="header-sep" style="margin-left:8px;"></div>
             <button class="nav-btn" id="navTeachers" onclick="switchView('teachers')">Teachers</button>
             <button class="nav-btn" id="navCover" onclick="switchView('cover')">Cover</button>
@@ -613,6 +616,7 @@
         // ═══════════════════════════════════════════════════════════════════
         let cachedSession = null;
         let teachers = [];
+        let applicants = [];
         let editingTimeslotId = null;
         let classHistory = [];
         let selectedTeacherId = null;
@@ -939,7 +943,11 @@
                     const rows = await dbGet(`teachers?id=eq.${currentUserProfile.teacher_id}&select=*`);
                     teachers = rows || [];
                 } else {
-                    teachers = await dbGet('teachers?select=*&order=first_name.asc');
+                    const allRows = await dbGet('teachers?select=*&order=first_name.asc') || [];
+                    // Applicants (public intake) are kept out of the live roster, sidebar,
+                    // counts, allocation and availability. Reviewed in the Applicants view.
+                    applicants = allRows.filter(t => t.status === 'applicant');
+                    teachers = allRows.filter(t => t.status !== 'applicant' && t.status !== 'rejected');
                 }
                 classHistory = await dbGet(`class_history?date=gte.${ninetyDaysAgo}&select=*&order=date.desc`);
                 await loadAllAbsences();
@@ -1264,6 +1272,7 @@
             if (mgmtRoles.includes(currentUserRole)) {
                 html += `<div style="border-top:1px solid var(--border-light);margin:10px 0;padding-top:10px;">
                     <div class="sidebar-label">Management Suite</div>
+                    <button class="btn btn-secondary" style="width:100%;margin-bottom:5px;font-size:11px;" onclick="renderApplicantsView()">New Applicants (${applicants.length})</button>
                     <button class="btn btn-secondary" style="width:100%;margin-bottom:5px;font-size:11px;" onclick="renderApprovalsView()">📋 Approvals Queue</button>
                     <button class="btn btn-secondary" style="width:100%;margin-bottom:5px;font-size:11px;" onclick="renderCourseManager()">📚 Course Manager</button>
                     <button class="btn btn-secondary" style="width:100%;margin-bottom:5px;font-size:11px;" onclick="renderTimeslotManager()">⏰ Timeslot Manager</button>
@@ -1277,6 +1286,120 @@
         // ═══════════════════════════════════════════════════════════════════
         // TEACHER SELECTION & TABS
         // ═══════════════════════════════════════════════════════════════════
+        // ===================================================================
+        // APPLICANTS VIEW (public teacher applications)
+        // ===================================================================
+        async function openCv(path) {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/teacher-cvs/${path}`, { method:'POST', headers: authHeaders(), body: JSON.stringify({ expiresIn: 300 }) });
+                const j = await res.json();
+                if (res.ok && j.signedURL) { window.open(`${SUPABASE_URL}/storage/v1${j.signedURL}`, '_blank', 'noopener'); }
+                else { showToast('Could not open CV: ' + (j.error || j.message || res.status), 'error'); }
+            } catch(e) { showToast('Error opening CV: ' + e.message, 'error'); }
+        }
+
+        function applicantBadge(ok) {
+            return ok
+                ? '<span class="pill" style="background:#B8D8B8;color:#2A6A2A;">Verified</span>'
+                : '<span class="pill" style="background:#F0D8B8;color:#8A5A1A;">Unverified</span>';
+        }
+
+        function renderApplicantsView() {
+            if (currentView !== 'teachers') switchView('teachers');
+            selectedTeacherId = null;
+            const canManage = can('canEditTeachers');
+            const rows = applicants.slice().sort((a,b) => (b.applied_at||'').localeCompare(a.applied_at||''));
+            const body = rows.length ? rows.map(a => {
+                const discs = DISCIPLINES.filter(d => (a.grades?.[d.key]||0) > 0)
+                    .map(d => `<span class="pill pill-d-${d.key}">${esc(d.label)}</span>`).join(' ')
+                    || '<span style="color:var(--text-muted);">-</span>';
+                const dup = a.possible_duplicate
+                    ? `<div class="pill" style="background:#F0D4A8;color:#7A4A0A;margin-top:4px;">Possible duplicate</div><div style="font-size:10px;color:var(--text-muted);">${esc(a.duplicate_notes||'')}</div>`
+                    : '';
+                const cv = a.cv_url
+                    ? `<button class="btn btn-secondary" style="font-size:10px;" onclick="openCv('${esc(a.cv_url)}')">CV</button>`
+                    : (a.video_url ? `<a href="${esc(a.video_url)}" target="_blank" rel="noopener">Video/CV link</a>` : '<span style="color:var(--text-muted);">none</span>');
+                const both = a.email_verified && a.phone_verified;
+                const actions = canManage ? `
+                    ${a.email_verified ? '' : `<button class="btn btn-secondary" style="font-size:10px;margin:2px;" onclick="markApplicantVerified('${a.id}','email')">Mark email verified</button>`}
+                    ${a.phone_verified ? '' : `<button class="btn btn-secondary" style="font-size:10px;margin:2px;" onclick="markApplicantVerified('${a.id}','phone')">Mark mobile verified</button>`}
+                    ${both ? `<button class="btn btn-gold" style="font-size:10px;margin:2px;" onclick="approveApplicant('${a.id}')">Approve and create login</button>` : ''}
+                    <button class="btn btn-danger" style="font-size:10px;margin:2px;" onclick="rejectApplicant('${a.id}')">Reject</button>`
+                    : '<span style="color:var(--text-muted);font-size:11px;">View only</span>';
+                const applied = a.applied_at ? new Date(a.applied_at).toLocaleDateString('en-AU') : '';
+                return `<tr>
+                    <td><div style="font-weight:500;">${esc(a.first_name)} ${esc(a.last_name)}</div><div style="font-size:10px;color:var(--text-muted);">${applied}</div>${dup}</td>
+                    <td>${esc(a.email||'')}<br>${applicantBadge(a.email_verified)}</td>
+                    <td>${esc(a.phone||'')}<br>${applicantBadge(a.phone_verified)}</td>
+                    <td>${discs}<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${esc((a.locations||[]).join(', '))}</div></td>
+                    <td style="font-size:11px;">${esc(a.located_text||'')}</td>
+                    <td>${cv}</td>
+                    <td>${actions}</td>
+                </tr>
+                <tr><td colspan="7" style="padding-top:0;border-bottom:1px solid var(--border);"><details><summary style="cursor:pointer;font-size:11px;color:var(--earth);">Experience and teaching style</summary><div style="font-size:12px;padding:8px 0;"><div style="font-weight:500;">Experience and training</div><div style="white-space:pre-wrap;margin-bottom:10px;">${esc(a.experience_training||'-')}</div><div style="font-weight:500;">Teaching style</div><div style="white-space:pre-wrap;">${esc(a.teaching_style||'-')}</div><div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Availability: ${esc(a.availability_text||'-')}</div></div></details></td></tr>`;
+            }).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-text">No applicants awaiting review.</div></div></td></tr>`;
+            document.getElementById('mainContent').innerHTML = `<div class="main-inner">
+                <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Applicants (${rows.length})</h2>
+                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;">Public teacher applications awaiting review. Verify email and mobile, then approve to create a login. Chosen disciplines are recorded as grade 2 (Probationary).</p>
+                <table class="data-table"><thead><tr><th>Applicant</th><th>Email</th><th>Mobile</th><th>Disciplines / Locations</th><th>Located</th><th>CV</th><th>Actions</th></tr></thead><tbody>${body}</tbody></table>
+            </div>`;
+        }
+
+        async function markApplicantVerified(id, channel) {
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
+            if (!can('canEditTeachers')) return;
+            const field = channel === 'email' ? 'email_verified' : 'phone_verified';
+            showLoading('Updating...');
+            try {
+                const rows = await dbPatch(`teachers?id=eq.${id}`, { [field]: true });
+                const a = applicants.find(x => x.id === id);
+                if (a && rows?.[0]) Object.assign(a, rows[0]);
+                await writeAudit(id, `Applicant ${channel} marked verified by ${currentUserEmail}`);
+                showToast(`${channel === 'email' ? 'Email' : 'Mobile'} marked verified.`);
+                renderApplicantsView();
+            } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            hideLoading();
+        }
+
+        async function approveApplicant(id) {
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
+            if (!can('canEditTeachers')) return;
+            const a = applicants.find(x => x.id === id);
+            if (!a) return;
+            if (!a.email_verified || !a.phone_verified) { showToast('Verify email and mobile first.', 'error'); return; }
+            if (!a.email) { showToast('Applicant has no email address.', 'error'); return; }
+            const pw = prompt(`Set a temporary password for ${a.first_name} ${a.last_name} (min 8 characters):`);
+            if (pw === null) return;
+            if (pw.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
+            showLoading('Creating login...');
+            try {
+                const ef = await callEdgeFunction('approve-applicant', { teacher_id:a.id, password:pw });
+                if (!ef.ok) { await writeAudit(a.id, `Applicant approved but auth FAILED: ${ef.error}`); showToast('Login creation failed: ' + ef.error, 'error', 8000); hideLoading(); return; }
+                const rows = await dbPatch(`teachers?id=eq.${id}`, { status:'active' });
+                applicants = applicants.filter(x => x.id !== id);
+                if (rows?.[0]) teachers.push(rows[0]);
+                await writeAudit(a.id, `Applicant approved and login created by ${currentUserEmail}`);
+                showToast(`${a.first_name} ${a.last_name} approved and added to the roster.`);
+                renderApplicantsView(); renderSidebar(); renderActionButtons();
+            } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            hideLoading();
+        }
+
+        async function rejectApplicant(id) {
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
+            if (!can('canEditTeachers')) return;
+            if (!confirm('Reject this applicant? They will be moved to rejected status (kept for the record).')) return;
+            showLoading('Rejecting...');
+            try {
+                await dbPatch(`teachers?id=eq.${id}`, { status:'rejected', rejected_at:new Date().toISOString(), rejected_by:currentUserEmail });
+                applicants = applicants.filter(x => x.id !== id);
+                await writeAudit(id, `Applicant rejected by ${currentUserEmail}`);
+                showToast('Applicant rejected.');
+                renderApplicantsView(); renderActionButtons();
+            } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            hideLoading();
+        }
+
         function selectTeacher(id) {
             selectedTeacherId = id;
             if (currentView !== 'teachers') switchView('teachers');
@@ -3253,6 +3376,6 @@ CREATE TABLE IF NOT EXISTS audit_log (
 </body>
 </html>
 
-<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/ritual-studio-ops-v2.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/ritual-studio-ops-v2.html &middot; v2 - Phase 5 (Merged App)</div>
+<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/ritual-studio-ops-v2.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/ritual-studio-ops-v2.html &middot; v2 - Phase 6 (Merged App)</div>
 </body>
 </html>
