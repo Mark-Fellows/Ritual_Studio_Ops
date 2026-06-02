@@ -538,3 +538,15 @@ Added localStorage diagnostic logging to _openV2Relay in index.html (visible in 
 **Diagnostic rule:** After any tool-based write to a large file on the OneDrive mount, always verify the tail contains the expected closing tag and the byte count grew as expected. Never trust a single wc read.
 
 **Applies to:** All large single-file apps on the OneDrive mount (ritual-studio-ops-v2.html especially). Prefer the git-dump + in-sandbox edit + cp-and-verify workflow over direct Edit-tool edits.
+
+---
+
+### L-MG-20 -- Live RLS policies and schema can drift from the migration files; phase numbers collide across workstreams
+
+**Problem:** During the 2026-06-02 audit, `user_profiles` was found to carry four developer-gated RLS policies (read-all / insert / update / delete) that exist in **no** migration file in either repo -- they had been applied directly to make the merged-app user-management UI work. Separately, "Phase 5" was being used for four unrelated things (merger parallel-run, Cover-Management user-admin feature, v2 build-iteration tag, and a 2026-05-09 auth sub-phase), making "roll out Phase 5" ambiguous.
+
+**Cause:** Policies applied via the Supabase dashboard / ad-hoc `apply_migration` without writing a corresponding file; and four parallel workstreams each minting their own "Phase N" numbering.
+
+**Fix:** Always verify live state with `pg_policies` / `pg_proc` / `to_regclass` before trusting a design doc or migration file. Record any out-of-band change as a parity migration (see `migrations/2026-06-02-user-profiles-admin-rls-backfill.sql`). For phase numbers, cite `docs/PHASE-NUMBERING.md` and prefer naming features explicitly over new "Phase N" labels.
+
+**Applies to:** All projects on the shared Supabase project; all design/spec docs.

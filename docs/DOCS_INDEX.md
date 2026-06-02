@@ -105,7 +105,8 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Phase 2 dedup design | CM | `Ritual_Cover_Management/PHASE-2-DEDUP-DESIGN.md` | active | Design doc for CM dedup phase |
 | Phase 3 dashboard design | CM | `Ritual_Cover_Management/PHASE-3-DASHBOARD-DESIGN.md` | active | Dashboard design spec |
 | Phase 4 offer matching design | CM | `Ritual_Cover_Management/PHASE-4-OFFER-MATCHING-DESIGN.md` | active | Offer matching design |
-| Phase 5 user admin design | CM | `Ritual_Cover_Management/PHASE-5-USER-ADMIN-DESIGN.md` | active | User admin design |
+| Phase 5 user admin design | CM | `Ritual_Cover_Management/PHASE-5-USER-ADMIN-DESIGN.md` | superseded | In-Portal User Admin (CM-feature scheme; see PHASE-NUMBERING.md). Carries a 2026-06-02 revision notice: targets the merged app now, 5.1 UI already built, 5.0+5.2 still to do. Re-spec in progress |
+| Phase numbering (disambiguation) | RSO | `Ritual_Studio_Ops/docs/PHASE-NUMBERING.md` | active | Canonical map of the four overlapping "Phase N" schemes. Cite when a phase number is ambiguous |
 | Phases quick invoke | CM | `Ritual_Cover_Management/PHASES-quick-invoke.md` | active | Quick command reference per phase |
 | Plan: coverage type | CM | `Ritual_Cover_Management/PLAN-coverage-type-feature.md` | active | Feature plan |
 | Plan: phase 4 offer matching | CM | `Ritual_Cover_Management/PLAN-phase4-offer-matching-2026-05-16.md` | active | Feature plan |
@@ -194,7 +195,7 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | LESSONS_LEARNED | RSO | `Ritual_Studio_Ops/docs/LESSONS_LEARNED.md` | active | |
 | Merger Plan v2 | RSO | `Ritual_Studio_Ops/docs/Ritual_Studio_Ops_Merger_Plan_v2.md` | active | Moved from TM folder 2026-05-21 |
 | .env template | RSO | `Ritual_Studio_Ops/.env.template` | active | Environment configuration template |
-| Merged app v2 (LIVE) | RSO | `Ritual_Studio_Ops/app/ritual-studio-ops-v2.html` | active | Teachers + Cover; Phase 5 build — teacher absence tracking, per-teacher panel, global absences view, on-leave sidebar pill, CRUD modal, soft-delete archive. The live merged app. |
+| Merged app v2 (LIVE) | RSO | `Ritual_Studio_Ops/app/ritual-studio-ops-v2.html` | active | Teachers + Cover. The live merged app. ("Phase 5 build" here = the v2 build-iteration scheme C, NOT the merger Phase 5 or the User-Admin Phase 5 — see PHASE-NUMBERING.md.) Includes teacher absence tracking, per-teacher panel, global absences view, on-leave sidebar pill, CRUD modal, soft-delete archive, and the existing user-management settings page. |
 | Management Portal (LIVE) | RSO | `Ritual_Studio_Ops/app/index.html` | active | Launcher hub for the new system; carries the emblem badge. Adapted from the legacy CM portal 2026-05-24. |
 | Finance & Cashflow dashboard | RSO | `Ritual_Studio_Ops/app/finance-cashflow.html` | active | v1 (2026-05-29). Static client-side cashflow dashboard opened from the portal Finance tile. Embeds Xero Stripe-settlement actuals Jul 2025 - Feb 2026; 13-week rolling forecast with editable assumptions. No auth gate yet (see PORTAL-DEVELOPER.md security note). |
 | Merged app v1 | RSO | `Ritual_Apps/RSO_archived_duplicates_2026-05-24/ritual-studio-ops-v1.html` | archived | Superseded by v2; truncated/corrupt. Moved to the archive folder on 2026-05-24. |
@@ -203,8 +204,8 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Test suite Phase 2 | RSO | `Ritual_Studio_Ops/scripts/test_phase2.py` | active | 37 checks — merged shell conventions |
 | Test suite Phase 3 | RSO | `Ritual_Studio_Ops/scripts/test_phase3.py` | active | 65 checks — cover pipeline re-point |
 | Test suite Phase 4 | RSO | `Ritual_Studio_Ops/scripts/test_phase4.py` | active | 24 checks — write-enable and legacy banners |
-| Test suite Phase 5 | RSO | `Ritual_Studio_Ops/scripts/test_phase5.py` | active | 28 checks — reconcile script |
-| Reconcile script | RSO | `Ritual_Studio_Ops/scripts/reconcile.py` | active | Daily parallel-run health check; run once per day during Phase 5 soak |
+| Test suite Phase 5 | RSO | `Ritual_Studio_Ops/scripts/test_phase5.py` | active | 28 checks — reconcile script (merger-programme Phase 5, scheme A — see PHASE-NUMBERING.md) |
+| Reconcile script | RSO | `Ritual_Studio_Ops/scripts/reconcile.py` | active | Daily parallel-run health check; run once per day during the merger Phase 5 (scheme A) soak |
 | Reconcile reports | RSO | `Ritual_Studio_Ops/scripts/reconcile_reports/` | active | Daily plain-text reports written by reconcile.py |
 | Source-of-truth map | RSO | `Ritual_Studio_Ops/docs/SOURCE_OF_TRUTH.md` | active | Which file backs which screen. Read before requesting changes to any dashboard or portal. |
 | Navigation map | RSO | `Ritual_Studio_Ops/docs/NAVIGATION.md` | active | Diagram of how portals, dashboards and external platforms link, plus the Phase 6 Pages consolidation plan. |

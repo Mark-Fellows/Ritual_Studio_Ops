@@ -6,6 +6,14 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-06-02 | Documentation | Phase-numbering disambiguation + Phase 5 user-admin re-spec; record live user_profiles RLS drift -- docs only, no DB change | docs/PHASE-NUMBERING.md, docs/DOCS_INDEX.md, docs/LESSONS_LEARNED.md, Ritual_Cover_Management/PHASE-5-USER-ADMIN-DESIGN.md, migrations/2026-06-02-user-profiles-admin-rls-backfill.sql
+
+Documentation-consistency pass. "Phase 5" was found to mean four different things across the docs (merger-programme parallel-run, Cover-Management user-admin feature, v2 build-iteration tag, and a 2026-05-09 auth sub-phase). Added docs/PHASE-NUMBERING.md as the canonical disambiguation and cross-referenced it from DOCS_INDEX.
+
+Marked PHASE-5-USER-ADMIN-DESIGN.md superseded and prepended a revision notice: it targeted the now-legacy public/index.html (must not be edited per SOURCE_OF_TRUTH); its "turn RLS on" premise is stale (RLS enabled 2026-05-17); the 5.1 user-admin UI already shipped in the merged v2 app but WITHOUT the 5.0 security foundation it called non-negotiable. Verified live (read-only) that admin.users.manage, user_permission_overrides, v_user_permissions_resolved, has_admin_users_manage() and the admin RPCs do NOT exist; only v_role_permissions_resolved does.
+
+Recorded live RLS drift: user_profiles carries developer-gated insert/update/delete policies present in no migration file. Captured in migrations/2026-06-02-user-profiles-admin-rls-backfill.sql (parity/documentation only; already live; not applied). Decision locked: admin.users.manage to be granted to both developer and administrator at launch. No build and no database changes made -- re-spec first.
+
 ## 2026-06-01 | Teacher Management | Public teacher applications: applicant intake model, Applicants review view, manual mobile verify, approve-and-provision, soft reject, duplicate flagging; 31 Asana applicants imported -- Phase 6 | app/ritual-studio-ops-v2.html, migrations/2026-06-01-teacher-applications.sql, Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Applications_Design.md
 
 Adds a public teacher-application capability using a status flag on the shared teachers table (status: active | applicant | rejected) rather than a separate table.
