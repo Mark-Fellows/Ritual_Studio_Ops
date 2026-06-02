@@ -3,6 +3,7 @@
   URL:        https://ritual-studio-ops.pages.dev/ritual-studio-ops-v2.html
   Reached:    From the Management Portal cards
   Identifier: emblem badge top-left, "v2 - Phase 6" stamp in header
+  Phase 6b: applicants view — discipline filter, applied-date sort, date font, heading fix
   Phase 6: public teacher applications - applicant intake, Applicants review
            view, manual mobile verify, approve-and-provision, reject (soft),
            duplicate flagging; applicants excluded from the live roster.
@@ -1314,7 +1315,22 @@
             if (currentView !== 'teachers') switchView('teachers');
             selectedTeacherId = null;
             const canManage = can('canEditTeachers');
-            const rows = applicants.slice().sort((a,b) => (b.applied_at||'').localeCompare(a.applied_at||''));
+            const discFilter = window.applicantsFilterDisc || '';
+            const sortDir = window.applicantsSortDir || 'desc';
+            let rows = applicants.slice();
+            if (discFilter) rows = rows.filter(a => (a.grades?.[discFilter] || 0) > 0);
+            rows.sort((a,b) => sortDir === 'asc'
+                ? (a.applied_at||'').localeCompare(b.applied_at||'')
+                : (b.applied_at||'').localeCompare(a.applied_at||''));
+            const discOptions = DISCIPLINES.map(d =>
+                `<option value="${d.key}" ${discFilter === d.key ? 'selected' : ''}>${d.label}</option>`).join('');
+            const sortLabel = sortDir === 'asc' ? 'Oldest first ↑' : 'Newest first ↓';
+            const filterBar = `<div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+                <select class="filter-select" style="width:auto;" onchange="window.applicantsFilterDisc=this.value;renderApplicantsView();">
+                    <option value="">All Disciplines</option>${discOptions}
+                </select>
+                <button class="btn btn-secondary" style="font-size:11px;" onclick="window.applicantsSortDir=(window.applicantsSortDir==='asc'?'desc':'asc');renderApplicantsView();">Applied: ${sortLabel}</button>
+            </div>`;
             const body = rows.length ? rows.map(a => {
                 const discs = DISCIPLINES.filter(d => (a.grades?.[d.key]||0) > 0)
                     .map(d => `<span class="pill pill-d-${d.key}">${esc(d.label)}</span>`).join(' ')
@@ -1334,7 +1350,7 @@
                     : '<span style="color:var(--text-muted);font-size:11px;">View only</span>';
                 const applied = a.applied_at ? new Date(a.applied_at).toLocaleDateString('en-AU') : '';
                 return `<tr>
-                    <td><div style="font-weight:500;">${esc(a.first_name)} ${esc(a.last_name)}</div><div style="font-size:10px;color:var(--text-muted);">${applied}</div>${dup}</td>
+                    <td><div style="font-weight:500;">${esc(a.first_name)} ${esc(a.last_name)}</div><div style="font-size:10px;color:var(--text-secondary);font-weight:500;">${applied}</div>${dup}</td>
                     <td>${esc(a.email||'')}<br>${applicantBadge(a.email_verified)}</td>
                     <td>${esc(a.phone||'')}<br>${applicantBadge(a.phone_verified)}</td>
                     <td>${discs}<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${esc((a.locations||[]).join(', '))}</div></td>
@@ -1346,7 +1362,8 @@
             }).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-text">No applicants awaiting review.</div></div></td></tr>`;
             document.getElementById('mainContent').innerHTML = `<div class="main-inner">
                 <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Applicants (${rows.length})</h2>
-                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;">Public teacher applications awaiting review. Verify email and mobile, then approve to create a login. Chosen disciplines are recorded as grade 2 (Probationary).</p>
+                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;">Teacher applications awaiting review. Verify email and mobile, then approve to create a login. Chosen disciplines are recorded as grade 2 (Probationary).</p>
+                ${filterBar}
                 <table class="data-table"><thead><tr><th>Applicant</th><th>Email</th><th>Mobile</th><th>Disciplines / Locations</th><th>Located</th><th>CV</th><th>Actions</th></tr></thead><tbody>${body}</tbody></table>
             </div>`;
         }

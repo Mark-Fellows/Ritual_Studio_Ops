@@ -572,3 +572,23 @@ Added localStorage diagnostic logging to _openV2Relay in index.html (visible in 
 **Fix:** When patching these functions, patch the block-B (later) copy, or patch both identically. Deterministic patchers should assert the expected occurrence count (1 vs 2) so a duplicate is never missed. Consider removing block A in a dedicated, tested cleanup.
 
 **Applies to:** ritual-studio-ops-v2.html.
+
+### L-MG-23 -- resolved_classes table rows have their own discipline field; always prefer it over the request-level discipline_code
+
+**Problem:** The "Classes That Need Cover" table in cover_dashboard.html displayed the wrong discipline for some rows. A mixed-discipline request (e.g. Mat Pilates at 5:15am + Reformer at 6:15am and 7:15am) showed Mat Pilates for every row because the renderer called `disciplineLabel(r.discipline_code)` — a single scalar on the cover_request row — for all classes.
+
+**Cause:** Two levels of discipline data exist on every resolved request: (1) `r.discipline_code` on the cover_request row, set by the NLP extractor to a single value (typically the first or most prominent discipline in the message); and (2) `c.discipline` on each resolved_classes record, sourced directly from Momence's session data and therefore accurate per-class. The table row renderer ignored the per-class Momence value and re-applied the request-level scalar to every row.
+
+**Fix:** Use `c.discipline || r.discipline_code` in any per-class renderer — prefer the Momence class-level discipline; fall back to the request-level code only when absent.
+
+**Applies to:** cover_dashboard.html resolved-classes table; any future renderer that iterates resolved_classes rows.
+
+### L-MG-24 -- formatDate() already includes the weekday; do not also prepend c.weekday
+
+**Problem:** The date cell in the resolved-classes table rendered as "Wed, Wed 3 Jun" — the weekday appeared twice.
+
+**Cause:** `formatDate()` calls `toLocaleDateString('en-AU', { weekday: 'short', ... })` which already produces "Wed, 3 Jun". A separate `wd` variable was constructed from `c.weekday` and prepended, doubling the day name.
+
+**Fix:** Drop the `wd +` prefix when `formatDate()` is used; the function is self-contained. If a raw day-of-week prefix is ever needed without a formatted date, do not use `formatDate()` — use a date formatter with no weekday option instead.
+
+**Applies to:** cover_dashboard.html resolved-classes table date cell.
