@@ -902,8 +902,8 @@
       let rows = [], rErr = null;
       try {
         const rRes = await fetch(
-          SUPABASE_URL + '/rest/v1/v_user_permissions_resolved?user_id=eq.' + user.id +
-          '&select=permission_code',  // 5.1: per-user resolver (layers per-user overrides; identical to role view when none)
+          SUPABASE_URL + '/rest/v1/v_role_permissions_resolved?role=eq.' + profile.role +
+          '&select=permission_code',
           { headers: restHeaders }
         );
         if (!rRes.ok) { rErr = { message: 'HTTP ' + rRes.status }; }
@@ -1201,90 +1201,4 @@
     }
 
     $pwSubmit.addEventListener('click', doChangePassword);
-    $confirmPw.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter') doChangePassword();
-    });
-
-    // ---------------------------------------------------------------------
-    // SSO: pass current Supabase session to Campaign Planning app so the
-    // user is not prompted to log in again.
-    // ---------------------------------------------------------------------
-    document.getElementById('campaign-tile').addEventListener('click', async function(e) {
-      e.preventDefault();
-      let href = 'https://ritual-campaign-planning.pages.dev/';
-      try {
-        const { data } = await sb.auth.getSession();
-        const s = data && data.session;
-        if (s && s.access_token) {
-          href += '#access_token=' + encodeURIComponent(s.access_token) +
-                  '&refresh_token=' + encodeURIComponent(s.refresh_token) +
-                  '&token_type=bearer';
-        }
-      } catch(_) {}
-      window.open(href, '_blank', 'noopener');
-    });
-
-    // -------------------------------------------------------------------------
-    // Teacher Portal tile -- relay session to v2 app.
-    //
-    // The Cover Dashboard tile (index.tile.cover_dashboard) opens the legacy
-    // ritual-cover-management.pages.dev app directly -- different origin, so
-    // localStorage cannot be shared and no relay is used.  (Phase 10 / L-MG-18)
-    //
-    // Why relay is needed for Teacher Portal: both index.html and v2 use
-    // implicit flow (Phase 8 removed PKCE) and share the same navigator.locks
-    // scope.  Fix (Phase 7 / L-MG-14, Phase 9 / L-MG-16): intercept the tile
-    // click, get the current session, and open v2-relay.html with the tokens in
-    // the URL hash.  v2-relay.html writes localStorage directly (lock-free) and
-    // redirects to ritual-studio-ops-v2.html.
-    // -------------------------------------------------------------------------
-    async function _openV2Relay(view) {
-      // Diagnostic: show localStorage session state in the debug panel.
-      try {
-        var lsRaw = localStorage.getItem('sb-rfjygyqijwgkmxboddup-auth-token');
-        if (lsRaw) {
-          var ls = JSON.parse(lsRaw);
-          var lsNow = Math.floor(Date.now() / 1000);
-          var lsMin = Math.round(((ls.expires_at || 0) - lsNow) / 60);
-          dbg('tile click: localStorage session=' + (ls.access_token ? 'present' : 'missing') +
-              ' user=' + (ls.user && ls.user.email) + ' exp_in=' + lsMin + 'min');
-        } else {
-          dbg('tile click: NO session in localStorage (sb-rfjygyqijwgkmxboddup-auth-token missing)');
-        }
-      } catch (lsErr) { dbg('tile click: localStorage diagnostic error: ' + lsErr.message); }
-
-      // Build relay URL (relay now writes to localStorage without a Supabase client).
-      var href = './ritual-studio-ops-v2.html' + (view === 'cover' ? '#cover' : '');
-      try {
-        var sessionData = await sb.auth.getSession();
-        var s = sessionData && sessionData.data && sessionData.data.session;
-        if (s && s.access_token) {
-          href = './v2-relay.html' +
-                 '#access_token='  + encodeURIComponent(s.access_token)  +
-                 '&refresh_token=' + encodeURIComponent(s.refresh_token) +
-                 '&token_type=bearer' +
-                 (view ? '&view=' + encodeURIComponent(view) : '');
-          dbg('relay URL built with token for ' + (s.user && s.user.email));
-        } else {
-          dbg('no active session -- opening v2 directly (will show login)');
-        }
-      } catch (relayErr) { dbg('getSession error: ' + relayErr.message); }
-      window.open(href, '_blank', 'noopener');
-    }
-
-    // Cover Dashboard tile opens ritual-cover-management.pages.dev directly (different
-    // origin -- localStorage relay cannot cross origins).  No click override needed;
-    // the <a href> with target="_blank" handles it.  (Phase 10 / L-MG-18)
-
-    document.querySelector('[data-perm="index.tile.teacher_portal"]')
-      .addEventListener('click', function (e) {
-        e.preventDefault();
-        _openV2Relay('');
-      });
-  </script>
-<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.0.1</div>
-</body>
-</html>
-index.html &middot; Management Portal (new)</div>
-</body>
-</html>
+    $confirmPw.addEven

@@ -6,6 +6,23 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-06-03 | RBAC unification (User Admin 5.0/5.1) | Merge the two authorization regimes onto the DB permission model; admin RPCs + RLS; v2/portal wired to per-user resolver -- DB APPLIED, app staged (NOT pushed) | migrations/2026-06-02-rbac-unification-backbone.sql, migrations/2026-06-02-user-admin-rpcs-and-rls.sql, migrations/2026-06-02-user-admin-harden-grants.sql, app/ritual-studio-ops-v2.html, app/index.html, app/_user-admin-5.2-overrides.snippet.js, docs/RBAC-MATRIX.md, docs/USER-ADMIN-BUILD-SPEC.md, docs/PHASE-NUMBERING.md, backups/rbac-2026-06-02/
+
+Autonomous session. Goal: one authorization model. Previously the portal (index.html) was permission-driven (v_role_permissions_resolved) while the merged app (v2) used a hard-coded ROLES capability object. Unified on the DB permission model.
+
+DB (shared project rfjygyqijwgkmxboddup; backed up first to backups/rbac-2026-06-02/, ROLLBACK.sql provided):
+- BACKBONE (apply_migration rbac_unification_backbone_2026_06_02): +11 permission rows extending the catalogue to Teacher-Management features (teachers/grades/bookings/applicants parents + leaves) and admin.users.manage; leaf grants per RBAC-MATRIX (administrator + coordinator get the TM leaves; admin.users.manage to developer+administrator; teacher gets teachers.edit_own_availability; developer covered by the system.admin wildcard); new user_permission_overrides table (RLS, read-own); new per-user resolver v_user_permissions_resolved (wildcard + parent cascade, overrides layered, security_invoker); has_admin_users_manage() helper. Verified: permissions 26->37, developer resolves 37, administrator 29, no parent-cascade over-grant.
+- RPCs + RLS (apply_migration user_admin_rpcs_and_rls_2026_06_02): admin_invite_user / admin_set_user_role / admin_set_user_permission / admin_remove_user (SECURITY DEFINER, permission-checked, self-protection); user_profiles writes switched from developer-only to has_admin_users_manage() (administrator can now manage users); admin write policies on user_permission_overrides and role_permissions. Guard tested: non-admin call -> 'Permission denied'.
+- HARDENING (apply_migration user_admin_harden_grants_2026_06_02): pinned search_path on has_admin_users_manage(); revoked EXECUTE on the admin RPCs + helper from anon/PUBLIC, granted to authenticated. From the security advisor.
+- DEFERRED: per-column RLS on teachers (grades/applicants/edit share one table; row-level RLS can't separate them) -- stays app-layer enforced; teachers keeps its permissive authenticated CRUD policies.
+
+App (staged locally, NOT pushed -- a push auto-deploys all four apps):
+- v2 (ritual-studio-ops-v2.html): loads v_user_permissions_resolved into resolvedPerms; new hasPerm() + rpc() helpers; settings/admin gate switched from can('canManageUsers') to hasPerm('admin.users.manage'); invite now attaches profile+role via signInWithOtp + admin_invite_user (Option A) -- previously invitees landed with no role; role-change and delete routed through admin_set_user_role / admin_remove_user (onclicks now pass user_id). node --check PASS.
+- index.html: permission read swapped to v_user_permissions_resolved (per-user; identical result today, forward-compatible). RECOVERED from a pre-existing working-tree truncation first (see L-MG-21). node --check PASS.
+- 5.2 (per-user override tree UI): delivered as app/_user-admin-5.2-overrides.snippet.js (validated, ready to integrate + browser-test); DB fully supports it.
+
+PENDING for Mark: browser-test v2 + portal as developer AND administrator; integrate 5.2 snippet; commit (sandbox could not write .git/index.lock) and push to deploy. See docs/USER-ADMIN-HANDOVER-2026-06-03.md.
+
 ## 2026-06-02 | Documentation | Phase-numbering disambiguation + Phase 5 user-admin re-spec; record live user_profiles RLS drift -- docs only, no DB change | docs/PHASE-NUMBERING.md, docs/DOCS_INDEX.md, docs/LESSONS_LEARNED.md, Ritual_Cover_Management/PHASE-5-USER-ADMIN-DESIGN.md, migrations/2026-06-02-user-profiles-admin-rls-backfill.sql
 
 Documentation-consistency pass. "Phase 5" was found to mean four different things across the docs (merger-programme parallel-run, Cover-Management user-admin feature, v2 build-iteration tag, and a 2026-05-09 auth sub-phase). Added docs/PHASE-NUMBERING.md as the canonical disambiguation and cross-referenced it from DOCS_INDEX.

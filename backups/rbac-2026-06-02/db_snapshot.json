@@ -1,0 +1,52 @@
+{
+  "taken_at": "2026-06-02T11:30:52Z",
+  "project": "rfjygyqijwgkmxboddup",
+  "note": "Pre-RBAC-unification snapshot of auth/permission state. Restore with ROLLBACK.sql (removes additive objects). Data rows below are for reference/manual restore.",
+  "permissions_count": 26,
+  "permissions_codes": [
+    "dashboard.actions","dashboard.actions.advanced_filters","dashboard.actions.approve","dashboard.actions.cancel_class","dashboard.actions.covered","dashboard.actions.edit","dashboard.actions.no_cover_needed","dashboard.actions.notes","dashboard.actions.settings","dashboard.read","dashboard.read.all","dashboard.read.own","index.tile","index.tile.classpass","index.tile.cover_dashboard","index.tile.fitness_passport","index.tile.momence","index.tile.ritual_dashboard","index.tile.ritual_website","index.tile.studio_timetable","index.tile.teacher_portal","system.admin","timetable.actions","timetable.actions.filters","timetable.read","user.signout"
+  ],
+  "role_permissions": [
+    {"role":"developer","permission_code":"system.admin"},
+    {"role":"developer","permission_code":"user.signout"},
+    {"role":"administrator","permission_code":"index.tile"},
+    {"role":"administrator","permission_code":"dashboard.read.all"},
+    {"role":"administrator","permission_code":"dashboard.actions"},
+    {"role":"administrator","permission_code":"timetable.read"},
+    {"role":"administrator","permission_code":"timetable.actions"},
+    {"role":"administrator","permission_code":"user.signout"},
+    {"role":"coordinator","permission_code":"index.tile"},
+    {"role":"coordinator","permission_code":"dashboard.read.all"},
+    {"role":"coordinator","permission_code":"dashboard.actions"},
+    {"role":"coordinator","permission_code":"timetable.read"},
+    {"role":"coordinator","permission_code":"timetable.actions"},
+    {"role":"coordinator","permission_code":"user.signout"},
+    {"role":"trainee","permission_code":"index.tile"},
+    {"role":"trainee","permission_code":"dashboard.read.all"},
+    {"role":"trainee","permission_code":"timetable.read"},
+    {"role":"trainee","permission_code":"user.signout"},
+    {"role":"teacher","permission_code":"index.tile"},
+    {"role":"teacher","permission_code":"dashboard.read.all"},
+    {"role":"teacher","permission_code":"timetable.read"},
+    {"role":"teacher","permission_code":"user.signout"}
+  ],
+  "user_profiles_roles": [
+    {"email":"staff@ritualpalmbeach.com","role":"developer"},
+    {"email":"markjfellows@gmail.com","role":"developer"},
+    {"email":"aimee@hotmail","role":"coordinator"},
+    {"email":"trainee@hotmail","role":"trainee"},
+    {"email":"markjfellows@hotmail.com","role":"teacher"},
+    {"email":"rose@hotmail.com","role":"teacher"},
+    {"email":"angel@hotmail","role":"teacher"},
+    {"email":"trainee@hotmail.com","role":"teacher"}
+  ],
+  "user_profiles_policies_pre": [
+    {"policy":"Users can read own profile","cmd":"SELECT","using":"auth.uid() = user_id"},
+    {"policy":"Developers and admins can read all profiles","cmd":"SELECT","using":"get_my_role() = ANY (ARRAY['developer','administrator'])"},
+    {"policy":"Developers can insert profiles","cmd":"INSERT","check":"get_my_role() = 'developer'"},
+    {"policy":"Developers can update profiles","cmd":"UPDATE","using":"get_my_role() = 'developer'"},
+    {"policy":"Developers can delete profiles","cmd":"DELETE","using":"get_my_role() = 'developer'"}
+  ],
+  "v_role_permissions_resolved_def": "WITH RECURSIVE expand AS (SELECT rp.role, rp.permission_code AS code, 0 AS depth FROM role_permissions rp UNION SELECT rp.role, p.code, 0 FROM role_permissions rp CROSS JOIN permissions p WHERE rp.permission_code = 'system.admin' UNION SELECT e.role, p.code, e.depth+1 FROM expand e JOIN permissions p ON p.parent_code = e.code WHERE e.depth < 10) SELECT DISTINCT role, code AS permission_code FROM expand;",
+  "get_my_role_def": "CREATE OR REPLACE FUNCTION public.get_my_role() RETURNS text LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT role FROM user_profiles WHERE user_id = auth.uid() LIMIT 1; $$;"
+}

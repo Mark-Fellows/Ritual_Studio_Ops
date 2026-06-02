@@ -107,6 +107,14 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Phase 4 offer matching design | CM | `Ritual_Cover_Management/PHASE-4-OFFER-MATCHING-DESIGN.md` | active | Offer matching design |
 | Phase 5 user admin design | CM | `Ritual_Cover_Management/PHASE-5-USER-ADMIN-DESIGN.md` | superseded | In-Portal User Admin (CM-feature scheme; see PHASE-NUMBERING.md). Carries a 2026-06-02 revision notice: targets the merged app now, 5.1 UI already built, 5.0+5.2 still to do. Re-spec in progress |
 | Phase numbering (disambiguation) | RSO | `Ritual_Studio_Ops/docs/PHASE-NUMBERING.md` | active | Canonical map of the four overlapping "Phase N" schemes. Cite when a phase number is ambiguous |
+| RBAC matrix & unification | RSO | `Ritual_Studio_Ops/docs/RBAC-MATRIX.md` | active | Role × permission matrix; capability→permission mapping; how the two authz regimes were merged |
+| User Admin build spec | RSO | `Ritual_Studio_Ops/docs/USER-ADMIN-BUILD-SPEC.md` | active | Revised Phase 5 (User Admin) 5.0/5.1/5.2 build spec, grounded in live DB |
+| User Admin handover | RSO | `Ritual_Studio_Ops/docs/USER-ADMIN-HANDOVER-2026-06-03.md` | active | What was applied to the DB vs staged in the app; pending browser-test + push |
+| Migration: RBAC backbone | RSO | `Ritual_Studio_Ops/migrations/2026-06-02-rbac-unification-backbone.sql` | applied | Catalogue extension + leaf grants + override table + per-user resolver + helper (applied 2026-06-02) |
+| Migration: User Admin RPCs + RLS | RSO | `Ritual_Studio_Ops/migrations/2026-06-02-user-admin-rpcs-and-rls.sql` | applied | admin RPCs + user-admin RLS switched to admin.users.manage (applied 2026-06-02) |
+| Migration: User Admin harden grants | RSO | `Ritual_Studio_Ops/migrations/2026-06-02-user-admin-harden-grants.sql` | applied | search_path + revoke anon EXECUTE (applied 2026-06-02) |
+| Migration: user_profiles RLS backfill | RSO | `Ritual_Studio_Ops/migrations/2026-06-02-user-profiles-admin-rls-backfill.sql` | parity | Records pre-existing live user_profiles policies (documentation/parity only) |
+| 5.2 overrides UI snippet | RSO | `Ritual_Studio_Ops/app/_user-admin-5.2-overrides.snippet.js` | ready | Per-user permission override tree UI, validated; ready to integrate + browser-test |
 | Phases quick invoke | CM | `Ritual_Cover_Management/PHASES-quick-invoke.md` | active | Quick command reference per phase |
 | Plan: coverage type | CM | `Ritual_Cover_Management/PLAN-coverage-type-feature.md` | active | Feature plan |
 | Plan: phase 4 offer matching | CM | `Ritual_Cover_Management/PLAN-phase4-offer-matching-2026-05-16.md` | active | Feature plan |

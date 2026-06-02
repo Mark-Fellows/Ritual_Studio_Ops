@@ -550,3 +550,25 @@ Added localStorage diagnostic logging to _openV2Relay in index.html (visible in 
 **Fix:** Always verify live state with `pg_policies` / `pg_proc` / `to_regclass` before trusting a design doc or migration file. Record any out-of-band change as a parity migration (see `migrations/2026-06-02-user-profiles-admin-rls-backfill.sql`). For phase numbers, cite `docs/PHASE-NUMBERING.md` and prefer naming features explicitly over new "Phase N" labels.
 
 **Applies to:** All projects on the shared Supabase project; all design/spec docs.
+
+---
+
+### L-MG-21 -- index.html working copy was silently truncated (pre-existing); recover from git HEAD, not the working tree or a same-day backup
+
+**Problem:** During the RBAC work the working-tree `app/index.html` was found truncated to 82,552 bytes, ending mid-statement (`$confirmPw.addEven`) with an unclosed `<script>` -- it would not function if deployed. git HEAD held the intact 87,441-byte file. A same-day backup taken at the start of the session had already captured the truncated copy.
+
+**Cause:** A prior session's Edit/Write truncation (same class as L-MG-19) left the working tree corrupted and uncommitted; it was never caught because nothing re-validated the file.
+
+**Fix:** Confirmed the working copy was an exact byte-prefix of HEAD (pure truncation, no real edits) with `cmp`, then restored via `git show HEAD:app/index.html > app/index.html` before patching. Always validate large single-file apps after any tool edit (`node --check` on the inline script + a closing-tag/byte-count check), and prefer `git show HEAD:` over working-tree backups when a backup may itself be corrupt.
+
+**Applies to:** index.html, ritual-studio-ops-v2.html, and any large single-file app on the OneDrive mount.
+
+### L-MG-22 -- ritual-studio-ops-v2.html contains duplicate top-level function declarations; the later copy wins
+
+**Problem:** Every user-management function (loadUserProfiles, sendUserInvite, deleteUser, updateUserRole, addNonTeacherUser) is declared twice in the single inline script -- once around line ~2300 (block A, dead) and once around ~3070 (block B, live). Function declarations do not throw on redeclaration, so the LATER definition silently wins; editing only block A would have no runtime effect.
+
+**Cause:** A duplicated code block (same family as the L-MG-17 duplicate that caused a SyntaxError when it involved let/const).
+
+**Fix:** When patching these functions, patch the block-B (later) copy, or patch both identically. Deterministic patchers should assert the expected occurrence count (1 vs 2) so a duplicate is never missed. Consider removing block A in a dedicated, tested cleanup.
+
+**Applies to:** ritual-studio-ops-v2.html.
