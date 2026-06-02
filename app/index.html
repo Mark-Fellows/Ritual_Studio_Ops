@@ -395,6 +395,23 @@
       border-radius: 6px;
     }
     .modal-card .modal-close-x:hover { background: #F3F4F6; color: var(--text); }
+    /* Change-password modal fields --------------------------------------- */
+    .pw-field { margin-top: 12px; }
+    .pw-field label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .pw-field input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px 12px;
+      font-size: 14px;
+      border: 1px solid #D9D2C7;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+    }
+    .pw-field input:focus { outline: none; border-color: var(--green-mid); box-shadow: 0 0 0 2px var(--green-bg); }
+    .pw-msg { font-size: 13px; line-height: 1.5; margin-top: 12px; padding: 8px 12px; border-radius: 8px; }
+    .pw-msg.error   { background: #FDECEC; color: #B42318; border: 1px solid #F5C2C0; }
+    .pw-msg.success { background: var(--green-bg); color: var(--green-dark); border: 1px solid var(--green-mid); }
     /* While we don't know auth state, hide page contents to avoid flash */
     body.auth-pending .main,
     body.auth-pending .session-strip,
@@ -454,6 +471,10 @@
           <button class="user-menu-item" id="menu-change-user" type="button" role="menuitem">
             <span class="glyph" aria-hidden="true">&#128100;</span>
             Change user
+          </button>
+          <button class="user-menu-item" id="menu-change-password" type="button" role="menuitem">
+            <span class="glyph" aria-hidden="true">&#128273;</span>
+            Change password
           </button>
           <button class="user-menu-item" id="menu-install" type="button" role="menuitem"
                   title="Install this site as a desktop app with the Ritual icon.">
@@ -640,6 +661,29 @@
   </div>
 
   <!-- Save-to-desktop fallback modal (shown when PWA install isn't available) -->
+  <div class="modal-overlay" id="change-password-modal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close-x" type="button" aria-label="Close" data-modal-close>&times;</button>
+      <h3>Change password</h3>
+      <p>Set a new password for your account. It must be at least 8 characters.</p>
+      <div id="pw-fields">
+        <div class="pw-field">
+          <label for="new-pw">New password</label>
+          <input id="new-pw" type="password" autocomplete="new-password" placeholder="Min. 8 characters" />
+        </div>
+        <div class="pw-field">
+          <label for="confirm-pw">Confirm password</label>
+          <input id="confirm-pw" type="password" autocomplete="new-password" placeholder="Re-enter new password" />
+        </div>
+      </div>
+      <div class="pw-msg" id="pw-msg" style="display:none;"></div>
+      <div class="modal-actions" id="pw-actions">
+        <button class="modal-btn" type="button" data-modal-close>Cancel</button>
+        <button class="modal-btn primary" type="button" id="pw-submit">Update password</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="install-fallback-modal" role="dialog" aria-modal="true">
     <div class="modal-card">
       <button class="modal-close-x" type="button" aria-label="Close" data-modal-close>&times;</button>
@@ -699,6 +743,7 @@
     const $userMenuBtn   = document.getElementById('user-menu-trigger');
     const $userMenuPanel = document.getElementById('user-menu-dropdown');
     const $menuChange    = document.getElementById('menu-change-user');
+    const $menuChangePwd = document.getElementById('menu-change-password');
     const $menuInstall   = document.getElementById('menu-install');
     const $menuReset     = document.getElementById('menu-reset');
     const $menuSignout   = document.getElementById('menu-signout');
@@ -708,6 +753,7 @@
     const $bookmarkKey   = document.getElementById('bookmark-key');
     const $installFb     = document.getElementById('install-fallback-modal');
     const $installFbKey  = document.getElementById('install-fallback-key');
+    const $pwModal       = document.getElementById('change-password-modal');
 
     // ---------------------------------------------------------------------
     // OS detection for the right modifier key in the Bookmark popover
@@ -1031,6 +1077,7 @@
         closeUserMenu();
         $bookmarkModal.classList.remove('visible');
         $installFb.classList.remove('visible');
+        $pwModal.classList.remove('visible');
       }
     });
 
@@ -1048,6 +1095,10 @@
     $menuChange.addEventListener('click', () => {
       closeUserMenu();
       signOutAndReset();
+    });
+    $menuChangePwd.addEventListener('click', () => {
+      closeUserMenu();
+      openChangePassword();
     });
     $menuSignout.addEventListener('click', () => {
       closeUserMenu();
@@ -1083,11 +1134,75 @@
         if (overlay) overlay.classList.remove('visible');
       });
     });
-    [$bookmarkModal, $installFb].forEach(modal => {
+    [$bookmarkModal, $installFb, $pwModal].forEach(modal => {
       modal.addEventListener('click', (ev) => {
         // Click on backdrop (outside the card) closes the modal
         if (ev.target === modal) modal.classList.remove('visible');
       });
+    });
+
+    // ---------------------------------------------------------------------
+    // Change password
+    // ---------------------------------------------------------------------
+    const $newPw      = document.getElementById('new-pw');
+    const $confirmPw  = document.getElementById('confirm-pw');
+    const $pwMsg      = document.getElementById('pw-msg');
+    const $pwFields   = document.getElementById('pw-fields');
+    const $pwActions  = document.getElementById('pw-actions');
+    const $pwSubmit   = document.getElementById('pw-submit');
+
+    function openChangePassword() {
+      $newPw.value = '';
+      $confirmPw.value = '';
+      $pwMsg.style.display = 'none';
+      $pwMsg.textContent = '';
+      $pwFields.style.display = '';
+      $pwActions.style.display = '';
+      $pwSubmit.disabled = false;
+      $pwSubmit.textContent = 'Update password';
+      $pwModal.classList.add('visible');
+      setTimeout(() => $newPw.focus(), 50);
+    }
+
+    function showPwMsg(text, kind) {
+      $pwMsg.className = 'pw-msg ' + kind;
+      $pwMsg.textContent = text;
+      $pwMsg.style.display = '';
+    }
+
+    async function doChangePassword() {
+      const pw = $newPw.value;
+      const confirm = $confirmPw.value;
+      $pwMsg.style.display = 'none';
+
+      if (pw.length < 8) { showPwMsg('Password must be at least 8 characters.', 'error'); return; }
+      if (pw !== confirm) { showPwMsg('Passwords do not match.', 'error'); return; }
+
+      $pwSubmit.disabled = true;
+      $pwSubmit.textContent = 'Saving…';
+      let error = null;
+      try {
+        const res = await sb.auth.updateUser({ password: pw });
+        error = res && res.error;
+      } catch (e) {
+        error = e;
+      }
+      $pwSubmit.disabled = false;
+      $pwSubmit.textContent = 'Update password';
+
+      if (error) {
+        showPwMsg(error.message || 'Could not update password. Please try again.', 'error');
+      } else {
+        $pwFields.style.display = 'none';
+        $pwActions.style.display = 'none';
+        showPwMsg('✓ Password updated successfully.', 'success');
+        setTimeout(() => $pwModal.classList.remove('visible'), 2500);
+      }
+    }
+
+    $pwSubmit.addEventListener('click', doChangePassword);
+    $confirmPw.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') doChangePassword();
     });
 
     // ---------------------------------------------------------------------
@@ -1167,7 +1282,7 @@
         _openV2Relay('');
       });
   </script>
-<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new)</div>
+<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.0.1</div>
 </body>
 </html>
 index.html &middot; Management Portal (new)</div>
