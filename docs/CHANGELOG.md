@@ -6,7 +6,7 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
-## 2026-06-03 | Teacher Management | Applicants view: discipline filter, applied-date sort toggle, stronger applied-date font, sub-heading text fix ("Public teacher..." → "Teacher...") | app/ritual-studio-ops-v2.html
+## 2026-06-03 | Teacher Management | Applicants view: discipline filter, applied-date sort toggle, stronger applied-date font, sub-heading fix; fix applicant count always 0 in Management Suite button (renderActionButtons called before loadData populated applicants[]) | app/ritual-studio-ops-v2.html
 
 ## 2026-06-03 | RBAC unification (User Admin 5.0/5.1) | Merge the two authorization regimes onto the DB permission model; admin RPCs + RLS; v2/portal wired to per-user resolver -- DB APPLIED, app staged (NOT pushed) | migrations/2026-06-02-rbac-unification-backbone.sql, migrations/2026-06-02-user-admin-rpcs-and-rls.sql, migrations/2026-06-02-user-admin-harden-grants.sql, app/ritual-studio-ops-v2.html, app/index.html, app/_user-admin-5.2-overrides.snippet.js, docs/RBAC-MATRIX.md, docs/USER-ADMIN-BUILD-SPEC.md, docs/PHASE-NUMBERING.md, backups/rbac-2026-06-02/
 

@@ -959,6 +959,7 @@
                 classHistory = await dbGet(`class_history?date=gte.${ninetyDaysAgo}&select=*&order=date.desc`);
                 await loadAllAbsences();
                 renderSidebar();
+                renderActionButtons(); // re-render now that applicants[] is populated
                 if (teachers.length > 0) selectTeacher(teachers[0].id);
                 else document.getElementById('mainContent').innerHTML = renderEmptyState();
             } catch(e) { showToast('Error loading data: ' + e.message, 'error'); }
