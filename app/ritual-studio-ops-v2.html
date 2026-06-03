@@ -1317,20 +1317,33 @@
             selectedTeacherId = null;
             const canManage = can('canEditTeachers');
             const discFilter = window.applicantsFilterDisc || '';
-            const sortDir = window.applicantsSortDir || 'desc';
+            // Reset grade sort if discipline cleared
+            let sortField = window.applicantsSortField || 'date_desc';
+            if (!discFilter && (sortField === 'grade_desc' || sortField === 'grade_asc')) {
+                sortField = 'date_desc'; window.applicantsSortField = 'date_desc';
+            }
             let rows = applicants.slice();
             if (discFilter) rows = rows.filter(a => (a.grades?.[discFilter] || 0) > 0);
-            rows.sort((a,b) => sortDir === 'asc'
-                ? (a.applied_at||'').localeCompare(b.applied_at||'')
-                : (b.applied_at||'').localeCompare(a.applied_at||''));
+            rows.sort((a, b) => {
+                if (sortField === 'date_asc')   return (a.applied_at||'').localeCompare(b.applied_at||'');
+                if (sortField === 'grade_desc') return (b.grades?.[discFilter]||0) - (a.grades?.[discFilter]||0);
+                if (sortField === 'grade_asc')  return (a.grades?.[discFilter]||0) - (b.grades?.[discFilter]||0);
+                return (b.applied_at||'').localeCompare(a.applied_at||''); // date_desc default
+            });
             const discOptions = DISCIPLINES.map(d =>
                 `<option value="${d.key}" ${discFilter === d.key ? 'selected' : ''}>${d.label}</option>`).join('');
-            const sortLabel = sortDir === 'asc' ? 'Oldest first ↑' : 'Newest first ↓';
+            const gradeOpts = discFilter ? `
+                <option value="grade_desc" ${sortField==='grade_desc'?'selected':''}>Grade: High to Low</option>
+                <option value="grade_asc"  ${sortField==='grade_asc' ?'selected':''}>Grade: Low to High</option>` : '';
             const filterBar = `<div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
                 <select class="filter-select" style="width:auto;" onchange="window.applicantsFilterDisc=this.value;renderApplicantsView();">
                     <option value="">All Disciplines</option>${discOptions}
                 </select>
-                <button class="btn btn-secondary" style="font-size:11px;" onclick="window.applicantsSortDir=(window.applicantsSortDir==='asc'?'desc':'asc');renderApplicantsView();">Applied: ${sortLabel}</button>
+                <select class="filter-select" style="width:auto;" onchange="window.applicantsSortField=this.value;renderApplicantsView();">
+                    <option value="date_desc" ${sortField==='date_desc'?'selected':''}>Applied: Newest first</option>
+                    <option value="date_asc"  ${sortField==='date_asc' ?'selected':''}>Applied: Oldest first</option>
+                    ${gradeOpts}
+                </select>
             </div>`;
             const body = rows.length ? rows.map(a => {
                 const discs = DISCIPLINES.filter(d => (a.grades?.[d.key]||0) > 0)
@@ -1347,6 +1360,7 @@
                     ${a.email_verified ? '' : `<button class="btn btn-secondary" style="font-size:10px;margin:2px;" onclick="markApplicantVerified('${a.id}','email')">Mark email verified</button>`}
                     ${a.phone_verified ? '' : `<button class="btn btn-secondary" style="font-size:10px;margin:2px;" onclick="markApplicantVerified('${a.id}','phone')">Mark mobile verified</button>`}
                     ${both ? `<button class="btn btn-gold" style="font-size:10px;margin:2px;" onclick="approveApplicant('${a.id}')">Approve and create login</button>` : ''}
+                    <button class="btn btn-secondary" style="font-size:10px;margin:2px;" onclick="openEditApplicant('${a.id}')">Edit</button>
                     <button class="btn btn-danger" style="font-size:10px;margin:2px;" onclick="rejectApplicant('${a.id}')">Reject</button>`
                     : '<span style="color:var(--text-muted);font-size:11px;">View only</span>';
                 const applied = a.applied_at ? new Date(a.applied_at).toLocaleDateString('en-AU') : '';
@@ -2062,6 +2076,18 @@
             document.getElementById('teacherModal').classList.add('open');
         }
 
+        function openEditApplicant(id) {
+            if (!WRITES_ENABLED) { showToast('Writes are currently disabled (WRITES_ENABLED=false)', 'error'); return; }
+            const a = applicants.find(x => x.id === id);
+            if (!a) return;
+            editingTeacherId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Applicant';
+            populateModal(a);
+            const accountSection = document.getElementById('mUserAccountSection');
+            if (accountSection) accountSection.style.display = 'none';
+            document.getElementById('teacherModal').classList.add('open');
+        }
+
         function closeModal() { document.getElementById('teacherModal').classList.remove('open'); editingTeacherId=null; }
 
         let pendingRejectBookingId=null;
@@ -2135,8 +2161,14 @@
                     const rows=await dbPatch(`teachers?id=eq.${editingTeacherId}`,data);
                     const idx=teachers.findIndex(t=>t.id===editingTeacherId);
                     if (idx>=0&&rows?.[0]) teachers[idx]=rows[0];
+                    const aidx=applicants.findIndex(a=>a.id===editingTeacherId);
+                    if (aidx>=0&&rows?.[0]) applicants[aidx]=rows[0];
                     await writeAudit(editingTeacherId,`Teacher profile updated by ${currentUserEmail}`);
-                    showToast('Teacher updated.'); closeModal(); renderSidebar(); renderMainPanel();
+                    if (aidx>=0) {
+                        showToast('Applicant updated.'); closeModal(); renderApplicantsView();
+                    } else {
+                        showToast('Teacher updated.'); closeModal(); renderSidebar(); renderMainPanel();
+                    }
                 } else {
                     const rows=await dbPost('teachers',data); const newTeacher=rows?.[0];
                     if (!newTeacher) throw new Error('Teacher record was not created.');
