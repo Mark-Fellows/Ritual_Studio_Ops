@@ -416,6 +416,107 @@
     body.auth-pending .main,
     body.auth-pending .session-strip,
     body.auth-pending .bookmark-fab { visibility: hidden; }
+    /* Settings gear button ------------------------------------------------- */
+    .settings-btn {
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.20);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+      display: none;
+    }
+    .settings-btn:hover { background: rgba(255,255,255,0.22); }
+    /* User Management modal ------------------------------------------------ */
+    .um-modal-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.30);
+      width: 100%;
+      max-width: 820px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .um-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .um-header h3 { font-size: 14px; font-weight: 700; color: var(--green-dark); letter-spacing: 0.06em; text-transform: uppercase; }
+    .um-body { display: flex; flex: 1; overflow: hidden; }
+    .um-list { width: 260px; min-width: 220px; border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; }
+    .um-list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 14px; border-bottom: 1px solid var(--border); background: #F9FAFB;
+    }
+    .um-list-header span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+    .um-add-btn {
+      background: var(--green-dark); color: #fff; border: none; border-radius: 6px;
+      padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background 0.15s;
+    }
+    .um-add-btn:hover { background: var(--green-mid); }
+    .um-user-row {
+      display: flex; align-items: center; padding: 10px 14px; cursor: pointer;
+      border-bottom: 1px solid var(--border); gap: 10px; transition: background 0.12s;
+    }
+    .um-user-row:hover { background: var(--green-bg); }
+    .um-user-row.active { background: var(--green-bg); border-left: 3px solid var(--green-dark); padding-left: 11px; }
+    .um-user-info { flex: 1; min-width: 0; }
+    .um-user-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .um-user-email { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .um-role-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--green-mid); background: var(--green-bg); padding: 2px 6px; border-radius: 5px; white-space: nowrap;
+    }
+    .um-form { flex: 1; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; }
+    .um-form h4 { font-size: 13px; font-weight: 700; color: var(--green-dark); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+    .um-field { margin-bottom: 13px; }
+    .um-field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 5px; }
+    .um-field input, .um-field select {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; font-family: inherit; background: #fff; color: var(--text); transition: border-color 0.15s;
+    }
+    .um-field input:focus, .um-field select:focus { outline: none; border-color: var(--green-mid); box-shadow: 0 0 0 3px var(--green-bg); }
+    .um-field input[readonly] { background: #F3F4F6; color: var(--text-muted); cursor: default; }
+    .um-row2 { display: flex; gap: 12px; }
+    .um-row2 .um-field { flex: 1; }
+    .um-section-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em;
+      color: var(--text-muted); margin: 16px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    .um-tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 4px; }
+    .um-tile-check {
+      display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      transition: background 0.12s, border-color 0.12s; font-size: 13px; color: var(--text); user-select: none;
+    }
+    .um-tile-check:hover { background: var(--green-bg); border-color: var(--green-light); }
+    .um-tile-check input[type="checkbox"] { accent-color: var(--green-dark); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+    .um-form-actions {
+      display: flex; gap: 8px; justify-content: flex-end;
+      margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .um-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.12s; }
+    .um-btn:hover { background: var(--green-bg); }
+    .um-btn.primary { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+    .um-btn.primary:hover { background: var(--green-mid); }
+    .um-btn.danger { border-color: #FECACA; color: #B91C1C; }
+    .um-btn.danger:hover { background: #FEF2F2; }
+    .um-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .um-msg { font-size: 12px; line-height: 1.5; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; }
+    .um-msg:empty { display: none; }
+    .um-msg.error { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+    .um-msg.success { background: var(--green-bg); color: var(--green-dark); border: 1px solid var(--green-light); }
+    .um-empty, .um-loading { padding: 20px 14px; text-align: center; color: var(--text-muted); font-size: 13px; }
   </style>
 </head>
 <body class="auth-pending">
@@ -462,6 +563,7 @@
     <p>Internal tools &middot; Robina &middot; Palm Beach</p>
     <div class="session-strip" id="session-strip">
       <span class="role-tag" id="session-role"></span>
+      <button id="settings-btn" class="settings-btn" type="button" title="User management" aria-label="User management">&#9881;</button>
       <div class="user-menu" id="user-menu">
         <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
           <span id="session-who">Signed in</span>
@@ -701,6 +803,62 @@
     </div>
   </div>
 
+  <!-- User Management modal ---------------------------------------------- -->
+  <div class="modal-overlay" id="um-modal" role="dialog" aria-modal="true">
+    <div class="um-modal-card">
+      <div class="um-header">
+        <h3>&#9881; User Management</h3>
+        <button class="modal-close-x" type="button" aria-label="Close" id="um-close">&times;</button>
+      </div>
+      <div class="um-body">
+        <div class="um-list" id="um-list">
+          <div class="um-list-header">
+            <span>Users</span>
+            <button class="um-add-btn" id="um-add-btn" type="button">+ Add user</button>
+          </div>
+          <div id="um-list-body"><div class="um-loading">Loading&hellip;</div></div>
+        </div>
+        <div class="um-form" id="um-form" style="display:none;">
+          <div class="um-msg" id="um-msg"></div>
+          <h4 id="um-form-title">Edit user</h4>
+          <div class="um-row2">
+            <div class="um-field">
+              <label for="um-first">First name</label>
+              <input id="um-first" type="text" autocomplete="off" placeholder="First name">
+            </div>
+            <div class="um-field">
+              <label for="um-last">Last name</label>
+              <input id="um-last" type="text" autocomplete="off" placeholder="Last name">
+            </div>
+          </div>
+          <div class="um-field">
+            <label for="um-email">Email address</label>
+            <input id="um-email" type="email" autocomplete="off" placeholder="user@example.com">
+          </div>
+          <div class="um-field">
+            <label for="um-role">Role</label>
+            <select id="um-role">
+              <option value="coordinator">Coordinator</option>
+              <option value="teacher">Teacher</option>
+              <option value="trainee">Trainee</option>
+              <option value="guest">Guest</option>
+              <option value="developer">Developer</option>
+            </select>
+          </div>
+          <div class="um-section-title">Internal Tools access</div>
+          <div class="um-tile-grid" id="um-tile-grid"></div>
+          <div class="um-section-title">External Platforms access</div>
+          <div class="um-tile-grid" id="um-ext-tile-grid"></div>
+          <div class="um-form-actions">
+            <button class="um-btn danger" id="um-delete-btn" type="button" style="display:none;">Remove user</button>
+            <button class="um-btn" id="um-cancel-btn" type="button">Cancel</button>
+            <button class="um-btn primary" id="um-save-btn" type="button">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ---------------------------------------------------------------------
     // Supabase client
@@ -847,6 +1005,9 @@
           el.removeAttribute('target');
         }
       });
+      // Show settings gear for users with admin.users.manage
+      const $sBtn = document.getElementById('settings-btn');
+      if ($sBtn) $sBtn.style.display = permSet.has('admin.users.manage') ? 'inline-block' : 'none';
     }
 
     // ---------------------------------------------------------------------
@@ -1281,8 +1442,271 @@
         e.preventDefault();
         _openV2Relay('');
       });
+
+    // =====================================================================
+    // USER MANAGEMENT
+    // =====================================================================
+    const TILE_PERMS = [
+      { code: 'index.tile.cover_dashboard',  label: 'Cover Dashboard',  section: 'internal' },
+      { code: 'index.tile.teacher_portal',   label: 'Teacher Portal',   section: 'internal' },
+      { code: 'index.tile.studio_timetable', label: 'Studio Timetable', section: 'internal' },
+      { code: 'index.tile.ritual_dashboard', label: 'Ritual Dashboard', section: 'internal' },
+      { code: 'index.tile.momence',          label: 'Momence',          section: 'external' },
+      { code: 'index.tile.fitness_passport', label: 'Fitness Passport', section: 'external' },
+      { code: 'index.tile.classpass',        label: 'ClassPass',        section: 'external' },
+      { code: 'index.tile.ritual_website',   label: 'Ritual Website',   section: 'external' },
+    ];
+
+    const $umModal    = document.getElementById('um-modal');
+    const $umClose    = document.getElementById('um-close');
+    const $umAddBtn   = document.getElementById('um-add-btn');
+    const $umListBody = document.getElementById('um-list-body');
+    const $umForm     = document.getElementById('um-form');
+    const $umFormTitle= document.getElementById('um-form-title');
+    const $umMsg      = document.getElementById('um-msg');
+    const $umFirst    = document.getElementById('um-first');
+    const $umLast     = document.getElementById('um-last');
+    const $umEmail    = document.getElementById('um-email');
+    const $umRole     = document.getElementById('um-role');
+    const $umTileGrid = document.getElementById('um-tile-grid');
+    const $umExtGrid  = document.getElementById('um-ext-tile-grid');
+    const $umSaveBtn  = document.getElementById('um-save-btn');
+    const $umCancelBtn= document.getElementById('um-cancel-btn');
+    const $umDeleteBtn= document.getElementById('um-delete-btn');
+    const $settingsBtn2 = document.getElementById('settings-btn');
+
+    let _umUsers     = [];
+    let _umSelUserId = null;
+    let _umRolePerms = {};
+
+    function umShowMsg(msg, type) {
+      $umMsg.textContent = msg || '';
+      $umMsg.className = 'um-msg' + (type ? ' ' + type : '');
+    }
+
+    async function umLoadRolePerms(role) {
+      if (_umRolePerms[role]) return _umRolePerms[role];
+      const { data } = await sb.from('v_role_permissions_resolved')
+        .select('permission_code').eq('role', role);
+      _umRolePerms[role] = new Set((data || []).map(r => r.permission_code));
+      return _umRolePerms[role];
+    }
+
+    async function umLoadOverrides(userId) {
+      if (!userId) return {};
+      const { data } = await sb.from('user_permission_overrides')
+        .select('permission_code, granted').eq('user_id', userId);
+      const map = {};
+      (data || []).forEach(r => { map[r.permission_code] = r.granted; });
+      return map;
+    }
+
+    async function umRenderTiles(role, overrides) {
+      const rolePerms = await umLoadRolePerms(role);
+      function buildGrid(el, tiles) {
+        el.innerHTML = '';
+        tiles.forEach(t => {
+          const checked = (t.code in overrides) ? overrides[t.code] : rolePerms.has(t.code);
+          const lbl = document.createElement('label');
+          lbl.className = 'um-tile-check';
+          lbl.innerHTML = '<input type="checkbox" name="tile" data-code="' + t.code + '"' + (checked ? ' checked' : '') + '> ' + t.label;
+          el.appendChild(lbl);
+        });
+      }
+      buildGrid($umTileGrid, TILE_PERMS.filter(t => t.section === 'internal'));
+      buildGrid($umExtGrid,  TILE_PERMS.filter(t => t.section === 'external'));
+    }
+
+    async function umOpenEdit(user) {
+      _umSelUserId = user ? user.user_id : null;
+      $umFormTitle.textContent = user ? 'Edit user' : 'Add new user';
+      $umFirst.value = user ? (user.first_name || '') : '';
+      $umLast.value  = user ? (user.last_name  || '') : '';
+      $umEmail.value = user ? (user.email      || '') : '';
+      $umEmail.readOnly = !!user;
+      $umRole.value  = user ? (user.role || 'coordinator') : 'coordinator';
+      $umDeleteBtn.style.display = user ? 'inline-flex' : 'none';
+      umShowMsg('');
+
+      const overrides = await umLoadOverrides(user ? user.user_id : null);
+      await umRenderTiles($umRole.value, overrides);
+
+      $umRole.onchange = async () => {
+        const ov = await umLoadOverrides(_umSelUserId);
+        await umRenderTiles($umRole.value, ov);
+      };
+
+      $umForm.style.display = 'flex';
+      document.querySelectorAll('.um-user-row').forEach(r => r.classList.remove('active'));
+      if (user) {
+        const row = document.querySelector('.um-user-row[data-uid="' + user.user_id + '"]');
+        if (row) row.classList.add('active');
+      }
+    }
+
+    function umRenderList(users) {
+      $umListBody.innerHTML = '';
+      if (!users.length) {
+        $umListBody.innerHTML = '<div class="um-empty">No users found.</div>';
+        return;
+      }
+      users.forEach(u => {
+        const div = document.createElement('div');
+        div.className = 'um-user-row';
+        div.dataset.uid = u.user_id;
+        const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email || '—';
+        div.innerHTML =
+          '<div class="um-user-info">' +
+          '<div class="um-user-name">' + name + '</div>' +
+          '<div class="um-user-email">' + (u.email || '') + '</div>' +
+          '</div><span class="um-role-badge">' + (u.role || '') + '</span>';
+        div.addEventListener('click', () => umOpenEdit(u));
+        $umListBody.appendChild(div);
+      });
+    }
+
+    async function umLoadUsers() {
+      $umListBody.innerHTML = '<div class="um-loading">Loading…</div>';
+      const { data, error } = await sb.from('user_profiles')
+        .select('user_id, email, first_name, last_name, role')
+        .order('last_name', { ascending: true });
+      if (error) {
+        $umListBody.innerHTML = '<div class="um-empty">Error: ' + error.message + '</div>';
+        return;
+      }
+      _umUsers = data || [];
+      umRenderList(_umUsers);
+    }
+
+    async function umSave() {
+      const first = $umFirst.value.trim();
+      const last  = $umLast.value.trim();
+      const email = $umEmail.value.trim().toLowerCase();
+      const role  = $umRole.value;
+      if (!email) { umShowMsg('Email is required.', 'error'); return; }
+      if (!role)  { umShowMsg('Role is required.',  'error'); return; }
+
+      $umSaveBtn.disabled = true;
+      $umSaveBtn.textContent = 'Saving…';
+      umShowMsg('');
+
+      try {
+        let userId = _umSelUserId;
+
+        if (!userId) {
+          const { data: { session } } = await sb.auth.getSession();
+          const resp = await fetch(SUPABASE_URL + '/functions/v1/invite-portal-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + session.access_token,
+              'apikey': SUPABASE_KEY,
+            },
+            body: JSON.stringify({ email: email, first_name: first, last_name: last, role: role }),
+          });
+          const result = await resp.json();
+          if (!resp.ok || result.error) throw new Error(result.error || 'Failed to create user');
+          userId = result.user_id;
+          umShowMsg(
+            result.existing
+              ? 'Profile updated — this email already had an account.'
+              : 'Invitation sent and profile created. They will receive a login link.',
+            'success'
+          );
+        } else {
+          const { error } = await sb.from('user_profiles')
+            .update({ first_name: first, last_name: last, role: role })
+            .eq('user_id', userId);
+          if (error) throw new Error(error.message);
+        }
+
+        const rolePerms = await umLoadRolePerms(role);
+        const { data: { user: me } } = await sb.auth.getUser();
+
+        await sb.from('user_permission_overrides')
+          .delete().eq('user_id', userId)
+          .in('permission_code', TILE_PERMS.map(t => t.code));
+
+        const toInsert = [];
+        [$umTileGrid, $umExtGrid].forEach(function(grid) {
+          grid.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+            const code = cb.dataset.code;
+            if (cb.checked !== rolePerms.has(code)) {
+              toInsert.push({ user_id: userId, permission_code: code, granted: cb.checked, granted_by: (me && me.id) || null });
+            }
+          });
+        });
+        if (toInsert.length) {
+          const { error: ovErr } = await sb.from('user_permission_overrides').insert(toInsert);
+          if (ovErr) throw new Error('Profile saved but tile overrides failed: ' + ovErr.message);
+        }
+
+        if (!_umSelUserId) {
+          await umLoadUsers();
+          $umForm.style.display = 'none';
+        } else {
+          const idx = _umUsers.findIndex(function(u) { return u.user_id === userId; });
+          if (idx >= 0) { _umUsers[idx] = Object.assign({}, _umUsers[idx], { first_name: first, last_name: last, role: role }); }
+          umRenderList(_umUsers);
+          setTimeout(function() {
+            const row = document.querySelector('.um-user-row[data-uid="' + userId + '"]');
+            if (row) row.classList.add('active');
+          }, 30);
+          umShowMsg('Changes saved.', 'success');
+        }
+      } catch (err) {
+        umShowMsg(err.message || 'An error occurred.', 'error');
+      } finally {
+        $umSaveBtn.disabled = false;
+        $umSaveBtn.textContent = 'Save';
+      }
+    }
+
+    function umOpenModal() {
+      $umModal.classList.add('visible');
+      $umForm.style.display = 'none';
+      umLoadUsers();
+    }
+    function umCloseModal() { $umModal.classList.remove('visible'); }
+
+    if ($settingsBtn2) $settingsBtn2.addEventListener('click', umOpenModal);
+    $umClose.addEventListener('click', umCloseModal);
+    $umModal.addEventListener('click', function(ev) { if (ev.target === $umModal) umCloseModal(); });
+    $umAddBtn.addEventListener('click', function() { umOpenEdit(null); });
+    $umCancelBtn.addEventListener('click', function() {
+      $umForm.style.display = 'none';
+      document.querySelectorAll('.um-user-row').forEach(function(r) { r.classList.remove('active'); });
+    });
+    $umSaveBtn.addEventListener('click', umSave);
+
+    $umDeleteBtn.addEventListener('click', async function() {
+      if (!_umSelUserId) return;
+      const u = _umUsers.find(function(x) { return x.user_id === _umSelUserId; });
+      const name = [u && u.first_name, u && u.last_name].filter(Boolean).join(' ') || (u && u.email) || 'this user';
+      if (!confirm('Remove portal access for ' + name + '?\n\nThis deletes their profile and tile overrides. Their Supabase login account is NOT deleted.')) return;
+      $umDeleteBtn.disabled = true;
+      try {
+        await sb.from('user_permission_overrides').delete().eq('user_id', _umSelUserId);
+        const { error } = await sb.from('user_profiles').delete().eq('user_id', _umSelUserId);
+        if (error) throw new Error(error.message);
+        _umUsers = _umUsers.filter(function(x) { return x.user_id !== _umSelUserId; });
+        umRenderList(_umUsers);
+        $umForm.style.display = 'none';
+      } catch (err) {
+        umShowMsg(err.message || 'Delete failed.', 'error');
+      } finally {
+        $umDeleteBtn.disabled = false;
+      }
+    });
+
+    document.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Escape' && $umModal && $umModal.classList.contains('visible')) {
+        ev.stopImmediatePropagation();
+        umCloseModal();
+      }
+    }, true);
   </script>
-<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.0.1</div>
+<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.1.0</div>
 </body>
 </html>
 index.html &middot; Management Portal (new)</div>
