@@ -192,7 +192,8 @@
       margin-bottom: 6px;
       font-weight: 700;
     }
-    .login-card input[type="email"] {
+    .login-card input[type="email"],
+    .login-card input[type="password"] {
       width: 100%;
       padding: 11px 12px;
       border: 1px solid var(--border);
@@ -530,13 +531,23 @@
 
       <div id="login-form-panel">
         <h2>Ritual Management Portal</h2>
-        <div class="subtitle">Enter the email address linked to your account.<br>We'll send you a one-tap login link.</div>
+        <div class="subtitle" id="login-subtitle">Enter the email address linked to your account.<br>We'll send you a one-tap login link.</div>
         <form id="login-form" autocomplete="on">
           <label for="login-email">Email address</label>
           <input id="login-email" type="email" autocomplete="email" required placeholder="you@example.com">
+          <div id="pw-login-field" style="display:none;margin-top:12px;">
+            <label for="login-password">Password</label>
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="Your password">
+          </div>
           <button class="login-btn" id="login-btn" type="submit">Send login link</button>
         </form>
         <div class="login-error" id="login-error"></div>
+        <p style="text-align:center;margin-top:12px;">
+          <button type="button" id="login-mode-toggle"
+            style="background:none;border:none;color:var(--green-mid);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;padding:0;">
+            Sign in with password instead
+          </button>
+        </p>
       </div>
 
       <div class="sent-panel" id="sent-panel">
@@ -954,6 +965,7 @@
     // UI state helpers
     // ---------------------------------------------------------------------
     function showFormPanel(errorMsg) {
+      if (typeof setLoginMode === 'function') setLoginMode('magic');
       $formPanel.style.display = 'block';
       $sentPanel.classList.remove('visible');
       if (errorMsg) {
@@ -1163,6 +1175,33 @@
     }, 1500);
 
     // ---------------------------------------------------------------------
+    // Login mode toggle (magic link ↔ password)
+    // ---------------------------------------------------------------------
+    let _loginMode = 'magic';
+    const $loginSubtitle  = document.getElementById('login-subtitle');
+    const $pwLoginField   = document.getElementById('pw-login-field');
+    const $loginPassword  = document.getElementById('login-password');
+    const $loginModeToggle= document.getElementById('login-mode-toggle');
+
+    function setLoginMode(mode) {
+      _loginMode = mode;
+      if (mode === 'password') {
+        $loginSubtitle.innerHTML = 'Enter your email and password to sign in.';
+        $pwLoginField.style.display = 'block';
+        $loginBtn.textContent = 'Sign in';
+        $loginModeToggle.textContent = 'Send a magic link instead';
+      } else {
+        $loginSubtitle.innerHTML = 'Enter the email address linked to your account.<br>We\'ll send you a one-tap login link.';
+        $pwLoginField.style.display = 'none';
+        $loginBtn.textContent = 'Send login link';
+        $loginModeToggle.textContent = 'Sign in with password instead';
+        if ($loginPassword) { $loginPassword.value = ''; }
+      }
+    }
+
+    $loginModeToggle.addEventListener('click', () => setLoginMode(_loginMode === 'magic' ? 'password' : 'magic'));
+
+    // ---------------------------------------------------------------------
     // Magic-link send
     // ---------------------------------------------------------------------
     async function sendMagicLink(email) {
@@ -1185,11 +1224,43 @@
       }
     }
 
+    // ---------------------------------------------------------------------
+    // Password sign-in
+    // ---------------------------------------------------------------------
+    async function signInWithPassword(email, password) {
+      $loginBtn.disabled = true;
+      $error.classList.remove('visible');
+      $error.textContent = '';
+      try {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        localStorage.setItem('rmp_last_email', email);
+        // onAuthStateChange → handleSession takes over from here
+      } catch (err) {
+        $error.textContent = (err.message || '').toLowerCase().includes('invalid login')
+          ? 'Incorrect email or password.'
+          : 'Could not sign in: ' + (err.message || String(err));
+        $error.classList.add('visible');
+      } finally {
+        $loginBtn.disabled = false;
+      }
+    }
+
     $form.addEventListener('submit', (ev) => {
       ev.preventDefault();
       const email = ($email.value || '').trim().toLowerCase();
       if (!email) return;
-      sendMagicLink(email);
+      if (_loginMode === 'password') {
+        const pw = ($loginPassword && $loginPassword.value) || '';
+        if (!pw) {
+          $error.textContent = 'Please enter your password.';
+          $error.classList.add('visible');
+          return;
+        }
+        signInWithPassword(email, pw);
+      } else {
+        sendMagicLink(email);
+      }
     });
 
     $resendBtn.addEventListener('click', () => {
@@ -1647,7 +1718,6 @@
         } else {
           const idx = _umUsers.findIndex(function(u) { return u.user_id === userId; });
           if (idx >= 0) { _umUsers[idx] = Object.assign({}, _umUsers[idx], { first_name: first, last_name: last, role: role }); }
-          umRenderList(_umUsers);
           setTimeout(function() {
             const row = document.querySelector('.um-user-row[data-uid="' + userId + '"]');
             if (row) row.classList.add('active');
@@ -1706,9 +1776,6 @@
       }
     }, true);
   </script>
-<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.1.0</div>
-</body>
-</html>
-index.html &middot; Management Portal (new)</div>
+<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.1.1</div>
 </body>
 </html>
