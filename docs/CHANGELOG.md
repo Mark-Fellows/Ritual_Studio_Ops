@@ -6,6 +6,10 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-06-05 | Teacher Management | Grade backfill from Momence: set grade 25 in disciplines taught over the last 3 months (5 Mar–5 Jun 2026, community + cancelled classes excluded) for matched teachers, fill-only where no existing grade. 20 grades filled across 20 teachers (19 mat_pilates, 1 yoga); 54 existing grades left untouched. Also logged a critical RLS-disabled finding (12 tables) and created a roadmap. | teachers.grades (DB, project rfjygyqijwgkmxboddup), docs/SECURITY-RLS-DISABLED-2026-06-05.md, docs/ROADMAP.md
+
+Data-only change to the shared teachers table — no app or schema change, no deploy (both legacy and merged apps read grades live). Scope built from momence_sessions: last three months, class_cancelled IS NOT TRUE, class_name NOT ILIKE '%community%'; class names mapped to the 5 canonical disciplines (yoga/barre/reformer/mat_pilates/yin). Teachers matched by case-insensitive first+last name. Fill rule: set 25 only where the discipline grade was 0 or missing (legacy 'mat' key treated as equivalent to 'mat_pilates'); any existing grade > 0 preserved. Not processed (no teachers row): Amy Landry, Samantha Barrie, Sophie Lamont, Tomer Leibovich, and the Ritual YTT/PTT student/graduate placeholders. Roadmap also notes duplicate teacher rows (Rose Lamont, Angel Dixon) and the mat/mat_pilates key inconsistency.
+
 ## 2026-06-03 | Teacher Management | Applicants view: Edit button per row (openEditApplicant + saveTeacher applicants[] patch); grade sort added to sort select when discipline filter active; discipline filter also resets grade sort when cleared | app/ritual-studio-ops-v2.html
 
 ## 2026-06-03 | Teacher Management | Applicants view: discipline filter, applied-date sort toggle, stronger applied-date font, sub-heading fix; fix applicant count always 0 in Management Suite button (renderActionButtons called before loadData populated applicants[]) | app/ritual-studio-ops-v2.html
@@ -394,3 +398,5 @@ Migration: `migrations/2026-04-05-add-teacher-photo-and-momence.sql`
 Source: `CHANGELOG-2026-04-05-teacher-management.md`
 
 ## 2026-06-03 | Cover Management (legacy) | Fix resolved-classes table: discipline now reads per-class Momence value (c.discipline) not request-level scalar; date cell no longer shows weekday twice | public/cover_dashboard.html
+
+## 2026-06-07 | Cover Management (legacy) | Fix edit-modal teacher dropdown: loadTeachers() now queries anon-readable teacher_directory view (teachers table RLS blocks anon SELECT, so the list was empty and only the raw name showed); saveAndApprove() also resolves and stores requesting_teacher_id for known teachers; v1.3.29 | public/cover_dashboard.html
