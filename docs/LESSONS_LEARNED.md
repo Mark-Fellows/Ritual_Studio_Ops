@@ -592,3 +592,4 @@ Added localStorage diagnostic logging to _openV2Relay in index.html (visible in 
 **Fix:** Drop the `wd +` prefix when `formatDate()` is used; the function is self-contained. If a raw day-of-week prefix is ever needed without a formatted date, do not use `formatDate()` — use a date formatter with no weekday option instead.
 
 **Applies to:** cover_dashboard.html resolved-classes table date cell.
+2026-06-08 | Dashboard c1_momence.js | Lite scrape keyed by Class Number (template ID), not session. The Momence "Teacher/Host" field on a recurring class template reflects the class owner, not the actual per-session teacher. Occupancy CSV (keyed date+class+studio) is the authoritative per-session teacher source and must take priority over the lite scrape in instructor resolution.

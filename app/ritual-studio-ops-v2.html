@@ -1297,6 +1297,103 @@
         // ===================================================================
         // APPLICANTS VIEW (public teacher applications)
         // ===================================================================
+        // ---- Applications CSV import (Asana export); skips emails already in the system ----
+        function parseCsv(text){
+            const rows=[]; let row=[], field='', i=0, inQ=false; const n=text.length;
+            while(i<n){ const c=text[i];
+                if(inQ){ if(c==='"'){ if(text[i+1]==='"'){ field+='"'; i+=2; continue; } inQ=false; i++; continue; } field+=c; i++; continue; }
+                if(c==='"'){ inQ=true; i++; continue; }
+                if(c===','){ row.push(field); field=''; i++; continue; }
+                if(c==='\r'){ i++; continue; }
+                if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=''; i++; continue; }
+                field+=c; i++;
+            }
+            if(field.length||row.length){ row.push(field); rows.push(row); }
+            return rows;
+        }
+        const APP_LABELS=["Name","Email address","Telephone number","Which disciplines do you have experience teaching?","Please give details of your experience and training","Please give details of your teaching style and technique","Please upload a link to a video of you teaching a class (a trial class is fine)","Give details of your availability:","Where are you located?","Which studio are you available to teach at?"];
+        function appField(notes,label){
+            const start=notes.indexOf(label+':'); if(start<0) return '';
+            const from=start+label.length+1;
+            const stops=[];
+            for(const l of APP_LABELS){ if(l===label) continue; const idx=notes.indexOf('\n'+l+':',from); if(idx>=0) stops.push(idx); }
+            const sep=notes.indexOf('———',from); if(sep>=0) stops.push(sep);
+            const sub=notes.indexOf('This task was submitted',from); if(sub>=0) stops.push(sub);
+            const end=stops.length?Math.min.apply(null,stops):notes.length;
+            return notes.slice(from,end).trim();
+        }
+        const APP_DISC={'reformer pilates':'reformer','mat pilates':'mat_pilates','barre':'barre','yoga':'yoga','yin':'yin'};
+        async function importApplicationsCsv(file){
+            if(!file) return;
+            if(!WRITES_ENABLED){ showToast('Writes are currently disabled (WRITES_ENABLED=false)','error'); return; }
+            if(!can('canEditTeachers')) return;
+            showLoading('Reading file...');
+            try{
+                const text=await file.text();
+                const rows=parseCsv(text);
+                if(rows.length<2){ hideLoading(); showToast('No rows found in file.','error'); return; }
+                const headers=rows[0].map(function(h){return (h||'').trim();});
+                const hasMarker=function(idx){ return idx>=0 && rows.slice(1).some(function(r){ return (r[idx]||'').indexOf('Email address:')>=0; }); };
+                let notesIdx=headers.indexOf('Notes');
+                if(!hasMarker(notesIdx)){ notesIdx=-1; for(let c=0;c<headers.length;c++){ if(hasMarker(c)){ notesIdx=c; break; } } }
+                if(notesIdx<0){ hideLoading(); showToast('Could not find an application notes column in this CSV.','error'); return; }
+                const createdIdx=headers.indexOf('Created At');
+                const existing=await dbGet('teachers?select=email');
+                const seen=new Set((existing||[]).map(function(t){return (t.email||'').trim().toLowerCase();}).filter(Boolean));
+                const GK=['yin','yoga','barre','reformer','mat_pilates'];
+                const recs=[]; let dupes=0; const dupList=[];
+                for(let r=1;r<rows.length;r++){
+                    const notes=rows[r][notesIdx]||'';
+                    if(notes.indexOf('Email address:')<0) continue;
+                    const email=appField(notes,'Email address').trim();
+                    if(!email) continue;
+                    const key=email.toLowerCase();
+                    if(seen.has(key)){ dupes++; dupList.push(email); continue; }
+                    seen.add(key);
+                    const nm=appField(notes,'Name').trim();
+                    const parts=nm.split(/\s+/).filter(Boolean);
+                    const fn=parts[0]||email; const ln=parts.length>1?parts.slice(1).join(' '):'-';
+                    const grades={}; GK.forEach(function(k){ grades[k]=0; });
+                    appField(notes,'Which disciplines do you have experience teaching?').split(/[\n,]/).forEach(function(d){ const k=APP_DISC[d.trim().toLowerCase()]; if(k) grades[k]=2; });
+                    const locs=[];
+                    appField(notes,'Which studio are you available to teach at?').split(/\n/).forEach(function(srow){ const v=srow.trim().toLowerCase(); if(v.indexOf('palm')>=0) locs.push('Palm Beach'); else if(v.indexOf('robina')>=0) locs.push('Robina'); });
+                    const video=appField(notes,'Please upload a link to a video of you teaching a class (a trial class is fine)').trim();
+                    let applied=new Date().toISOString();
+                    if(createdIdx>=0){ const d=new Date(rows[r][createdIdx]); if(!isNaN(d.getTime())) applied=d.toISOString(); }
+                    recs.push({ first_name:fn, last_name:ln, email:email, phone:appField(notes,'Telephone number').trim()||null,
+                        grades:grades, locations:Array.from(new Set(locs)),
+                        experience_training:appField(notes,'Please give details of your experience and training')||null,
+                        teaching_style:appField(notes,'Please give details of your teaching style and technique')||null,
+                        video_url:(video.indexOf('http')>=0?video:null),
+                        availability_text:appField(notes,'Give details of your availability:')||null,
+                        located_text:appField(notes,'Where are you located?')||null,
+                        status:'applicant', source:'asana_recruitment_import', applied_at:applied,
+                        email_verified:false, phone_verified:false });
+                }
+                hideLoading();
+                if(!recs.length){ showToast('No new applications found. '+dupes+' duplicate(s) skipped.','error',6000); return; }
+                if(!confirm('Found '+recs.length+' new application(s) and '+dupes+' duplicate(s) to skip. Import the '+recs.length+' new applicant(s)?')) return;
+                showLoading('Importing '+recs.length+'...');
+                let ok=0, fail=0; const added=[];
+                for(const rec of recs){ try{ await dbPost('teachers',rec); ok++; added.push({ name:(rec.first_name+' '+rec.last_name).trim(), applied:rec.applied_at }); }catch(e){ fail++; } }
+                await writeAudit(null,'Applications CSV import: '+ok+' added, '+dupes+' duplicates skipped, '+fail+' failed by '+currentUserEmail);
+                applicants=await dbGet('teachers?select=*&status=eq.applicant&order=applied_at.desc')||[];
+                hideLoading();
+                renderApplicantsView(); renderActionButtons();
+                showImportSummary(added, dupList, fail);
+            }catch(e){ hideLoading(); showToast('Import failed: '+e.message,'error'); }
+        }
+
+        function showImportSummary(added, skipped, fail){
+            const fmt=function(d){ try{ return new Date(d).toLocaleDateString('en-AU'); }catch(e){ return ''; } };
+            const list = added.length ? added.map(function(a){ return '<li style="padding:4px 0;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;gap:10px;"><span>'+esc(a.name)+'</span><span style="color:var(--text-muted);font-size:11px;white-space:nowrap;">'+fmt(a.applied)+'</span></li>'; }).join('') : '<li style="color:var(--text-muted);">None</li>';
+            const skippedHtml = skipped.length ? '<details style="margin-top:12px;"><summary style="cursor:pointer;font-size:12px;color:var(--earth);">'+skipped.length+' skipped (already in system)</summary><div style="font-size:11px;color:var(--text-muted);max-height:160px;overflow:auto;margin-top:6px;">'+skipped.map(function(e){return esc(e);}).join('<br>')+'</div></details>' : '';
+            const ov=document.createElement('div'); ov.className='modal-overlay'; ov.style.display='flex'; ov.style.alignItems='center'; ov.style.justifyContent='center';
+            ov.innerHTML='<div class="modal" style="width:480px;max-width:92vw;"><h2 style="font-family:\'Cormorant Garamond\',serif;font-weight:400;font-size:24px;margin:0 0 6px;">Import complete</h2><p style="font-size:12px;color:var(--text-secondary);margin:0 0 14px;">'+added.length+' added &middot; '+skipped.length+' skipped'+(fail?(' &middot; '+fail+' failed'):'')+'</p><div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Added applicants</div><ul style="list-style:none;padding:0;margin:0;max-height:300px;overflow:auto;font-size:13px;">'+list+'</ul>'+skippedHtml+'<div style="text-align:right;margin-top:18px;"><button class="btn btn-gold" onclick="this.closest(\'.modal-overlay\').remove()">Close</button></div></div>';
+            ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+            document.body.appendChild(ov);
+        }
+
         async function openCv(path) {
             try {
                 const res = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/teacher-cvs/${path}`, { method:'POST', headers: authHeaders(), body: JSON.stringify({ expiresIn: 300 }) });
@@ -1322,9 +1419,16 @@
             if (!discFilter && (sortField === 'grade_desc' || sortField === 'grade_asc')) {
                 sortField = 'date_desc'; window.applicantsSortField = 'date_desc';
             }
+            const fromDate = window.applicantsFrom || '';
+            const toDate = window.applicantsTo || '';
             let rows = applicants.slice();
             if (discFilter) rows = rows.filter(a => (a.grades?.[discFilter] || 0) > 0);
+            if (fromDate) rows = rows.filter(a => (a.applied_at||'').slice(0,10) >= fromDate);
+            if (toDate) rows = rows.filter(a => (a.applied_at||'').slice(0,10) <= toDate);
+            const byName = (a, b) => (a.first_name||'').localeCompare(b.first_name||'') || (a.last_name||'').localeCompare(b.last_name||'');
             rows.sort((a, b) => {
+                if (sortField === 'name_asc')   return byName(a, b);
+                if (sortField === 'name_desc')  return byName(b, a);
                 if (sortField === 'date_asc')   return (a.applied_at||'').localeCompare(b.applied_at||'');
                 if (sortField === 'grade_desc') return (b.grades?.[discFilter]||0) - (a.grades?.[discFilter]||0);
                 if (sortField === 'grade_asc')  return (a.grades?.[discFilter]||0) - (b.grades?.[discFilter]||0);
@@ -1342,8 +1446,13 @@
                 <select class="filter-select" style="width:auto;" onchange="window.applicantsSortField=this.value;renderApplicantsView();">
                     <option value="date_desc" ${sortField==='date_desc'?'selected':''}>Applied: Newest first</option>
                     <option value="date_asc"  ${sortField==='date_asc' ?'selected':''}>Applied: Oldest first</option>
+                    <option value="name_asc"  ${sortField==='name_asc' ?'selected':''}>Name: A to Z</option>
+                    <option value="name_desc" ${sortField==='name_desc'?'selected':''}>Name: Z to A</option>
                     ${gradeOpts}
                 </select>
+                <label style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:6px;">From <input type="date" class="filter-select" style="width:auto;" value="${esc(fromDate)}" onchange="window.applicantsFrom=this.value;renderApplicantsView();"></label>
+                <label style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:6px;">To <input type="date" class="filter-select" style="width:auto;" value="${esc(toDate)}" onchange="window.applicantsTo=this.value;renderApplicantsView();"></label>
+                ${(fromDate||toDate||discFilter)?`<button class="btn btn-ghost" style="font-size:11px;" onclick="window.applicantsFrom='';window.applicantsTo='';window.applicantsFilterDisc='';renderApplicantsView();">Clear</button>`:''}
             </div>`;
             const body = rows.length ? rows.map(a => {
                 const discs = DISCIPLINES.filter(d => (a.grades?.[d.key]||0) > 0)
@@ -1377,6 +1486,7 @@
             }).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-text">No applicants awaiting review.</div></div></td></tr>`;
             document.getElementById('mainContent').innerHTML = `<div class="main-inner">
                 <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Applicants (${rows.length})</h2>
+                <div style="margin:2px 0 12px;">${can('canEditTeachers') ? `<button class="btn btn-secondary" style="font-size:11px;" onclick="document.getElementById('appImportFile').click()">Import applications (CSV)</button><input type="file" id="appImportFile" accept=".csv,text/csv" style="display:none" onchange="importApplicationsCsv(this.files[0]); this.value='';">` : ''}</div>
                 <p style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;">Teacher applications awaiting review. Verify email and mobile, then approve to create a login. Chosen disciplines are recorded as grade 2 (Probationary).</p>
                 ${filterBar}
                 <table class="data-table"><thead><tr><th>Applicant</th><th>Email</th><th>Mobile</th><th>Disciplines / Locations</th><th>Located</th><th>CV</th><th>Actions</th></tr></thead><tbody>${body}</tbody></table>
@@ -3415,22 +3525,15 @@ CREATE TABLE IF NOT EXISTS audit_log (
                 const extraNotes = (document.getElementById('mr_notes')?.value || '').trim();
                 const adminNotes = `[RSO] Manual entry by ${currentUserEmail}` + (extraNotes ? '. ' + extraNotes : '');
 
-                const mrTime = document.getElementById('mr_time')?.value || null;
                 await dbPost('cover_requests', {
-                    // raw_message is NOT NULL in cover_requests; synthesise one for manual entries
-                    raw_message:    '[Manual entry] ' + teacher + ' needs cover ' + date
-                                      + (mrTime ? ' ' + mrTime : '') + ' at ' + studio + ' (' + disc + ')',
-                    message_type:   'request',
-                    message_timestamp: new Date().toISOString(),
-                    confidence_score: 1,
                     requesting_teacher_name_raw: teacher,
                     class_date:     date,
-                    class_time:     mrTime,
+                    class_time:     document.getElementById('mr_time')?.value    || null,
                     class_name_raw: (document.getElementById('mr_class')?.value || '').trim() || null,
                     studio:         studio,
                     discipline_code: disc,
                     coverage_type:  document.getElementById('mr_coverage')?.value || null,
-                    status:         'pending_review',
+                    status:         'pending',
                     source:         'manual',
                     admin_notes:    adminNotes,
                 });
