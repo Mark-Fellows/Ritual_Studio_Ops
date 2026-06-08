@@ -2888,10 +2888,11 @@ CREATE TABLE IF NOT EXISTS audit_log (
         function closeConfirmBookingModal(){pendingBookingPayload=null;document.getElementById('confirmBookingModal').classList.remove('open');}
         async function submitPendingBooking(){
             if (!pendingBookingPayload) return closeConfirmBookingModal();
+            const payload = { ...pendingBookingPayload, user_id: cachedSession?.user?.id || null };
             closeConfirmBookingModal();
             showLoading('Creating booking request...');
             try {
-                await dbPost('trainee_bookings',pendingBookingPayload);
+                await dbPost('trainee_bookings',payload);
                 showToast('Booking request created (status: pending).');
                 try{window.masterTimeslotFilterStudio=document.getElementById('tvStudioFilter')?.value||window.masterTimeslotFilterStudio;window.masterTimeslotFilterDisc=document.getElementById('tvDiscFilter')?.value||window.masterTimeslotFilterDisc;window.masterTimeslotShowBooked=!!document.getElementById('tvShowBooked')?.checked||!!window.masterTimeslotShowBooked;}catch(e){}
                 try{renderTraineeAvailable();}catch(e){}

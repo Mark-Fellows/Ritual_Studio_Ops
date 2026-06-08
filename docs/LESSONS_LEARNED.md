@@ -593,3 +593,19 @@ Added localStorage diagnostic logging to _openV2Relay in index.html (visible in 
 
 **Applies to:** cover_dashboard.html resolved-classes table date cell.
 2026-06-08 | Dashboard c1_momence.js | Lite scrape keyed by Class Number (template ID), not session. The Momence "Teacher/Host" field on a recurring class template reflects the class owner, not the actual per-session teacher. Occupancy CSV (keyed date+class+studio) is the authoritative per-session teacher source and must take priority over the lite scrape in instructor resolution.
+---
+
+### L-MG-25 -- L-TM-08 recurred in submitPendingBooking: payload nulled before POST
+
+**Problem:** Trainee bookings showed a success toast ("Booking request created (status: pending)") but no row was ever written to trainee_bookings. The coordinator could not see the booking. The trainee's "Booked Timeslots" view was empty.
+
+**Cause:** submitPendingBooking() followed the exact L-TM-08 pattern. closeConfirmBookingModal() was called first, which set pendingBookingPayload = null. The dbPost() call immediately after received null as its payload. JSON.stringify(null) = "null"; PostgREST returned 2xx with an empty body, so no error was thrown and the success toast fired. No row was inserted.
+
+Additionally, user_id (the auth user's UUID from cachedSession.user.id) was absent from the payload, so even a correctly-inserted booking would never match matchesBookingOwner() and the "Mine" label and "Only my bookings" filter would be broken.
+
+**Fix:** In submitPendingBooking(), capture the payload into a local const and add user_id before calling closeConfirmBookingModal():
+  const payload = { ...pendingBookingPayload, user_id: cachedSession?.user?.id || null };
+  closeConfirmBookingModal();
+  await dbPost('trainee_bookings', payload);
+
+**Applies to:** ritual-studio-ops-v2.html submitPendingBooking(). Any modal-with-confirm pattern: always capture all state into a local variable before calling the close/clear routine.
