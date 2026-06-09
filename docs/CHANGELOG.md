@@ -6,6 +6,8 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-06-09 | Cover Management (legacy) | WhatsApp view: add green tick / red cross association indicator to Offer and Rejection rows — shows whether the message is linked to a cover request via linked_to_cover_request_id; v1.3.32 | public/cover_dashboard.html
+
 ## 2026-06-08 | Teacher Management | Applicants view: add Notes column showing first two lines of most recent notes in table view — Phase 6c | app/ritual-studio-ops-v2.html
 
 ## 2026-06-05 | Teacher Management | Grade backfill from Momence: set grade 25 in disciplines taught over the last 3 months (5 Mar–5 Jun 2026, community + cancelled classes excluded) for matched teachers, fill-only where no existing grade. 20 grades filled across 20 teachers (19 mat_pilates, 1 yoga); 54 existing grades left untouched. Also logged a critical RLS-disabled finding (12 tables) and created a roadmap. | teachers.grades (DB, project rfjygyqijwgkmxboddup), docs/SECURITY-RLS-DISABLED-2026-06-05.md, docs/ROADMAP.md
@@ -409,3 +411,5 @@ Source: `CHANGELOG-2026-04-05-teacher-management.md`
 
 ## 2026-06-07 | Cover Management (legacy) | New Request modal now offers free-form entry: paste/type the message, Parse with AI (parse-cover-request edge function, called with anon key) pre-fills the structured fields and surfaces clarifying questions; pasted message stored as raw_message; v1.3.31 | public/cover_dashboard.html
 2026-06-08 | Teacher Management (Trainee Bookings) | Fixed booking not persisting: captured pendingBookingPayload before closeConfirmBookingModal() nulled it; added user_id (auth UID) to booking row | Ritual_Studio_Ops/app/ritual-studio-ops-v2.html
+  
+2026-06-09 | Cover Management (backend) | Fixed IndentationError in cover_processor.py caused by 3 duplicate trailing lines introduced in commit 03a86aa (2026-06-08 21:48). Crashed all June 9 morning monitor runs silently; Leah's 20:28 cover request missed until 2pm run. | stage2/cover_processor.py (commit bb23ecd) 
