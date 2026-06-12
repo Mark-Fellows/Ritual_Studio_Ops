@@ -6,6 +6,12 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-06-12 | Portal | Persist login mode preference to localStorage (rmp_last_login_mode) so mobile users who prefer password login are not reset to magic link on every session expiry; v1.1.3 | app/index.html
+
+## 2026-06-12 | Cover Management (legacy) | Edit modal: added editable raw_message textarea so admin can create or correct message text to improve NLP accuracy; field saved back to cover_requests.raw_message on Save & Approve | public/cover_dashboard.html
+
+## 2026-06-12 | Cover Management (legacy) | Split-request feature: admin can split a multi-date/studio cover request into two or more independent child requests via checkboxes on the resolved-classes table; parent shown greyed with provenance badge; migration adds parent_request_id, is_split_parent, split_by, split_at to cover_requests; v1.3.33 | public/cover_dashboard.html, migrations/2026-06-12-request-split-columns.sql
+
 ## 2026-06-09 | Cover Management (legacy) | WhatsApp view: add green tick / red cross association indicator to Offer and Rejection rows — shows whether the message is linked to a cover request via linked_to_cover_request_id; v1.3.32 | public/cover_dashboard.html
 
 ## 2026-06-08 | Teacher Management | Applicants view: add Notes column showing first two lines of most recent notes in table view — Phase 6c | app/ritual-studio-ops-v2.html

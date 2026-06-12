@@ -965,7 +965,8 @@
     // UI state helpers
     // ---------------------------------------------------------------------
     function showFormPanel(errorMsg) {
-      if (typeof setLoginMode === 'function') setLoginMode('magic');
+      const savedMode = localStorage.getItem('rmp_last_login_mode') || 'magic';
+      if (typeof setLoginMode === 'function') setLoginMode(savedMode);
       $formPanel.style.display = 'block';
       $sentPanel.classList.remove('visible');
       if (errorMsg) {
@@ -1185,6 +1186,7 @@
 
     function setLoginMode(mode) {
       _loginMode = mode;
+      try { localStorage.setItem('rmp_last_login_mode', mode); } catch (e) { /* noop */ }
       if (mode === 'password') {
         $loginSubtitle.innerHTML = 'Enter your email and password to sign in.';
         $pwLoginField.style.display = 'block';
@@ -1776,6 +1778,4 @@
       }
     }, true);
   </script>
-<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.1.2</div>
-</body>
-</html>
+<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/index.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index
