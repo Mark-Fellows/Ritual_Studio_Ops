@@ -1,17 +1,16 @@
 {
-  "date": "2026-06-12",
+  "date": "2026-06-13",
   "audit_24h": {
     "total": 0,
     "rso": 0,
     "legacy": 0
   },
   "cover_requests": {
-    "approved": 14,
+    "approved": 15,
     "cancelled": 2,
-    "covered": 69,
+    "covered": 70,
     "duplicate_of": 23,
     "no_cover_needed": 21,
-    "pending_review": 1,
     "reclassified": 4
   },
   "trainee_bookings": {
