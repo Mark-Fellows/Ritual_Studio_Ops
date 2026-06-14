@@ -419,3 +419,4 @@ Source: `CHANGELOG-2026-04-05-teacher-management.md`
 2026-06-08 | Teacher Management (Trainee Bookings) | Fixed booking not persisting: captured pendingBookingPayload before closeConfirmBookingModal() nulled it; added user_id (auth UID) to booking row | Ritual_Studio_Ops/app/ritual-studio-ops-v2.html
   
 2026-06-09 | Cover Management (backend) | Fixed IndentationError in cover_processor.py caused by 3 duplicate trailing lines introduced in commit 03a86aa (2026-06-08 21:48). Crashed all June 9 morning monitor runs silently; Leah's 20:28 cover request missed until 2pm run. | stage2/cover_processor.py (commit bb23ecd) 
+2026-06-15 | Teacher Management (Trainee Bookings) | Fixed wrong teacher assigned to booking: guarded fuzzy email match in resolveTeacherIdForCurrentUser to skip null/empty emails | Ritual_Studio_Ops/app/ritual-studio-ops-v2.html

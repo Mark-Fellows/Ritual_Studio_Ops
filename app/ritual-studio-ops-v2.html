@@ -2809,7 +2809,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
                         const cue=(currentUserEmail||'').toLowerCase();
                         let tByEmail=teachers.find(t=>(t.email||'').toLowerCase()===cue);
                         if (!tByEmail&&!cue.includes('@')) tByEmail=teachers.find(t=>{const te=(t.email||'').toLowerCase();return te&&te.split('@')[0]===cue;});
-                        if (!tByEmail) tByEmail=teachers.find(t=>(t.email||'').toLowerCase().includes(cue)||cue.includes((t.email||'').toLowerCase()));
+                        if (!tByEmail) tByEmail=teachers.find(t=>{const te=(t.email||'').toLowerCase();return te&&(te.includes(cue)||cue.includes(te));});
                         if (tByEmail) return tByEmail.id;
                     }
                     if (currentUserProfile?.user_id) {

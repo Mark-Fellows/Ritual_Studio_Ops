@@ -609,3 +609,20 @@ Additionally, user_id (the auth user's UUID from cachedSession.user.id) was abse
   await dbPost('trainee_bookings', payload);
 
 **Applies to:** ritual-studio-ops-v2.html submitPendingBooking(). Any modal-with-confirm pattern: always capture all state into a local variable before calling the close/clear routine.
+
+---
+
+### L-MG-26 -- resolveTeacherIdForCurrentUser fuzzy email match always returns the first teacher with a null email
+
+**Problem:** Trainee bookings showed the wrong teacher (Alli May) instead of the trainee's own teacher record. The booking was correctly inserted but teacher_id resolved to an unrelated teacher.
+
+**Cause:** The fuzzy fallback in resolveTeacherIdForCurrentUser() was:
+  cue.includes((t.email||'').toLowerCase())
+Any string includes the empty string (''), so every teacher with email = null matched. Teachers are loaded order=first_name.asc, so "Alli" (A) sorted before the correct match and was returned first.
+
+**Fix:** Guard the fuzzy match to skip teachers with null/empty email:
+  const te = (t.email||'').toLowerCase();
+  return te && (te.includes(cue) || cue.includes(te));
+The te&& check ensures a blank email never matches anything.
+
+**Applies to:** ritual-studio-ops-v2.html resolveTeacherIdForCurrentUser(). Any fuzzy-match function using String.includes() must guard against empty-string operands.
