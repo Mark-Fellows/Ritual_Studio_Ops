@@ -262,6 +262,8 @@ _COVER_REQUESTS_COLUMNS = frozenset({
     "momence_session_ids",
     "resolved_classes",
     "classes_resolved_at",
+    # Added 2026-06-15 — requires 2026-06-15-sender-name-cover-requests.sql
+    "sender_name",
 })
 
 
@@ -384,6 +386,10 @@ def insert_whatsapp_message(msg, result, existing_fps: set, dry_run: bool) -> bo
         raw_message=msg.text,
         message_timestamp=msg.timestamp,
     )
+    # Capture the WhatsApp sender so it survives later teacher-name edits.
+    # Added 2026-06-15 — requires 2026-06-15-sender-name-cover-requests.sql.
+    if msg.sender:
+        full_payload["sender_name"] = msg.sender
 
     # Strip any columns that don't exist in cover_requests
     payload = {k: v for k, v in full_payload.items() if k in _COVER_REQUESTS_COLUMNS}

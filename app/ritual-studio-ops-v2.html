@@ -2432,6 +2432,7 @@
             document.getElementById('navTeachers').classList.remove('active');
             document.getElementById('navCover').classList.remove('active');
             renderSidebar(); document.getElementById('mainContent').innerHTML=renderSettingsPage();
+            if (can('canEditTeachers')) setTimeout(loadRefDataAll, 0);
         }
 
         function renderSettingsPage() {
@@ -2459,12 +2460,336 @@
     </div>
     ${canManage?renderUserManagement():''}
     ${can('canEditTeachers')?`<div class="settings-section"><div class="settings-section-title">Import Teachers</div><button class="btn btn-secondary" onclick="openImportModal()">⇩ Import from CSV</button></div>`:''}
+    ${can('canEditTeachers') ? renderRefDataSection() : ''}
     <div class="settings-section">
       <div class="settings-section-title">Database Setup</div>
       <pre style="background:var(--deep);color:var(--cream);padding:16px;border-radius:8px;font-size:11px;overflow-x:auto;line-height:1.5;">${esc(getSqlSetup())}</pre>
     </div>
   </div>`;
         }
+
+        // =====================================================================
+        // REFERENCE DATA UI (Settings page)
+        // =====================================================================
+
+        let _refMem = [], _refCG = [], _refTiers = [], _refTeachers = [], _refLocs = [], _refRooms = [], _refAliases = [];
+
+        function renderRefDataSection() {
+            return `<div class="settings-section" id="refDataSection">
+  <div class="settings-section-title">Reference Data</div>
+  <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;">Supabase lookup tables used by classify.py and booking analysis scripts. Edits take effect on the next script run.</p>
+
+  <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px;">Membership Types <span id="refMemCount" style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;"></span></div>
+  <div id="refMemList" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:8px;"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+    <input class="form-control" id="newMemUsed" placeholder="Membership name (exact)" style="flex:1;min-width:180px;font-size:12px;">
+    <select class="form-control" id="newMemType" style="width:150px;font-size:12px;"><option>FP</option><option>Pack</option><option>Subscription</option><option>Waiver</option><option>Other</option></select>
+    <button class="btn btn-secondary" onclick="addRefMembership()" style="font-size:11px;">+ Add</button>
+  </div>
+
+  <div style="border-top:1px solid var(--border-light);padding-top:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px;">Class Groups <span id="refCGCount" style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;"></span></div>
+  <div id="refCGList" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:8px;"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+    <input class="form-control" id="newCGName" placeholder="Class name (exact)" style="flex:1;min-width:180px;font-size:12px;">
+    <select class="form-control" id="newCGGroup" style="width:150px;font-size:12px;"><option>Yoga</option><option>Pilates</option><option>Reformer</option><option>Barre</option><option>Yin</option><option>Special</option><option>Other</option></select>
+    <button class="btn btn-secondary" onclick="addRefClassGroup()" style="font-size:11px;">+ Add</button>
+  </div>
+
+  <div style="border-top:1px solid var(--border-light);padding-top:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px;">Teacher Pay Rates</div>
+  <div id="refPayRateList" style="max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:20px;"></div>
+
+  <div style="border-top:1px solid var(--border-light);padding-top:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px;">Pay Rate Tiers <span id="refTierCount" style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;"></span></div>
+  <div id="refTierList" style="border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:8px;"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+    <input class="form-control" id="newTierName" placeholder="Tier name" style="flex:1;min-width:140px;font-size:12px;">
+    <input class="form-control" id="newTierRate" placeholder="Rate e.g. 95" type="number" step="0.01" style="width:100px;font-size:12px;">
+    <button class="btn btn-secondary" onclick="addRefPayTier()" style="font-size:11px;">+ Add</button>
+  </div>
+
+  <div style="border-top:1px solid var(--border-light);padding-top:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px;">Locations</div>
+  <div id="refLocList" style="border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:20px;"></div>
+
+  <div style="border-top:1px solid var(--border-light);padding-top:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px;">Rooms</div>
+  <div id="refRoomList" style="border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:20px;"></div>
+
+  <div style="border-top:1px solid var(--border-light);padding-top:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px;">Location Aliases <span id="refAliasCount" style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;"></span></div>
+  <div id="refAliasList" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:8px;"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <input class="form-control" id="newAliasRaw" placeholder="Raw location string (exact)" style="flex:2;min-width:180px;font-size:12px;">
+    <select class="form-control" id="newAliasLoc" style="width:80px;font-size:12px;"><option value="PB">PB</option><option value="RS">RS</option><option value="MB">MB</option></select>
+    <select class="form-control" id="newAliasRoom" style="width:110px;font-size:12px;"><option value="">-- studio --</option><option value="PB-REF">PB-REF</option><option value="PB-YPM">PB-YPM</option><option value="RS-REF">RS-REF</option><option value="RS-YPM">RS-YPM</option><option value="MB-YPM">MB-YPM</option></select>
+    <button class="btn btn-secondary" onclick="addRefLocationAlias()" style="font-size:11px;">+ Add</button>
+  </div>
+</div>`;
+        }
+
+        async function loadRefDataAll() {
+            await Promise.all([
+                loadRefMembership(),
+                loadRefClassGroups(),
+                loadRefPayRates(),
+                loadRefPayTiers(),
+                loadRefLocations(),
+                loadRefRooms(),
+                loadRefLocationAliases()
+            ]);
+        }
+
+        // -- Membership Types --
+        async function loadRefMembership() {
+            const el = document.getElementById('refMemList');
+            const cnt = document.getElementById('refMemCount');
+            if (!el) return;
+            el.innerHTML = '<span style="color:var(--text-muted);">Loading...</span>';
+            try {
+                _refMem = await dbGet('membership_types?select=membership_used,membership_type&order=membership_used.asc');
+                if (cnt) cnt.textContent = '(' + _refMem.length + ')';
+                const TYPES = ['FP', 'Pack', 'Subscription', 'Waiver', 'Other'];
+                el.innerHTML = _refMem.map(function(r, i) {
+                    return '<div style="display:flex;align-items:center;gap:6px;padding:3px 2px;border-bottom:1px solid var(--border-light);">'
+                        + '<span style="flex:1;font-size:11px;color:var(--text-secondary);word-break:break-all;">' + esc(r.membership_used) + '</span>'
+                        + '<select onchange="updateRefMembership(' + i + ',this.value)" style="font-size:11px;width:140px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
+                        + TYPES.map(function(t) { return '<option' + (t === r.membership_type ? ' selected' : '') + '>' + t + '</option>'; }).join('')
+                        + '</select></div>';
+                }).join('');
+            } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
+        }
+        async function updateRefMembership(idx, newType) {
+            const row = _refMem[idx]; if (!row) return;
+            try {
+                await dbPatch('membership_types?membership_used=eq.' + encodeURIComponent(row.membership_used), { membership_type: newType });
+                _refMem[idx].membership_type = newType;
+                showToast('Membership type updated', 'success');
+            } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
+        }
+        async function addRefMembership() {
+            const nameEl = document.getElementById('newMemUsed');
+            const typeEl = document.getElementById('newMemType');
+            const name = nameEl ? nameEl.value.trim() : '';
+            const type = typeEl ? typeEl.value : 'Other';
+            if (!name) { showToast('Enter a membership name', 'error'); return; }
+            try {
+                await dbPost('membership_types', { membership_used: name, membership_type: type });
+                if (nameEl) nameEl.value = '';
+                showToast('Membership type added', 'success');
+                await loadRefMembership();
+            } catch(e) { showToast('Add failed: ' + e.message, 'error'); }
+        }
+
+        // -- Class Groups --
+        async function loadRefClassGroups() {
+            const el = document.getElementById('refCGList');
+            const cnt = document.getElementById('refCGCount');
+            if (!el) return;
+            el.innerHTML = '<span style="color:var(--text-muted);">Loading...</span>';
+            try {
+                _refCG = await dbGet('class_group_mappings?select=class_name,class_group&order=class_name.asc');
+                if (cnt) cnt.textContent = '(' + _refCG.length + ')';
+                const GROUPS = ['Yoga', 'Pilates', 'Reformer', 'Barre', 'Yin', 'Special', 'Other'];
+                el.innerHTML = _refCG.map(function(r, i) {
+                    return '<div style="display:flex;align-items:center;gap:6px;padding:3px 2px;border-bottom:1px solid var(--border-light);">'
+                        + '<span style="flex:1;font-size:11px;color:var(--text-secondary);word-break:break-all;">' + esc(r.class_name) + '</span>'
+                        + '<select onchange="updateRefClassGroup(' + i + ',this.value)" style="font-size:11px;width:120px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
+                        + GROUPS.map(function(g) { return '<option' + (g === r.class_group ? ' selected' : '') + '>' + g + '</option>'; }).join('')
+                        + '</select></div>';
+                }).join('');
+            } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
+        }
+        async function updateRefClassGroup(idx, newGroup) {
+            const row = _refCG[idx]; if (!row) return;
+            try {
+                await dbPatch('class_group_mappings?class_name=eq.' + encodeURIComponent(row.class_name), { class_group: newGroup });
+                _refCG[idx].class_group = newGroup;
+                showToast('Class group updated', 'success');
+            } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
+        }
+        async function addRefClassGroup() {
+            const nameEl = document.getElementById('newCGName');
+            const groupEl = document.getElementById('newCGGroup');
+            const name = nameEl ? nameEl.value.trim() : '';
+            const group = groupEl ? groupEl.value : 'Other';
+            if (!name) { showToast('Enter a class name', 'error'); return; }
+            try {
+                await dbPost('class_group_mappings', { class_name: name, class_group: group });
+                if (nameEl) nameEl.value = '';
+                showToast('Class group added', 'success');
+                await loadRefClassGroups();
+            } catch(e) { showToast('Add failed: ' + e.message, 'error'); }
+        }
+
+        // -- Teacher Pay Rates --
+        async function loadRefPayRates() {
+            const el = document.getElementById('refPayRateList');
+            if (!el) return;
+            el.innerHTML = '<span style="color:var(--text-muted);">Loading...</span>';
+            try {
+                const teachers = await dbGet('teachers?select=id,first_name,last_name,hourly_cost,default_pay_rate&order=first_name.asc');
+                const tiers = await dbGet('teacher_pay_rate_tiers?select=tier_name,hourly_rate&order=hourly_rate.asc');
+                _refTeachers = teachers;
+                const tierOptBase = '<option value="">-- no tier --</option>'
+                    + tiers.map(function(t) { return '<option value="' + esc(t.tier_name) + '">' + esc(t.tier_name) + ' ($' + t.hourly_rate + ')</option>'; }).join('');
+                el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 110px 180px;gap:4px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);padding:0 2px 4px;border-bottom:1px solid var(--border);">'
+                    + '<span>Teacher</span><span>Hourly ($)</span><span>Tier</span></div>'
+                    + teachers.map(function(t, i) {
+                        const tierOpts = tierOptBase.replace('value="' + esc(t.default_pay_rate) + '"', 'value="' + esc(t.default_pay_rate) + '" selected');
+                        return '<div style="display:grid;grid-template-columns:1fr 110px 180px;gap:4px;align-items:center;padding:4px 2px;border-bottom:1px solid var(--border-light);">'
+                            + '<span style="font-size:11px;">' + esc(t.first_name) + ' ' + esc(t.last_name) + '</span>'
+                            + '<input type="number" step="0.01" min="0" value="' + (t.hourly_cost || '') + '" onchange="updateRefPayRate(' + i + ',\'rate\',this.value)" style="font-size:11px;width:100%;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
+                            + '<select onchange="updateRefPayRate(' + i + ',\'tier\',this.value)" style="font-size:11px;width:100%;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">' + tierOpts + '</select>'
+                            + '</div>';
+                    }).join('');
+            } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
+        }
+        async function updateRefPayRate(idx, field, val) {
+            const t = _refTeachers[idx]; if (!t) return;
+            const data = (field === 'rate') ? { hourly_cost: parseFloat(val) || null } : { default_pay_rate: val || null };
+            try {
+                await dbPatch('teachers?id=eq.' + t.id, data);
+                if (field === 'rate') _refTeachers[idx].hourly_cost = parseFloat(val) || null;
+                else _refTeachers[idx].default_pay_rate = val || null;
+                showToast('Pay rate updated', 'success');
+            } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
+        }
+
+        // -- Pay Rate Tiers --
+        async function loadRefPayTiers() {
+            const el = document.getElementById('refTierList');
+            const cnt = document.getElementById('refTierCount');
+            if (!el) return;
+            el.innerHTML = '<span style="color:var(--text-muted);">Loading...</span>';
+            try {
+                _refTiers = await dbGet('teacher_pay_rate_tiers?select=tier_name,hourly_rate,notes&order=hourly_rate.asc');
+                if (cnt) cnt.textContent = '(' + _refTiers.length + ')';
+                el.innerHTML = _refTiers.map(function(r, i) {
+                    return '<div style="display:flex;align-items:center;gap:8px;padding:4px 2px;border-bottom:1px solid var(--border-light);">'
+                        + '<span style="flex:1;font-size:12px;">' + esc(r.tier_name) + '</span>'
+                        + '<span style="font-size:11px;color:var(--text-muted);">$</span>'
+                        + '<input type="number" step="0.01" min="0" value="' + r.hourly_rate + '" onchange="updateRefPayTier(' + i + ',this.value)" style="font-size:12px;width:80px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
+                        + '</div>';
+                }).join('');
+            } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
+        }
+        async function updateRefPayTier(idx, newRate) {
+            const row = _refTiers[idx]; if (!row) return;
+            try {
+                await dbPatch('teacher_pay_rate_tiers?tier_name=eq.' + encodeURIComponent(row.tier_name), { hourly_rate: parseFloat(newRate) });
+                _refTiers[idx].hourly_rate = parseFloat(newRate);
+                showToast('Tier rate updated', 'success');
+            } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
+        }
+        async function addRefPayTier() {
+            const nameEl = document.getElementById('newTierName');
+            const rateEl = document.getElementById('newTierRate');
+            const name = nameEl ? nameEl.value.trim() : '';
+            const rate = parseFloat(rateEl ? rateEl.value : '');
+            if (!name || isNaN(rate)) { showToast('Enter tier name and rate', 'error'); return; }
+            try {
+                await dbPost('teacher_pay_rate_tiers', { tier_name: name, hourly_rate: rate });
+                if (nameEl) nameEl.value = '';
+                if (rateEl) rateEl.value = '';
+                showToast('Tier added', 'success');
+                await loadRefPayTiers();
+            } catch(e) { showToast('Add failed: ' + e.message, 'error'); }
+        }
+
+        // -- Locations --
+        async function loadRefLocations() {
+            const el = document.getElementById('refLocList');
+            if (!el) return;
+            el.innerHTML = '<span style="color:var(--text-muted);">Loading...</span>';
+            try {
+                _refLocs = await dbGet('locations?select=location_id,location_name,status,notes&order=location_id.asc');
+                const STATUSES = ['open', 'closed', 'pending'];
+                el.innerHTML = _refLocs.map(function(r, i) {
+                    return '<div style="padding:6px 4px;border-bottom:1px solid var(--border-light);">'
+                        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+                        + '<span style="font-weight:500;font-size:12px;">' + esc(r.location_id) + '</span>'
+                        + '<span style="font-size:12px;color:var(--text-secondary);">' + esc(r.location_name) + '</span>'
+                        + '<select onchange="updateRefLocation(' + i + ',\'status\',this.value)" style="font-size:11px;margin-left:auto;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
+                        + STATUSES.map(function(s) { return '<option' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('')
+                        + '</select></div>'
+                        + '<input class="form-control" value="' + esc(r.notes || '') + '" onchange="updateRefLocation(' + i + ',\'notes\',this.value)" placeholder="Notes" style="font-size:11px;">'
+                        + '</div>';
+                }).join('');
+            } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
+        }
+        async function updateRefLocation(idx, field, val) {
+            const r = _refLocs[idx]; if (!r) return;
+            const data = {}; data[field] = val;
+            try {
+                await dbPatch('locations?location_id=eq.' + encodeURIComponent(r.location_id), data);
+                _refLocs[idx][field] = val;
+                showToast('Location updated', 'success');
+            } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
+        }
+
+        // -- Rooms --
+        async function loadRefRooms() {
+            const el = document.getElementById('refRoomList');
+            if (!el) return;
+            el.innerHTML = '<span style="color:var(--text-muted);">Loading...</span>';
+            try {
+                _refRooms = await dbGet('rooms?select=room_id,location_id,room_name,status,notes&order=room_id.asc');
+                const STATUSES = ['open', 'closed', 'pending'];
+                el.innerHTML = _refRooms.map(function(r, i) {
+                    return '<div style="padding:6px 4px;border-bottom:1px solid var(--border-light);">'
+                        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+                        + '<span style="font-weight:500;font-size:12px;">' + esc(r.room_id) + '</span>'
+                        + '<span style="font-size:11px;color:var(--text-muted);">' + esc(r.location_id) + '</span>'
+                        + '<span style="font-size:12px;color:var(--text-secondary);">' + esc(r.room_name) + '</span>'
+                        + '<select onchange="updateRefRoom(' + i + ',\'status\',this.value)" style="font-size:11px;margin-left:auto;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
+                        + STATUSES.map(function(s) { return '<option' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('')
+                        + '</select></div>'
+                        + '<input class="form-control" value="' + esc(r.notes || '') + '" onchange="updateRefRoom(' + i + ',\'notes\',this.value)" placeholder="Notes" style="font-size:11px;">'
+                        + '</div>';
+                }).join('');
+            } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
+        }
+        async function updateRefRoom(idx, field, val) {
+            const r = _refRooms[idx]; if (!r) return;
+            const data = {}; data[field] = val;
+            try {
+                await dbPatch('rooms?room_id=eq.' + encodeURIComponent(r.room_id), data);
+                _refRooms[idx][field] = val;
+                showToast('Room updated', 'success');
+            } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
+        }
+
+        // -- Location Aliases --
+        async function loadRefLocationAliases() {
+            const el = document.getElementById('refAliasList');
+            const cnt = document.getElementById('refAliasCount');
+            if (!el) return;
+            el.innerHTML = '<span style="color:var(--text-muted);">Loading...</span>';
+            try {
+                _refAliases = await dbGet('location_aliases?select=raw_string,location_id,room_id&order=location_id.asc,raw_string.asc');
+                if (cnt) cnt.textContent = '(' + _refAliases.length + ')';
+                el.innerHTML = _refAliases.map(function(r) {
+                    return '<div style="display:flex;align-items:center;gap:6px;padding:3px 2px;border-bottom:1px solid var(--border-light);">'
+                        + '<span style="flex:1;font-size:11px;color:var(--text-secondary);word-break:break-all;">' + esc(r.raw_string) + '</span>'
+                        + '<span style="font-size:11px;font-weight:500;white-space:nowrap;">' + esc(r.location_id) + '</span>'
+                        + '<span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">' + (r.room_id ? esc(r.room_id) : 'studio') + '</span>'
+                        + '</div>';
+                }).join('');
+            } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
+        }
+        async function addRefLocationAlias() {
+            const rawEl = document.getElementById('newAliasRaw');
+            const locEl = document.getElementById('newAliasLoc');
+            const roomEl = document.getElementById('newAliasRoom');
+            const raw = rawEl ? rawEl.value.trim() : '';
+            const loc = locEl ? locEl.value : '';
+            const room = (roomEl && roomEl.value) ? roomEl.value : null;
+            if (!raw) { showToast('Enter the raw location string', 'error'); return; }
+            try {
+                await dbPost('location_aliases', { raw_string: raw, location_id: loc, room_id: room });
+                if (rawEl) rawEl.value = '';
+                showToast('Location alias added', 'success');
+                await loadRefLocationAliases();
+            } catch(e) { showToast('Add failed: ' + e.message, 'error'); }
+        }
+
+        // =====================================================================
 
         function roleDescription(key) {
             const map = { developer:'Full access including user management, database, and all settings.', administrator:'Can add/edit teachers and grades, cannot manage user accounts.', adjudicator:'Can view all teachers and edit discipline grades only.', coordinator:'Approves trainee bookings and manages Momence handoffs.', teacher:'Can view their own profile only.', trainee:'Access to community class dashboard and request portal.', guest:'Read-only access to all teacher records.' };

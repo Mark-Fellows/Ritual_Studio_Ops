@@ -4,7 +4,7 @@
 
 A document is not considered created until this index is updated. If a document is not listed here, it does not officially exist. Two entries for the same topic means one is a duplicate — mark the older as `superseded` and consolidate.
 
-Last updated: 2026-05-29 (Phase 6; Finance & Cashflow dashboard added)
+Last updated: 2026-06-15 (reference data migration docs added; see 2026-05-23 CHANGELOG entry)
 Maintained by: Ritual Studio Ops project (Claude as PM)
 
 ---
@@ -110,6 +110,7 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | RBAC matrix & unification | RSO | `Ritual_Studio_Ops/docs/RBAC-MATRIX.md` | active | Role × permission matrix; capability→permission mapping; how the two authz regimes were merged |
 | User Admin build spec | RSO | `Ritual_Studio_Ops/docs/USER-ADMIN-BUILD-SPEC.md` | active | Revised Phase 5 (User Admin) 5.0/5.1/5.2 build spec, grounded in live DB |
 | User Admin handover | RSO | `Ritual_Studio_Ops/docs/USER-ADMIN-HANDOVER-2026-06-03.md` | active | What was applied to the DB vs staged in the app; pending browser-test + push |
+| User Admin test plan | RSO | `Ritual_Studio_Ops/docs/USER-ADMIN-TEST-PLAN.md` | active | Re-runnable SQL + browser tests for the RBAC/User-Admin work |
 | Migration: RBAC backbone | RSO | `Ritual_Studio_Ops/migrations/2026-06-02-rbac-unification-backbone.sql` | applied | Catalogue extension + leaf grants + override table + per-user resolver + helper (applied 2026-06-02) |
 | Migration: User Admin RPCs + RLS | RSO | `Ritual_Studio_Ops/migrations/2026-06-02-user-admin-rpcs-and-rls.sql` | applied | admin RPCs + user-admin RLS switched to admin.users.manage (applied 2026-06-02) |
 | Migration: User Admin harden grants | RSO | `Ritual_Studio_Ops/migrations/2026-06-02-user-admin-harden-grants.sql` | applied | search_path + revoke anon EXECUTE (applied 2026-06-02) |
@@ -221,6 +222,11 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Migration 2026-05-22: source on cover_requests | RSO | `Ritual_Studio_Ops/migrations/2026-05-22-add-source-to-cover-requests.sql` | active | Adds the `source` column distinguishing whatsapp vs manual cover requests. |
 | Migration 2026-05-27: teacher_absences | RSO | `Ritual_Studio_Ops/migrations/2026-05-27-teacher-absences.sql` | active | Creates `teacher_absences` table, trigger, 3 partial indexes, 5 RLS policies. Applied 2026-05-27 via Supabase MCP. |
 | Edge Function: parse-cover-request | RSO | Supabase project rfjygyqijwgkmxboddup (deployed via MCP) | active | Called by the v2 Manual Cover Request modal. JWT-verified. No local source file in the repo. |
+| Migration 2026-05-22: reference tables | RSO | `G:\Shared drives\RITUAL MASTER DRIVE\Claude Project 20260322\Ritual Studios\migrations\2026-05-22-reference-tables.sql` | applied | Creates membership_types, class_group_mappings; adds teachers.hourly_cost. Applied 2026-05-22. |
+| Migration 2026-05-23: locations, rooms, pay rates | RSO | `G:\Shared drives\RITUAL MASTER DRIVE\Claude Project 20260322\Ritual Studios\migrations\2026-05-23-locations-rooms-pay-rates.sql` | applied | Creates locations, rooms, location_aliases, teacher_pay_rate_tiers; adds teachers.default_pay_rate. Applied 2026-05-23. |
+| Migration 2026-05-23b: drop check constraints | RSO | `G:\Shared drives\RITUAL MASTER DRIVE\Claude Project 20260322\Ritual Studios\migrations\2026-05-23b-drop-ref-check-constraints.sql` | applied | Drops over-restrictive CHECK constraints on membership_types.membership_type and class_group_mappings.class_group. Applied 2026-05-23. |
+| Reference data migration summary | RSO | `G:\Shared drives\RITUAL MASTER DRIVE\Claude Project 20260322\Ritual Studios\migrations\MIGRATION_SUMMARY.md` | active | Full reference for all reference-data tables, migration run order, seed script usage, classify.py behaviour, location alias model, and outstanding items. Last updated 2026-05-23. |
+| Seed script: reference tables | RSO | `G:\Shared drives\RITUAL MASTER DRIVE\Claude Project 20260322\Ritual Studios\scripts\seed_reference_tables.py` | active | Idempotent seed for all 8 reference data sections. Supports --dry-run and --only TABLE flags. Requires SUPABASE_SERVICE_KEY env var (set per session only; do not hardcode). |
 
 **Tables-and-owners matrix** (updated each migration — 2026-05-merged-v1.sql)
 

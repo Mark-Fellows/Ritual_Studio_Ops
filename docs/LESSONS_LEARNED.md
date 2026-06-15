@@ -646,3 +646,39 @@ The te&& check ensures a blank email never matches anything.
 **Fix:** Confirm the live script via the scheduled-task action (run_monitor.bat) before editing. Verify column names with information_schema before writing queries. The cost fix above was applied to stage2/cover_processor.py, the copy that actually runs.
 
 **Applies to:** All cover-pipeline edits; any query against whatsapp_monitor_runs.
+
+---
+
+### L-DB-01 -- Supabase REST upsert requires on_conflict query param for unique-non-PK columns
+
+**Problem:** Upserting rows to membership_types (unique on membership_used) and class_group_mappings (unique on class_name) returned 409 Conflict errors despite using Prefer: resolution=merge-duplicates.
+
+**Cause:** The Supabase REST API Prefer: resolution=merge-duplicates header only resolves conflicts on the table PRIMARY KEY. When the upsert target is a unique constraint on a non-PK column, the header has no effect and the insert fails on duplicate.
+
+**Fix:** Append ?on_conflict=<column_name> to the POST URL: POST /rest/v1/table?on_conflict=membership_used. This directs PostgREST to issue ON CONFLICT (membership_used) DO UPDATE, targeting the correct unique constraint. The on_conflict parameter is required whenever upserting on a non-PK unique column.
+
+**Applies to:** scripts/seed_reference_tables.py upsert() function; any script or app that uses the Supabase REST API to upsert on a non-PK unique column.
+
+---
+
+### L-DB-02 -- Supabase REST batch POST (PGRST102): all rows in a batch must have identical key sets
+
+**Problem:** Appending FP name rows (2 keys: membership_used, membership_type) to a batch that already contained full membership_types rows (7 keys) returned error PGRST102 "All object keys must match".
+
+**Cause:** A single POST to /rest/v1/table sends the entire batch as a JSON array. PostgREST requires every object in the array to have the same set of keys. Rows with different key sets are rejected at parse time, before any insert attempt.
+
+**Fix:** Before POSTing a batch, compute the union of all keys across all rows and normalise every row to that full key set, filling any missing values with null. Implementation: all_keys = list({k for r in rows for k in r.keys()}); rows = [{k: r.get(k) for k in all_keys} for r in rows]. This ensures all rows in the batch are structurally identical regardless of origin.
+
+**Applies to:** scripts/seed_reference_tables.py upsert() function; any script that builds a POST batch from rows with varying column sets (e.g. combining rows from two different workbook sheets into a single upsert call).
+
+---
+
+### L-DB-03 -- PostgreSQL ON CONFLICT DO UPDATE cannot affect the same row twice in a single batch
+
+**Problem:** Upserting class_group_mappings returned error "ON CONFLICT DO UPDATE command cannot affect row a second time" even after fixing L-DB-01 and L-DB-02.
+
+**Cause:** The workbook ClassGroups sheet contained 89 rows with duplicate class_name values (the same class name appearing multiple times). A single batch upsert cannot resolve a conflict for a key that appears more than once in the same request -- PostgreSQL cannot determine which value to use and raises an error. This is a PostgreSQL constraint, not a Supabase-specific one.
+
+**Fix:** Deduplicate at parse time before building the batch. Use a dict keyed on the conflict column (class_name): first occurrence wins; subsequent duplicates are logged and discarded. This guarantees every key appears exactly once in the batch. The same pattern applies to any upsert batch where the source data may contain duplicate conflict-column values.
+
+**Applies to:** scripts/seed_reference_tables.py read_class_groups(); any seed or import script that reads from a workbook or CSV that may contain duplicate key values before upserting on a unique constraint.

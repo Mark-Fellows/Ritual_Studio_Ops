@@ -6,6 +6,8 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+2026-06-15 | Cover Management (backend + legacy dashboard) | Fix dedup timezone bug (_message_fingerprint now UTC-normalises before hour-bucket so AEST scraper timestamps and UTC DB values match); fix load_dotenv(override=True) so funded Anthropic key wins over stale Windows system env var; fix waReplyMap double-push of FK-linked offers in dashboard (offers appeared twice on Approved card and WA feed); add test_api_keys.py smoke-test for both Anthropic and Gemini API paths; add DEVELOPER.md Known Constraints section | stage2/cover_processor.py, stage2/config.py, public/cover_dashboard.html, test_api_keys.py, DEVELOPER.md
+
 ## 2026-06-15 | Teacher Management | All Upcoming Absences view: added "+ Add absence" button (opens modal with a teacher selector) and per-row Edit/Archive actions; both gated by canEditTeachers. openAbsenceModal now falls back to allAbsencesCache for edit pre-fill, and save/archive refresh the global view when open — Phase 6c | app/ritual-studio-ops-v2.html
 
 ## 2026-06-12 | Portal | Persist login mode preference to localStorage (rmp_last_login_mode) so mobile users who prefer password login are not reset to magic link on every session expiry; v1.1.3 | app/index.html
