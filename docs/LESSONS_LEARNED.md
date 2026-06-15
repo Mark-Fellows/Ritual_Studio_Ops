@@ -626,3 +626,23 @@ Any string includes the empty string (''), so every teacher with email = null ma
 The te&& check ensures a blank email never matches anything.
 
 **Applies to:** ritual-studio-ops-v2.html resolveTeacherIdForCurrentUser(). Any fuzzy-match function using String.includes() must guard against empty-string operands.
+
+### L-CM-08 -- NLP parsing ran before dedup, re-billing every message each hourly run
+
+**Problem:** The Anthropic (and Gemini) bill grew quickly. `cover_processor.run()` scraped the full lookback window (24h via run_monitor.bat) on each of 13 hourly runs and called the dual NLP parser on EVERY scraped message before checking for duplicates. The insert-time dedup then discarded the re-parsed result, so a single message was paid for ~13-25 times/day across two models for zero benefit.
+
+**Cause:** Order of operations was scrape -> parse -> dedup -> insert. Dedup only guarded database writes, not model calls.
+
+**Fix:** Load the whatsapp_messages fingerprints (sender + hour-bucket + text[:120], all available pre-parse) BEFORE parsing and filter the scraped list down to genuinely new messages; parse only those. Re-parsing stored messages was never useful because their corrected classification was discarded by insert-time dedup anyway. Also added a dynamic lookback (compute_lookback_hours) that windows back to 30 min before the last successful run (capped 24h), shrinking overlap further.
+
+**Applies to:** stage2/cover_processor.py; any scrape->LLM->store pipeline — always dedup/cache before the paid model call, not after.
+
+### L-CM-09 -- Live cover pipeline is stage2/, not services/cover/; and whatsapp_monitor_runs uses started_at not run_started_at
+
+**Problem:** SOURCE_OF_TRUTH.md says the cover pipeline was re-pointed to Ritual_Studio_Ops/services/cover/, but the actual Windows scheduled task ("Cover Manager - WhatsApp Monitor") runs run_monitor.bat which executes Ritual_Cover_Management/stage2/cover_processor.py. Editing services/cover/ would have had no effect on production. Separately, SCHEMA.md documents whatsapp_monitor_runs.run_started_at, but the live column is started_at.
+
+**Cause:** Documentation drift from the live system (cf. L-MG-20).
+
+**Fix:** Confirm the live script via the scheduled-task action (run_monitor.bat) before editing. Verify column names with information_schema before writing queries. The cost fix above was applied to stage2/cover_processor.py, the copy that actually runs.
+
+**Applies to:** All cover-pipeline edits; any query against whatsapp_monitor_runs.
