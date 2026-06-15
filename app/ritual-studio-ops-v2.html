@@ -3,6 +3,7 @@
   URL:        https://ritual-studio-ops.pages.dev/ritual-studio-ops-v2.html
   Reached:    From the Management Portal cards
   Identifier: emblem badge top-left, "v2 - Phase 6" stamp in header
+  Phase 6c: All Upcoming Absences view — + Add absence button and per-row Edit/Archive actions (canEditTeachers only)
   Phase 6b: applicants view — discipline filter, applied-date sort, date font, heading fix
   Phase 6: public teacher applications - applicant intake, Applicants review
            view, manual mobile verify, approve-and-provision, reject (soft),
@@ -267,6 +268,10 @@
         <div class="modal" style="max-width:460px;">
             <button class="modal-close" onclick="closeAbsenceModal()">&#10005;</button>
             <div class="modal-title" id="absenceModalTitle">Add Absence</div>
+            <div class="form-group" id="absTeacherGroup" style="margin-top:16px;display:none;">
+                <label class="form-label">Teacher *</label>
+                <select id="absTeacherSelect" class="form-control"></select>
+            </div>
             <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                 <div class="form-group">
                     <label class="form-label">Start Date *</label>
@@ -1832,12 +1837,13 @@
                 allAbsencesCache = allAbsencesCache.filter(a => a.id !== absenceId);
                 renderAbsencePanelRows(teacherId);
                 renderSidebar();
+                if (document.getElementById('globalAbsenceContent')) renderAbsencesGlobalView();
                 await writeAudit(teacherId, `Absence archived (id: ${absenceId.slice(0,8)})`);
                 showToast('Absence archived.');
             } catch(e) { showToast('Error archiving: ' + e.message, 'error'); }
         }
 
-        function openAbsenceModal(absenceId, teacherId) {
+        function openAbsenceModal(absenceId, teacherId, fromGlobal = false) {
             editingAbsenceId = absenceId;
             absenceModalTeacherId = teacherId;
             const modal = document.getElementById('absenceModalOverlay');
@@ -1848,9 +1854,26 @@
             document.getElementById('absApprox').checked = false;
             document.getElementById('absReason').value = 'holiday';
             document.getElementById('absNote').value = '';
-            if (absenceId && teacherAbsencesCache[teacherId]) {
-                const a = teacherAbsencesCache[teacherId].find(x => x.id === absenceId);
+            // Teacher selector — only shown when adding a new absence from the global view
+            // (no fixed teacher). Hidden for per-teacher add and for any edit.
+            const tGroup = document.getElementById('absTeacherGroup');
+            const tSelect = document.getElementById('absTeacherSelect');
+            if (fromGlobal && !absenceId) {
+                tSelect.innerHTML = [...teachers]
+                    .sort((a, b) => (a.first_name || '').localeCompare(b.first_name || ''))
+                    .map(t => `<option value="${t.id}">${esc(t.first_name + ' ' + t.last_name)}</option>`)
+                    .join('');
+                tGroup.style.display = '';
+            } else {
+                tGroup.style.display = 'none';
+            }
+            if (absenceId) {
+                // Pre-fill from the per-teacher cache when available, otherwise from the
+                // global cache (the global view does not populate teacherAbsencesCache).
+                const a = (teacherAbsencesCache[teacherId] || []).find(x => x.id === absenceId)
+                       || allAbsencesCache.find(x => x.id === absenceId);
                 if (a) {
+                    absenceModalTeacherId = a.teacher_id;
                     document.getElementById('absStartDate').value = a.start_date;
                     document.getElementById('absEndDate').value   = a.end_date;
                     document.getElementById('absApprox').checked  = a.end_date_approximate;
@@ -1869,7 +1892,12 @@
 
         async function saveAbsence() {
             if (!WRITES_ENABLED) { showToast('Writes are currently disabled.', 'error'); return; }
-            const teacherId = absenceModalTeacherId;
+            // When adding from the global view the teacher selector is visible; use it.
+            const tGroup = document.getElementById('absTeacherGroup');
+            const teacherId = (tGroup && tGroup.style.display !== 'none')
+                ? document.getElementById('absTeacherSelect').value
+                : absenceModalTeacherId;
+            if (!teacherId) { showToast('Please choose a teacher.', 'error'); return; }
             const startDate = document.getElementById('absStartDate').value;
             const endDate   = document.getElementById('absEndDate').value;
             const approx    = document.getElementById('absApprox').checked;
@@ -1896,6 +1924,8 @@
                 await loadAllAbsences();
                 renderAbsencePanelRows(teacherId);
                 renderSidebar();
+                // If the global "All Upcoming Absences" view is on screen, refresh it.
+                if (document.getElementById('globalAbsenceContent')) renderAbsencesGlobalView();
                 showToast(editingAbsenceId ? 'Absence updated.' : 'Absence added.');
             } catch(e) { showToast('Error saving absence: ' + e.message, 'error'); }
         }
@@ -1905,7 +1935,10 @@
             if (!el) return;
             const today = new Date().toISOString().slice(0,10);
             el.innerHTML = `<div class="main-inner">
-              <div class="section-header"><div class="section-title">All Upcoming Absences</div></div>
+              <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                <div class="section-title">All Upcoming Absences</div>
+                ${can('canEditTeachers') ? `<button class="btn btn-secondary" style="font-size:11px;padding:4px 12px;" onclick="openAbsenceModal(null,null,true)">+ Add absence</button>` : ''}
+              </div>
               <div id="globalAbsenceContent"><div style="text-align:center;padding:32px;color:var(--text-muted);font-style:italic;">Loading&#8230;</div></div>
             </div>`;
             try {
@@ -1918,22 +1951,29 @@
                 teachers.forEach(t => { teacherMap[t.id] = `${t.first_name} ${t.last_name}`; });
                 const reasonLabels = {holiday:'Holiday',sick:'Sick',personal:'Personal',training:'Training',other:'Other'};
                 const reasonColors = {holiday:'#B8D4E8',sick:'#F0C8C8',personal:'#E8C8E8',training:'#C8DDB8',other:'var(--border-light)'};
+                const canEdit = can('canEditTeachers');
+                const gridCols = canEdit ? '180px 100px 115px 50px 80px 1fr 120px' : '180px 100px 115px 50px 80px 1fr';
                 document.getElementById('globalAbsenceContent').innerHTML = `<div class="info-card" style="padding:0;overflow:hidden;">
-                  <div style="display:grid;grid-template-columns:180px 100px 115px 50px 80px 1fr;gap:0;background:var(--sand);font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-secondary);padding:8px 16px;">
-                    <span>Teacher</span><span>Start</span><span>End</span><span>~</span><span>Reason</span><span>Note</span>
+                  <div style="display:grid;grid-template-columns:${gridCols};gap:0;background:var(--sand);font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-secondary);padding:8px 16px;">
+                    <span>Teacher</span><span>Start</span><span>End</span><span>~</span><span>Reason</span><span>Note</span>${canEdit ? '<span>Actions</span>' : ''}
                   </div>
                   ${rows.map(a => {
                       const name     = teacherMap[a.teacher_id] || 'Unknown';
                       const isActive = a.start_date <= today && a.end_date >= today;
                       const startFmt = new Date(a.start_date + 'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});
                       const endFmt   = new Date(a.end_date   + 'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});
-                      return `<div style="display:grid;grid-template-columns:180px 100px 115px 50px 80px 1fr;gap:0;padding:10px 16px;border-bottom:1px solid var(--border-light);font-size:12px;${isActive?'background:#FFFBF0;':''}">
+                      const actions  = canEdit ? `<span style="display:flex;gap:4px;flex-shrink:0;">
+                          <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px;" onclick="openAbsenceModal('${a.id}','${a.teacher_id}')">Edit</button>
+                          <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px;color:#C0392B;" onclick="archiveAbsence('${a.id}','${a.teacher_id}')">Archive</button>
+                        </span>` : '';
+                      return `<div style="display:grid;grid-template-columns:${gridCols};gap:0;padding:10px 16px;border-bottom:1px solid var(--border-light);font-size:12px;align-items:center;${isActive?'background:#FFFBF0;':''}">
                         <span style="font-weight:500;cursor:pointer;color:var(--earth);" onclick="selectTeacher('${a.teacher_id}')">${esc(name)}</span>
                         <span>${startFmt}</span>
                         <span>${endFmt}</span>
                         <span>${a.end_date_approximate ? '~' : ''}</span>
                         <span style="background:${reasonColors[a.reason]||'var(--border-light)'};font-size:10px;padding:2px 7px;border-radius:10px;display:inline-block;">${reasonLabels[a.reason]||a.reason}</span>
                         <span style="color:var(--text-muted);font-style:italic;">${esc(a.note||'')}</span>
+                        ${actions}
                       </div>`;
                   }).join('')}
                 </div>`;

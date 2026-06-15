@@ -6,6 +6,8 @@ Individual project changelogs are NOT the authoritative record from Phase 0 onwa
 
 Format: `YYYY-MM-DD | Project | Summary | Files changed`
 
+## 2026-06-15 | Teacher Management | All Upcoming Absences view: added "+ Add absence" button (opens modal with a teacher selector) and per-row Edit/Archive actions; both gated by canEditTeachers. openAbsenceModal now falls back to allAbsencesCache for edit pre-fill, and save/archive refresh the global view when open — Phase 6c | app/ritual-studio-ops-v2.html
+
 ## 2026-06-12 | Portal | Persist login mode preference to localStorage (rmp_last_login_mode) so mobile users who prefer password login are not reset to magic link on every session expiry; v1.1.3 | app/index.html
 
 ## 2026-06-12 | Cover Management (legacy) | Edit modal: added editable raw_message textarea so admin can create or correct message text to improve NLP accuracy; field saved back to cover_requests.raw_message on Save & Approve | public/cover_dashboard.html
