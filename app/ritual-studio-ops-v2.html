@@ -1478,6 +1478,13 @@
                     <button class="btn btn-danger" style="font-size:10px;margin:2px;" onclick="rejectApplicant('${a.id}')">Reject</button>`
                     : '<span style="color:var(--text-muted);font-size:11px;">View only</span>';
                 const applied = a.applied_at ? new Date(a.applied_at).toLocaleDateString('en-AU') : '';
+                const notesPreview = (() => {
+                    if (!a.notes) return '<span style="color:var(--text-muted);">—</span>';
+                    const lines = a.notes.split('\n').filter(l => l.trim());
+                    return lines.length
+                        ? `<div style="font-size:11px;white-space:pre-wrap;max-width:180px;">${esc(lines.slice(0,2).join('\n'))}</div>`
+                        : '<span style="color:var(--text-muted);">—</span>';
+                })();
                 return `<tr>
                     <td><div style="font-weight:500;">${esc(a.first_name)} ${esc(a.last_name)}</div><div style="font-size:10px;color:var(--text-secondary);font-weight:500;">${applied}</div>${dup}</td>
                     <td>${esc(a.email||'')}<br>${applicantBadge(a.email_verified)}</td>
@@ -1485,16 +1492,17 @@
                     <td>${discs}<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${esc((a.locations||[]).join(', '))}</div></td>
                     <td style="font-size:11px;">${esc(a.located_text||'')}</td>
                     <td>${cv}</td>
+                    <td>${notesPreview}</td>
                     <td>${actions}</td>
                 </tr>
-                <tr><td colspan="7" style="padding-top:0;border-bottom:1px solid var(--border);"><details><summary style="cursor:pointer;font-size:11px;color:var(--earth);">Experience and teaching style</summary><div style="font-size:12px;padding:8px 0;"><div style="font-weight:500;">Experience and training</div><div style="white-space:pre-wrap;margin-bottom:10px;">${esc(a.experience_training||'-')}</div><div style="font-weight:500;">Teaching style</div><div style="white-space:pre-wrap;">${esc(a.teaching_style||'-')}</div><div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Availability: ${esc(a.availability_text||'-')}</div></div></details></td></tr>`;
-            }).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-text">No applicants awaiting review.</div></div></td></tr>`;
+                <tr><td colspan="8" style="padding-top:0;border-bottom:1px solid var(--border);"><details><summary style="cursor:pointer;font-size:11px;color:var(--earth);">Experience and teaching style</summary><div style="font-size:12px;padding:8px 0;"><div style="font-weight:500;">Experience and training</div><div style="white-space:pre-wrap;margin-bottom:10px;">${esc(a.experience_training||'-')}</div><div style="font-weight:500;">Teaching style</div><div style="white-space:pre-wrap;">${esc(a.teaching_style||'-')}</div><div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Availability: ${esc(a.availability_text||'-')}</div></div></details></td></tr>`;
+            }).join('') : `<tr><td colspan="8"><div class="empty-state"><div class="empty-state-text">No applicants awaiting review.</div></div></td></tr>`;
             document.getElementById('mainContent').innerHTML = `<div class="main-inner">
                 <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Applicants (${rows.length})</h2>
                 <div style="margin:2px 0 12px;">${can('canEditTeachers') ? `<button class="btn btn-secondary" style="font-size:11px;" onclick="document.getElementById('appImportFile').click()">Import applications (CSV)</button><input type="file" id="appImportFile" accept=".csv,text/csv" style="display:none" onchange="importApplicationsCsv(this.files[0]); this.value='';">` : ''}</div>
                 <p style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;">Teacher applications awaiting review. Verify email and mobile, then approve to create a login. Chosen disciplines are recorded as grade 2 (Probationary).</p>
                 ${filterBar}
-                <table class="data-table"><thead><tr><th>Applicant</th><th>Email</th><th>Mobile</th><th>Disciplines / Locations</th><th>Located</th><th>CV</th><th>Actions</th></tr></thead><tbody>${body}</tbody></table>
+                <table class="data-table"><thead><tr><th>Applicant</th><th>Email</th><th>Mobile</th><th>Disciplines / Locations</th><th>Located</th><th>CV</th><th>Notes</th><th>Actions</th></tr></thead><tbody>${body}</tbody></table>
             </div>`;
         }
 
