@@ -3545,4 +3545,63 @@ CREATE TABLE IF NOT EXISTS audit_log (
         }
 
         async function submitManualRequest() {
-            const teacher  = (document.getElementById('mr_teacher')?.value  || '').trim
+            const teacher  = (document.getElementById('mr_teacher')?.value  || '').trim();
+            const date     = (document.getElementById('mr_date')?.value      || '').trim();
+            const studio   = (document.getElementById('mr_studio')?.value    || '').trim();
+            const disc     = (document.getElementById('mr_discipline')?.value || '').trim();
+            const errEl    = document.getElementById('manualReqError');
+
+            const missing = [];
+            if (!teacher) missing.push('Teacher name');
+            if (!date)    missing.push('Class date');
+            if (!studio)  missing.push('Studio');
+            if (!disc)    missing.push('Discipline');
+            if (missing.length) { errEl.textContent = 'Required: ' + missing.join(', '); return; }
+
+            const btn = document.getElementById('manualSubmitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+            errEl.textContent = '';
+
+            try {
+                const extraNotes = (document.getElementById('mr_notes')?.value || '').trim();
+                const adminNotes = `[RSO] Manual entry by ${currentUserEmail}` + (extraNotes ? '. ' + extraNotes : '');
+
+                const mrTime = document.getElementById('mr_time')?.value || null;
+                await dbPost('cover_requests', {
+                    // raw_message is NOT NULL in cover_requests; synthesise one for manual entries
+                    raw_message:    '[Manual entry] ' + teacher + ' needs cover ' + date
+                                      + (mrTime ? ' ' + mrTime : '') + ' at ' + studio + ' (' + disc + ')',
+                    message_type:   'request',
+                    message_timestamp: new Date().toISOString(),
+                    confidence_score: 1,
+                    requesting_teacher_name_raw: teacher,
+                    class_date:     date,
+                    class_time:     mrTime,
+                    class_name_raw: (document.getElementById('mr_class')?.value || '').trim() || null,
+                    studio:         studio,
+                    discipline_code: disc,
+                    coverage_type:  document.getElementById('mr_coverage')?.value || null,
+                    status:         'pending_review',
+                    source:         'manual',
+                    admin_notes:    adminNotes,
+                });
+
+                await writeAudit(null, `Manual cover request created: ${teacher} — ${date} — ${disc} at ${studio}`);
+
+                closeManualRequestModal();
+                showToast('Cover request created. It will be picked up by the pipeline on its next run.');
+                await loadCoverData();
+            } catch (e) {
+                errEl.textContent = 'Save failed: ' + (e.message || String(e));
+                if (btn) { btn.disabled = false; btn.textContent = 'Submit Request'; }
+            }
+        }
+
+
+    </script>
+</body>
+</html>
+
+<div data-file-id="rso-file-footer" title="Click to copy path" onclick="(function(el){navigator.clipboard.writeText('Ritual_Studio_Ops/app/ritual-studio-ops-v2.html').then(function(){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;el.textContent='Copied!';setTimeout(function(){el.textContent=t;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/ritual-studio-ops-v2.html &middot; v2 - Phase 6 (Merged App)</div>
+</body>
+</html>
