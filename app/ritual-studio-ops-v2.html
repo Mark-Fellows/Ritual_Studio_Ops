@@ -2461,10 +2461,6 @@
     ${canManage?renderUserManagement():''}
     ${can('canEditTeachers')?`<div class="settings-section"><div class="settings-section-title">Import Teachers</div><button class="btn btn-secondary" onclick="openImportModal()">⇩ Import from CSV</button></div>`:''}
     ${can('canEditTeachers') ? renderRefDataSection() : ''}
-    <div class="settings-section">
-      <div class="settings-section-title">Database Setup</div>
-      <pre style="background:var(--deep);color:var(--cream);padding:16px;border-radius:8px;font-size:11px;overflow-x:auto;line-height:1.5;">${esc(getSqlSetup())}</pre>
-    </div>
   </div>`;
         }
 
@@ -2740,7 +2736,7 @@
                         + '<select onchange="updateRefRoom(' + i + ',\'status\',this.value)" style="font-size:11px;margin-left:auto;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
                         + STATUSES.map(function(s) { return '<option' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('')
                         + '</select></div>'
-                        + '<input class="form-control" value="' + esc(r.notes || '') + '" onchange="updateRefRoom(' + i + ',\'notes\',this.value)" placeholder="Notes" style="font-size:11px;">'
+                        + '<input class="form-control" value="' + esc(r.notes || '') + '" onchange="updateRefRoom(' + i + ',\'notes\',this.value)" placeholder="Notes" style="font-size:11px;width:100%;box-sizing:border-box;">'
                         + '</div>';
                 }).join('');
             } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
