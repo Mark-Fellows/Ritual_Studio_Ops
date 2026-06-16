@@ -345,7 +345,7 @@
             <div class="header-logo">Ritual <span>Studios</span></div>
             <div class="header-sep"></div>
             <div class="header-subtitle">Studio Ops</div>
-            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 6">v2 &middot; Phase 6</div>
+            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 6 · P0-5 fail-closed 2026-06-16">v2 &middot; Phase 6 &middot; P0-5</div>
             <div class="header-sep" style="margin-left:8px;"></div>
             <button class="nav-btn" id="navTeachers" onclick="switchView('teachers')">Teachers</button>
             <button class="nav-btn" id="navCover" onclick="switchView('cover')">Cover</button>
@@ -884,9 +884,11 @@
                 }
                 try { const _pr = await dbGet(`v_user_permissions_resolved?user_id=eq.${userId}&select=permission_code`); resolvedPerms = new Set((_pr||[]).map(x=>x.permission_code)); } catch(_) { resolvedPerms = new Set(); }
             } catch(e) {
-                console.warn('user_profiles load error — defaulting to developer role. Error:', e);
-                currentUserRole = 'developer'; currentUserProfile = { user_id: userId, email, role: 'developer' };
-                resolvedPerms = new Set(['system.admin']);
+                // P0-5 (2026-06-16): fail CLOSED. A profile-load error must never grant access.
+                console.error('user_profiles load error — denying access (fail closed). Error:', e);
+                currentUserRole = 'guest'; currentUserProfile = { user_id: userId, email, role: 'guest' };
+                resolvedPerms = new Set();
+                try { alert('Could not load your access profile, so you have been signed in with no permissions. Please contact an administrator.'); } catch(_){}
             }
         }
 
