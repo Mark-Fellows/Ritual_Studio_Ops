@@ -1,0 +1,36 @@
+RSO Phase 5 Reconciliation Report — 2026-06-18
+Lookback window: 1 day(s) (since 2026-06-16T21:00:03Z UTC)
+Supabase project: https://rfjygyqijwgkmxboddup.supabase.co
+============================================================
+
+-- Check 1: Audit log origin (last 24h) --
+  Total audit entries (last 24h): 0
+  RSO writes ([RSO] prefix):      0
+  Non-RSO writes (legacy/other):  0
+  [OK] All audit entries originate from RSO.
+
+-- Check 2: Cover requests by status --
+  Total cover requests: 139
+    approved: 17
+    cancelled: 2
+    covered: 72
+    duplicate_of: 23
+    no_cover_needed: 21
+    reclassified: 4
+
+-- Check 3: Trainee bookings by status --
+  Total trainee bookings: 0
+
+-- Check 4: Teacher records --
+  Total teacher records: 0
+
+-- Drift comparison vs yesterday --
+  [OK] Teacher count unchanged: 0.
+  [OK] Cover requests increased 137 → 139 (new requests received).
+  [OK] Pending trainee bookings: 0 (was 0).
+
+============================================================
+P1 issues: 0
+Warnings:  0
+
+All checks passed. Parallel run is GREEN.
