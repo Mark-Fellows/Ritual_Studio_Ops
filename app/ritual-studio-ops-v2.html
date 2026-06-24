@@ -345,7 +345,7 @@
             <div class="header-logo">Ritual <span>Studios</span></div>
             <div class="header-sep"></div>
             <div class="header-subtitle">Studio Ops</div>
-            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 6 · P0-5 fail-closed 2026-06-16">v2 &middot; Phase 6 &middot; P0-5</div>
+            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 6 · P0-6 · teacher Send link + Email link 2026-06-22">v2 &middot; Phase 6 &middot; P0-6</div>
             <div class="header-sep" style="margin-left:8px;"></div>
             <button class="nav-btn" id="navTeachers" onclick="switchView('teachers')">Teachers</button>
             <button class="nav-btn" id="navCover" onclick="switchView('cover')">Cover</button>
@@ -1640,6 +1640,10 @@
             }).join('');
             const editBtn = can('canEditTeachers') ? `<button class="btn btn-secondary" onclick="openEditTeacher('${t.id}')">Edit</button>` : '';
             const deleteBtn = can('canEditTeachers') ? `<button class="btn btn-danger" onclick="askDeleteTeacher('${t.id}')">Delete</button>` : '';
+            const _schedPhone = (t.whatsapp_phone||t.phone||'').replace(/\D/g,'');
+            const sendBtn = can('canEditTeachers') ? `<button class="btn btn-secondary" title="WhatsApp this teacher their personal cover-schedule link" onclick="sendTeacherScheduleLink('${t.id}','${_schedPhone}','${encodeURIComponent(t.first_name||'')}')">Send link</button>` : '';
+            const _hasEmail = !!((t.email||'').toString().trim());
+            const emailBtn = can('canEditTeachers') ? `<button class="btn btn-secondary" ${_hasEmail?'':'disabled'} style="${_hasEmail?'':'opacity:0.45;cursor:not-allowed;'}" title="${_hasEmail?'Email this teacher their cover-schedule link':'No email on file for this teacher'}" onclick="emailTeacherScheduleLink('${t.id}', this)">Email link</button>` : '';
             return `<div class="teacher-header">
     ${photoHtml}
     <div class="teacher-header-info">
@@ -1652,13 +1656,44 @@
         ${t.notes?`<span class="contact-chip" style="font-style:italic;color:var(--text-muted)">${esc(t.notes)}</span>`:''}
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;">${editBtn}${deleteBtn}</div>
+    <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end;">${editBtn}${deleteBtn}${sendBtn}${emailBtn}</div>
   </div>`;
         }
 
         // ═══════════════════════════════════════════════════════════════════
         // GRADE HELPERS
         // ═══════════════════════════════════════════════════════════════════
+        function sendTeacherScheduleLink(id, phone, firstEnc) {
+            if (!phone) { alert('No phone number on file for this teacher.'); return; }
+            const first = (decodeURIComponent(firstEnc || '') || 'there').trim();
+            const url = 'https://ritual-cover-management.pages.dev/teacher_schedule.html?t=' + id;
+            const text = 'Hi ' + first + ' 🌿\n\nHere is your personal Ritual cover schedule — bookmark it to see the classes you are confirmed to cover and any that are open for you:\n' + url + '\n\nTo accept or decline a cover, just reply in the group as usual. 🙏';
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(text), '_blank');
+        }
+
+        async function emailTeacherScheduleLink(id, btn) {
+            const orig = btn ? btn.textContent : '';
+            try {
+                if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/send-schedule-link`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON,
+                        'Authorization': 'Bearer ' + (cachedSession?.access_token || SUPABASE_ANON),
+                    },
+                    body: JSON.stringify({ teacher_id: id }),
+                });
+                const j = await res.json().catch(() => ({}));
+                if (res.ok && j.ok) { showToast('Schedule link emailed to ' + (j.email || 'teacher') + '.'); }
+                else { showToast('Could not email link: ' + (j.error || ('HTTP ' + res.status)), 'error'); }
+            } catch (e) {
+                showToast('Could not email link: ' + (e.message || e), 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = orig || 'Email link'; }
+            }
+        }
+
         function gradeLabel(g) {
             if (g===0) return 'Not approved'; if (g===1) return 'Student'; if (g===2) return 'Probationary';
             if (g>=10&&g<20) return 'Qualified'; if (g>=20&&g<30) return 'Experienced';
