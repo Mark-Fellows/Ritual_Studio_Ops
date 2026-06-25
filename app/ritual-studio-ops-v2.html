@@ -3,6 +3,7 @@
   URL:        https://ritual-studio-ops.pages.dev/ritual-studio-ops-v2.html
   Reached:    From the Management Portal cards
   Identifier: emblem badge top-left, "v2 - Phase 7" stamp in header
+  Phase 7b: Per-teacher class history loading — fixes 1,000-row REST cap that zeroed teaching statistics
   Phase 7: Grid-first teacher layout — teacher cards grid by default; click card for detail; Back button returns to grid
   Phase 6c: All Upcoming Absences view — + Add absence button and per-row Edit/Archive actions (canEditTeachers only)
   Phase 6b: applicants view — discipline filter, applied-date sort, date font, heading fix
@@ -365,7 +366,7 @@
             <div class="header-logo">Ritual <span>Studios</span></div>
             <div class="header-sep"></div>
             <div class="header-subtitle">Studio Ops</div>
-            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 7 · P0-7 · grid-first teacher layout 2026-06-25">v2 &middot; Phase 7 &middot; P0-7</div>
+            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 7b · P0-8 · per-teacher history loading 2026-06-25">v2 &middot; Phase 7b &middot; P0-8</div>
             <div class="header-sep" style="margin-left:8px;"></div>
             <button class="nav-btn" id="navTeachers" onclick="switchView('teachers')">Teachers</button>
             <button class="nav-btn" id="navCover" onclick="switchView('cover')">Cover</button>
@@ -645,6 +646,7 @@
         let applicants = [];
         let editingTimeslotId = null;
         let classHistory = [];
+        let teacherHistoryCache = {}; // keyed by teacher_id; loaded on demand to avoid REST max_rows cap
         let selectedTeacherId = null;
         let activeTab = 'overview';
         let sortMode = 'az';
@@ -858,7 +860,7 @@
             appInitialized = false;
             document.getElementById('authScreen').style.display = 'flex';
             document.getElementById('appShell').classList.remove('visible');
-            teachers = []; classHistory = []; selectedTeacherId = null;
+            teachers = []; classHistory = []; teacherHistoryCache = {}; selectedTeacherId = null;
             coverRequests = []; coverCandidates = []; coverDataLoaded = false;
             currentUserRole = 'guest'; currentUserProfile = null;
         }
@@ -991,7 +993,8 @@
                     applicants = allRows.filter(t => t.status === 'applicant');
                     teachers = allRows.filter(t => t.status !== 'applicant' && t.status !== 'rejected');
                 }
-                classHistory = await dbGet(`class_history?date=gte.${ninetyDaysAgo}&select=*&order=date.desc&limit=10000`);
+                // class_history is now loaded per-teacher in selectTeacher() to avoid the
+                // Supabase REST 1,000-row max_rows cap on the global query.
                 await loadAllAbsences();
                 // Phase 7: grid-first layout — show grid on load, not auto-selected teacher
                 if (teachers.length > 0) renderTeacherGrid();
@@ -1689,19 +1692,28 @@
             hideLoading();
         }
 
-        function selectTeacher(id) {
+        async function selectTeacher(id) {
             selectedTeacherId = id;
             teacherViewMode = 'detail';
             if (currentView !== 'teachers') switchView('teachers');
             if (currentUserRole === 'trainee') { renderTraineeAvailable(); return; }
             if (currentUserRole === 'teacher' && currentUserProfile?.teacher_id && id !== currentUserProfile.teacher_id) return;
+            // Load this teacher's 90-day class history on demand (avoids the 1,000-row global cap)
+            if (!teacherHistoryCache[id]) {
+                const ninetyDaysAgo = new Date(Date.now() - 90*86400000).toISOString().slice(0,10);
+                showLoading('Loading history…');
+                try {
+                    teacherHistoryCache[id] = await dbGet(`class_history?teacher_id=eq.${id}&date=gte.${ninetyDaysAgo}&select=*&order=date.desc`);
+                } catch(e) { teacherHistoryCache[id] = []; showToast('Could not load class history', 'error'); }
+                hideLoading();
+            }
             renderMainPanel();
         }
 
         function renderMainPanel() {
             const t = teachers.find(x => x.id === selectedTeacherId);
             if (!t) { document.getElementById('mainContent').innerHTML = renderEmptyState(); return; }
-            const history = classHistory.filter(c => c.teacher_id === t.id);
+            const history = teacherHistoryCache[t.id] || [];
             const adjudicatorTabClass = can('canEditGrades') ? '' : 'hidden';
             document.getElementById('mainContent').innerHTML = `
     <div class="main-inner">
@@ -1728,7 +1740,7 @@
             const t = teachers.find(x => x.id === selectedTeacherId);
             if (!t) return;
             const disciplineFilter = document.getElementById('filterDiscipline')?.value || '';
-            let history = classHistory.filter(c => c.teacher_id === t.id);
+            let history = teacherHistoryCache[t.id] || [];
             if (disciplineFilter) history = history.filter(c => c.discipline === disciplineFilter);
             document.getElementById('tabContent').innerHTML = renderTab(t, history);
             document.querySelectorAll('.tab').forEach(el => {
@@ -2167,7 +2179,7 @@
             showLoading('Loading full history…');
             try {
                 const rows = await dbGet(`class_history?teacher_id=eq.${teacherId}&select=*&order=date.desc`);
-                classHistory = [...classHistory.filter(c=>c.teacher_id!==teacherId), ...rows];
+                teacherHistoryCache[teacherId] = rows; // Replace cache with full (unfiltered-by-date) history
                 document.getElementById('tabContent').innerHTML = renderHistory(rows);
             } catch(e) { showToast('Error: ' + e.message, 'error'); }
             hideLoading();
@@ -2532,7 +2544,7 @@
             showLoading('Deleting…');
             try {
                 await dbDelete(`class_history?teacher_id=eq.${pendingDeleteId}`); await dbDelete(`teachers?id=eq.${pendingDeleteId}`);
-                teachers=teachers.filter(t=>t.id!==pendingDeleteId); classHistory=classHistory.filter(c=>c.teacher_id!==pendingDeleteId);
+                teachers=teachers.filter(t=>t.id!==pendingDeleteId); delete teacherHistoryCache[pendingDeleteId];
                 document.getElementById('deleteModal').classList.remove('open'); pendingDeleteId=null; selectedTeacherId=null; teacherViewMode='grid';
                 if (teachers.length) renderTeacherGrid(); else document.getElementById('mainContent').innerHTML=renderEmptyState();
                 showToast('Teacher deleted.');
