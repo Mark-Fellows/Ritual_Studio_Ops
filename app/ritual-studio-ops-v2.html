@@ -2,7 +2,8 @@
   LIVE FILE - Ritual Studio Ops, merged app (Teachers + Cover)
   URL:        https://ritual-studio-ops.pages.dev/ritual-studio-ops-v2.html
   Reached:    From the Management Portal cards
-  Identifier: emblem badge top-left, "v2 - Phase 6" stamp in header
+  Identifier: emblem badge top-left, "v2 - Phase 7" stamp in header
+  Phase 7: Grid-first teacher layout — teacher cards grid by default; click card for detail; Back button returns to grid
   Phase 6c: All Upcoming Absences view — + Add absence button and per-row Edit/Archive actions (canEditTeachers only)
   Phase 6b: applicants view — discipline filter, applied-date sort, date font, heading fix
   Phase 6: public teacher applications - applicant intake, Applicants review
@@ -98,6 +99,25 @@
         .sort-btn.active { background:var(--deep); color:var(--cream); border-color:var(--deep); }
         .main { overflow-y:auto; background:var(--cream); height:100%; min-height:0; }
         .main-inner { padding:32px; max-width:1100px; }
+        /* ── Teacher grid view ─────────────────────────────────────────── */
+        #appShell.no-sidebar { grid-template-columns:1fr; }
+        .teacher-grid-wrap { padding:28px 32px; }
+        .teacher-filter-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+        .teacher-filter-bar .sort-toggle { width:auto; flex-shrink:0; }
+        .teacher-filter-bar .filter-input { width:160px; flex-shrink:0; }
+        .teacher-filter-bar .filter-select { width:140px; flex-shrink:0; }
+        .teacher-count-label { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+        .teacher-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px; }
+        .teacher-card { background:var(--warm-white); border:1px solid var(--border); border-radius:14px; padding:24px 16px 18px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:box-shadow 0.15s,transform 0.15s; }
+        .teacher-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.09); transform:translateY(-2px); }
+        .teacher-card-photo { width:72px; height:72px; border-radius:50%; object-fit:cover; margin-bottom:12px; }
+        .teacher-card-avatar { width:72px; height:72px; border-radius:50%; background:var(--earth); color:white; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; margin-bottom:12px; font-family:'Cormorant Garamond',serif; letter-spacing:0.04em; }
+        .teacher-card-name { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:8px; line-height:1.3; }
+        .teacher-card-disc { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+        .teacher-card-loc { font-size:11px; color:var(--text-muted); margin-top:6px; }
+        .detail-back-btn { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--earth); cursor:pointer; background:none; border:none; padding:0 0 0 2px; margin-bottom:20px; font-family:'DM Sans',sans-serif; font-weight:500; }
+        .detail-back-btn:hover { text-decoration:underline; }
+        /* ────────────────────────────────────────────────────────────────── */
         .tab-bar { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:28px; }
         .tab { padding:10px 20px; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; font-weight:400; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
         .tab:hover { color:var(--text-secondary); }
@@ -345,7 +365,7 @@
             <div class="header-logo">Ritual <span>Studios</span></div>
             <div class="header-sep"></div>
             <div class="header-subtitle">Studio Ops</div>
-            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 6 · P0-6 · teacher Send link + Email link 2026-06-22">v2 &middot; Phase 6 &middot; P0-6</div>
+            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 7 · P0-7 · grid-first teacher layout 2026-06-25">v2 &middot; Phase 7 &middot; P0-7</div>
             <div class="header-sep" style="margin-left:8px;"></div>
             <button class="nav-btn" id="navTeachers" onclick="switchView('teachers')">Teachers</button>
             <button class="nav-btn" id="navCover" onclick="switchView('cover')">Cover</button>
@@ -628,6 +648,10 @@
         let selectedTeacherId = null;
         let activeTab = 'overview';
         let sortMode = 'az';
+        let teacherViewMode = 'grid'; // 'grid' | 'detail'
+        let gFilterName = '';
+        let gFilterDisc = '';
+        let gFilterLoc = '';
         let editingTeacherId = null;
         let editingCourseId = null;
         let appInitialized = false;
@@ -912,13 +936,16 @@
 
             if (view === 'teachers') {
                 shell.classList.remove('cover-active');
-                sidebar.style.display = '';
+                shell.classList.add('no-sidebar');
+                sidebar.style.display = 'none';
                 mainArea.style.display = '';
                 coverShell.style.display = 'none';
-                if (teachers.length > 0 && selectedTeacherId) {
-                    renderSidebar(); renderMainPanel();
-                } else if (teachers.length > 0) {
-                    selectTeacher(teachers[0].id);
+                if (teachers.length > 0) {
+                    if (teacherViewMode === 'detail' && selectedTeacherId) {
+                        renderMainPanel();
+                    } else {
+                        renderTeacherGrid();
+                    }
                 }
             } else if (view === 'cover') {
                 shell.classList.add('cover-active');
@@ -932,6 +959,7 @@
                 }
             } else if (view === 'settings') {
                 shell.classList.remove('cover-active');
+                shell.classList.remove('no-sidebar');
                 sidebar.style.display = '';
                 mainArea.style.display = '';
                 coverShell.style.display = 'none';
@@ -963,11 +991,10 @@
                     applicants = allRows.filter(t => t.status === 'applicant');
                     teachers = allRows.filter(t => t.status !== 'applicant' && t.status !== 'rejected');
                 }
-                classHistory = await dbGet(`class_history?date=gte.${ninetyDaysAgo}&select=*&order=date.desc`);
+                classHistory = await dbGet(`class_history?date=gte.${ninetyDaysAgo}&select=*&order=date.desc&limit=10000`);
                 await loadAllAbsences();
-                renderSidebar();
-                renderActionButtons(); // re-render now that applicants[] is populated
-                if (teachers.length > 0) selectTeacher(teachers[0].id);
+                // Phase 7: grid-first layout — show grid on load, not auto-selected teacher
+                if (teachers.length > 0) renderTeacherGrid();
                 else document.getElementById('mainContent').innerHTML = renderEmptyState();
             } catch(e) { showToast('Error loading data: ' + e.message, 'error'); }
             hideLoading();
@@ -1230,8 +1257,12 @@
         // ═══════════════════════════════════════════════════════════════════
         function setSortMode(mode) {
             sortMode = mode;
-            document.getElementById('sortAZ').classList.toggle('active', mode==='az');
-            document.getElementById('sortRecent').classList.toggle('active', mode==='recent');
+            if (teacherViewMode === 'grid') { renderTeacherGrid(); return; }
+            // Update sidebar sort buttons when sidebar is visible (settings view)
+            const az = document.getElementById('sortAZ');
+            const rc = document.getElementById('sortRecent');
+            if (az) az.classList.toggle('active', mode==='az');
+            if (rc) rc.classList.toggle('active', mode==='recent');
             renderSidebar();
         }
 
@@ -1271,6 +1302,101 @@
                     <div><div class="teacher-name">${esc(t.first_name)} ${esc(t.last_name)}</div><div class="teacher-meta">${disciplines}</div>${leavePill}</div>
                 </li>`;
             }).join('');
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // TEACHER GRID (grid-first layout — Phase 7)
+        // ═══════════════════════════════════════════════════════════════════
+        function renderTeacherGrid() {
+            teacherViewMode = 'grid';
+            selectedTeacherId = null;
+
+            // Save cursor before any possible re-render triggered by filter changes
+            const prevFocusId = document.activeElement?.id;
+            const prevCursor = (prevFocusId === 'filterName') ? document.getElementById('filterName')?.selectionStart : null;
+
+            const nameQ = gFilterName.toLowerCase();
+            let list = teachers.filter(t => {
+                const fullName = `${t.first_name} ${t.last_name}`.toLowerCase();
+                if (nameQ && !fullName.includes(nameQ)) return false;
+                if (gFilterDisc && !(t.grades?.[gFilterDisc] > 0)) return false;
+                if (gFilterLoc && !(t.locations || []).includes(gFilterLoc)) return false;
+                return true;
+            });
+            if (sortMode === 'az') list.sort((a,b) => a.first_name.localeCompare(b.first_name) || a.last_name.localeCompare(b.last_name));
+
+            const canEdit = can('canEditTeachers');
+            const isMgmt = ['developer','administrator','coordinator'].includes(currentUserRole);
+
+            const mgmtBtns = isMgmt ? `
+                <button class="btn btn-secondary" style="font-size:11px;" onclick="renderApplicantsView()">Applicants (${applicants.length})</button>
+                <button class="btn btn-secondary" style="font-size:11px;" onclick="renderApprovalsView()">Approvals</button>
+                <button class="btn btn-secondary" style="font-size:11px;" onclick="renderAbsencesGlobalView()">Absences</button>
+                <button class="btn btn-secondary" style="font-size:11px;" onclick="renderCourseManager()">Courses</button>
+                <button class="btn btn-secondary" style="font-size:11px;" onclick="renderTimeslotManager()">Timeslots</button>` : '';
+            const addBtn = canEdit ? `<button class="btn btn-gold" onclick="openAddTeacher()">+ Add Teacher</button>` : '';
+
+            const fNameVal = gFilterName.replace(/"/g, '&quot;');
+
+            const cards = list.map(t => {
+                const qualified = DISCIPLINES.filter(d => (t.grades?.[d.key] || 0) >= 10);
+                const pills = qualified.length
+                    ? qualified.map(d => `<span class="pill pill-d-${d.key}">${esc(d.label)}</span>`).join('')
+                    : `<span style="color:var(--text-muted);font-size:11px;">No disciplines</span>`;
+                const photo = t.photo_url
+                    ? `<img src="${esc(t.photo_url)}" class="teacher-card-photo" alt="">`
+                    : `<div class="teacher-card-avatar">${initials(t)}</div>`;
+                const activeAbsence = getActiveAbsence(t.id);
+                const leavePill = activeAbsence
+                    ? `<div class="on-leave-pill" style="margin-top:8px;font-size:10px;">On leave until ${activeAbsence.end_date_approximate ? '≈ ' : ''}${new Date(activeAbsence.end_date + 'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div>`
+                    : '';
+                const locs = (t.locations || []).join(' · ');
+                return `<div class="teacher-card" onclick="selectTeacher('${t.id}')">
+                    ${photo}
+                    <div class="teacher-card-name">${esc(t.first_name)} ${esc(t.last_name)}</div>
+                    <div class="teacher-card-disc">${pills}</div>
+                    ${locs ? `<div class="teacher-card-loc">${esc(locs)}</div>` : ''}
+                    ${leavePill}
+                </div>`;
+            }).join('');
+
+            document.getElementById('mainContent').innerHTML = `
+            <div class="teacher-grid-wrap">
+              <div class="teacher-filter-bar">
+                <div class="sort-toggle" style="width:auto;flex-shrink:0;">
+                  <button class="sort-btn ${sortMode==='az'?'active':''}" onclick="setSortMode('az')">A → Z</button>
+                  <button class="sort-btn ${sortMode==='recent'?'active':''}" onclick="setSortMode('recent')">Recent</button>
+                </div>
+                <input class="filter-input" id="filterName" type="text" placeholder="Search name…" value="${fNameVal}" oninput="gFilterName=this.value;renderTeacherGrid()">
+                <select class="filter-select" id="filterDiscipline" onchange="gFilterDisc=this.value;renderTeacherGrid()">
+                  <option value="">All Disciplines</option>
+                  <option value="yoga" ${gFilterDisc==='yoga'?'selected':''}>Yoga</option>
+                  <option value="yin" ${gFilterDisc==='yin'?'selected':''}>Yin</option>
+                  <option value="mat_pilates" ${gFilterDisc==='mat_pilates'?'selected':''}>Mat Pilates</option>
+                  <option value="barre" ${gFilterDisc==='barre'?'selected':''}>Barre</option>
+                  <option value="reformer" ${gFilterDisc==='reformer'?'selected':''}>Reformer</option>
+                </select>
+                <select class="filter-select" id="filterLocation" onchange="gFilterLoc=this.value;renderTeacherGrid()">
+                  <option value="">All Locations</option>
+                  <option value="Palm Beach" ${gFilterLoc==='Palm Beach'?'selected':''}>Palm Beach</option>
+                  <option value="Robina" ${gFilterLoc==='Robina'?'selected':''}>Robina</option>
+                </select>
+                <span class="teacher-count-label">${list.length} teacher${list.length!==1?'s':''}</span>
+                <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  ${mgmtBtns}
+                  ${addBtn}
+                </div>
+              </div>
+              ${list.length
+                ? `<div class="teacher-grid">${cards}</div>`
+                : '<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No teachers match the current filters.</div></div>'}
+            </div>`;
+
+            // Restore focus + cursor position if the search input was active
+            if (prevFocusId === 'filterName') {
+                const inp = document.getElementById('filterName');
+                if (inp) { inp.focus(); if (prevCursor !== null) inp.setSelectionRange(prevCursor, prevCursor); }
+            }
         }
 
         function renderActionButtons() {
@@ -1565,10 +1691,10 @@
 
         function selectTeacher(id) {
             selectedTeacherId = id;
+            teacherViewMode = 'detail';
             if (currentView !== 'teachers') switchView('teachers');
             if (currentUserRole === 'trainee') { renderTraineeAvailable(); return; }
             if (currentUserRole === 'teacher' && currentUserProfile?.teacher_id && id !== currentUserProfile.teacher_id) return;
-            renderSidebar();
             renderMainPanel();
         }
 
@@ -1579,6 +1705,7 @@
             const adjudicatorTabClass = can('canEditGrades') ? '' : 'hidden';
             document.getElementById('mainContent').innerHTML = `
     <div class="main-inner">
+      <button class="detail-back-btn" onclick="renderTeacherGrid()">← All Teachers</button>
       ${renderTeacherHeader(t)}
       <div class="tab-bar">
         <div class="tab ${activeTab==='overview'?'active':''}" onclick="switchTab('overview')">Overview</div>
@@ -1756,7 +1883,7 @@
       <div style="text-align:center;padding:16px;color:var(--text-muted);font-style:italic;font-size:12px;">Loading absences&#8230;</div>
     </div>
     <div class="section-header"><div class="section-title">Recent Classes</div></div>
-    ${renderHistoryTable(history.slice(0,5))}`;
+    ${renderHistoryTable(history.filter(c=>c.status==='taught').slice(0,5))}`;
         }
 
         async function loadOverviewUserProfile(teacherId) {
@@ -2086,7 +2213,7 @@
         function renderHistoryTable(rows) {
             if (!rows.length) return `<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No classes recorded.</div></div>`;
             return `<div class="scrollable-table-wrap"><table class="data-table">
-      <thead><tr><th>Date</th><th>Class</th><th>Discipline</th><th>Location</th><th>Signed Up</th><th>Booked In</th><th>No Shows</th><th>Status</th></tr></thead>
+      <thead><tr><th>Date</th><th>Class</th><th>Discipline</th><th>Location</th><th>Bookings</th><th>Sign Ins</th><th>No Shows</th><th>Status</th></tr></thead>
       <tbody>${rows.map(c=>`<tr><td>${esc(c.date)}</td><td>${esc(c.class_name)}</td><td>${getDisciplinePill(c.discipline)}</td><td>${esc(c.location||'')}</td><td>${c.signed_up??'—'}</td><td>${c.booked_in??'—'}</td><td>${c.no_shows??'—'}</td><td>${statusPill(c.status)}</td></tr>`).join('')}
       </tbody></table></div>`;
         }
@@ -2373,7 +2500,7 @@
                     const efResult=await callEdgeFunction('create-user',{ email:data.email, password:userPw, role:'teacher', teacher_id:newTeacher.id, first_name:newTeacher.first_name, last_name:newTeacher.last_name });
                     if (!efResult.ok) { await writeAudit(newTeacher.id,`Teacher created but auth FAILED: ${efResult.error}`); showToast(`Teacher saved but account creation failed: ${efResult.error}`,'error',8000); }
                     else { await writeAudit(newTeacher.id,`Teacher and user account created by ${currentUserEmail}`); showToast(`${newTeacher.first_name} ${newTeacher.last_name} added.`); }
-                    closeModal(); renderSidebar(); selectTeacher(newTeacher.id);
+                    closeModal(); selectTeacher(newTeacher.id);
                 }
             } catch(e) { showToast('Error saving: '+e.message,'error'); }
             hideLoading();
@@ -2406,8 +2533,8 @@
             try {
                 await dbDelete(`class_history?teacher_id=eq.${pendingDeleteId}`); await dbDelete(`teachers?id=eq.${pendingDeleteId}`);
                 teachers=teachers.filter(t=>t.id!==pendingDeleteId); classHistory=classHistory.filter(c=>c.teacher_id!==pendingDeleteId);
-                document.getElementById('deleteModal').classList.remove('open'); pendingDeleteId=null; selectedTeacherId=null;
-                renderSidebar(); if (teachers.length) selectTeacher(teachers[0].id); else document.getElementById('mainContent').innerHTML=renderEmptyState();
+                document.getElementById('deleteModal').classList.remove('open'); pendingDeleteId=null; selectedTeacherId=null; teacherViewMode='grid';
+                if (teachers.length) renderTeacherGrid(); else document.getElementById('mainContent').innerHTML=renderEmptyState();
                 showToast('Teacher deleted.');
             } catch(e) { showToast('Error deleting: '+e.message,'error'); }
             hideLoading();
@@ -2473,6 +2600,7 @@
             const mainArea=document.getElementById('mainArea');
             const coverShell=document.getElementById('coverShell');
             shell.classList.remove('cover-active');
+            shell.classList.remove('no-sidebar');
             sidebar.style.display=''; mainArea.style.display=''; coverShell.style.display='none';
             document.getElementById('navTeachers').classList.remove('active');
             document.getElementById('navCover').classList.remove('active');

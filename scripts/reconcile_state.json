@@ -1,8 +1,8 @@
 {
-  "date": "2026-06-24",
+  "date": "2026-06-25",
   "audit_24h": {
-    "total": 0,
-    "rso": 0,
+    "total": 1,
+    "rso": 1,
     "legacy": 0
   },
   "cover_requests": {
@@ -20,6 +20,6 @@
     "cancelled": 1
   },
   "teachers": {
-    "count": 232
+    "count": 233
   }
 }
