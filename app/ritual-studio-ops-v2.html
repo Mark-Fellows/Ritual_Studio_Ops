@@ -3,7 +3,7 @@
   URL:        https://ritual-studio-ops.pages.dev/ritual-studio-ops-v2.html
   Reached:    From the Management Portal cards
   Identifier: emblem badge top-left, "v2 - Phase 7" stamp in header
-  Phase 7b: Per-teacher class history loading — fixes 1,000-row REST cap that zeroed teaching statistics
+  Phase 7c: Class History tab — past sessions first, planned sessions second; Sign Ins/No Shows show — for upcoming rows
   Phase 7: Grid-first teacher layout — teacher cards grid by default; click card for detail; Back button returns to grid
   Phase 6c: All Upcoming Absences view — + Add absence button and per-row Edit/Archive actions (canEditTeachers only)
   Phase 6b: applicants view — discipline filter, applied-date sort, date font, heading fix
@@ -366,7 +366,7 @@
             <div class="header-logo">Ritual <span>Studios</span></div>
             <div class="header-sep"></div>
             <div class="header-subtitle">Studio Ops</div>
-            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 7b · P0-8 · per-teacher history loading 2026-06-25">v2 &middot; Phase 7b &middot; P0-8</div>
+            <div id="buildStamp" style="font-size:10px;color:var(--text-muted);margin-left:10px;white-space:nowrap;cursor:default;" title="RSO v2 Phase 7c · P0-8 · history tab past-first layout 2026-06-25">v2 &middot; Phase 7c &middot; P0-8</div>
             <div class="header-sep" style="margin-left:8px;"></div>
             <button class="nav-btn" id="navTeachers" onclick="switchView('teachers')">Teachers</button>
             <button class="nav-btn" id="navCover" onclick="switchView('cover')">Cover</button>
@@ -2170,9 +2170,15 @@
         // HISTORY TAB
         // ═══════════════════════════════════════════════════════════════════
         function renderHistory(history) {
+            const past     = [...history].filter(c => c.status !== 'planned').sort((a,b) => b.date.localeCompare(a.date));
+            const upcoming = [...history].filter(c => c.status === 'planned').sort((a,b) => a.date.localeCompare(b.date));
             return `<div class="section-header"><div class="section-title">Class History &amp; Schedule</div>
       <button class="btn btn-secondary" onclick="loadFullHistory('${selectedTeacherId}')" style="font-size:11px;">Load All History</button>
-    </div>${renderHistoryTable([...history].sort((a,b)=>b.date.localeCompare(a.date)))}`;
+    </div>
+    <div class="section-header" style="margin-top:8px;"><div class="section-title" style="font-size:12px;">Recent &amp; Past Classes</div></div>
+    ${past.length ? renderHistoryTable(past) : '<div class="empty-state"><div class="empty-state-text">No past classes in the loaded window.</div></div>'}
+    <div class="section-header" style="margin-top:20px;"><div class="section-title" style="font-size:12px;">Upcoming Schedule</div></div>
+    ${upcoming.length ? renderHistoryTable(upcoming) : '<div class="empty-state"><div class="empty-state-text">No upcoming sessions.</div></div>'}`;
         }
 
         async function loadFullHistory(teacherId) {
@@ -2226,7 +2232,10 @@
             if (!rows.length) return `<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No classes recorded.</div></div>`;
             return `<div class="scrollable-table-wrap"><table class="data-table">
       <thead><tr><th>Date</th><th>Class</th><th>Discipline</th><th>Location</th><th>Bookings</th><th>Sign Ins</th><th>No Shows</th><th>Status</th></tr></thead>
-      <tbody>${rows.map(c=>`<tr><td>${esc(c.date)}</td><td>${esc(c.class_name)}</td><td>${getDisciplinePill(c.discipline)}</td><td>${esc(c.location||'')}</td><td>${c.signed_up??'—'}</td><td>${c.booked_in??'—'}</td><td>${c.no_shows??'—'}</td><td>${statusPill(c.status)}</td></tr>`).join('')}
+      <tbody>${rows.map(c=>{
+        const isPlanned = c.status==='planned';
+        return `<tr><td>${esc(c.date)}</td><td>${esc(c.class_name)}</td><td>${getDisciplinePill(c.discipline)}</td><td>${esc(c.location||'')}</td><td>${c.signed_up??'—'}</td><td>${isPlanned?'—':(c.booked_in??'—')}</td><td>${isPlanned?'—':(c.no_shows??'—')}</td><td>${statusPill(c.status)}</td></tr>`;
+      }).join('')}
       </tbody></table></div>`;
         }
 
