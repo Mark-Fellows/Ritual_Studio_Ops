@@ -880,6 +880,7 @@
       'g40IEOLPDTWnbFYybWL01wZMiE_f2_yor_DKuaSCajU';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
+        flowType: 'implicit',        // explicit: PKCE's ?code= exchange is broken by Cloudflare Access
         detectSessionInUrl: true,
         persistSession: true,
         autoRefreshToken: true
@@ -1213,7 +1214,7 @@
       try {
         const { error } = await sb.auth.signInWithOtp({
           email,
-          options: { emailRedirectTo: 'https://ritual-studio-ops.pages.dev' }
+          options: { emailRedirectTo: 'https://ritual-ops.lesss.com.au' }
         });
         if (error) throw error;
         localStorage.setItem('rmp_last_email', email);
