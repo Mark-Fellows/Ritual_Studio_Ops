@@ -44,7 +44,7 @@ sys.path.insert(0, str(_COVER))
 
 try:
     from config import (
-        SUPABASE_URL, SUPABASE_KEY, sb_get,
+        SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_KEY, sb_get,
         SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, NOTIFY_FROM,
     )
 except ImportError as e:
@@ -101,15 +101,24 @@ def _jwt_role(token: str):
 
 
 def require_service_role():
-    """Abort unless queries will use the SERVICE_ROLE key. With RLS enabled on the shared
-    tables, the anon key silently returns RLS-filtered (often empty) rows and reports a
-    false-GREEN reconciliation."""
-    key  = os.getenv("SUPABASE_SERVICE_KEY") or SUPABASE_KEY
-    role = _jwt_role(key)
-    if role != "service_role":
-        print(f"ERROR: reconcile must run with the SERVICE_ROLE key (found role={role!r}).")
+    """Abort unless queries will use a privileged (RLS-bypassing) key. With RLS enabled on
+    the shared tables, the anon key silently returns RLS-filtered (often empty) rows and
+    reports a false-GREEN reconciliation.
+
+    Accepts two privileged key formats:
+      * legacy JWT with role == "service_role"
+      * Supabase's newer secret key, prefixed "sb_secret_" (server-side, bypasses RLS).
+    Rejects the anon JWT and the publishable ("sb_publishable_") key.
+    """
+    key = SUPABASE_SERVICE_KEY or os.getenv("SUPABASE_SERVICE_KEY") or SUPABASE_KEY
+    is_secret = isinstance(key, str) and key.startswith("sb_secret_")
+    role = None if is_secret else _jwt_role(key)
+    if not (is_secret or role == "service_role"):
+        found = "sb_secret_ (ok)" if is_secret else f"role={role!r}"
+        print(f"ERROR: reconcile must run with the SERVICE_ROLE / secret key (found {found}).")
         print("RLS is enabled on the shared tables, so the anon key would hide rows and")
-        print("produce false-GREEN reconciliations. Set SUPABASE_SERVICE_KEY in the RSO .env.")
+        print("produce false-GREEN reconciliations. Set SUPABASE_SERVICE_KEY (or")
+        print("SUPABASE_SERVICE_ROLE_KEY) to the project's service_role / sb_secret_ key.")
         sys.exit(2)
 
 
@@ -288,7 +297,7 @@ def main():
     args = parser.parse_args()
 
     run_date = datetime.date.today().isoformat()
-    since_dt = datetime.datetime.utcnow() - datetime.timedelta(days=args.days)
+    since_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=args.days)
     since_iso = since_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     log(f"RSO Reconciliation Report — {run_date}")

@@ -47,8 +47,20 @@ if _MOMENCE_SERVICES.exists() and str(_MOMENCE_SERVICES) not in sys.path:
 # ── Supabase ──────────────────────────────────────────────────────────────────
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://rfjygyqijwgkmxboddup.supabase.co")
 
-SUPABASE_KEY = (
+# Privileged (server-side) key. Accepts both the legacy env name SUPABASE_SERVICE_KEY
+# and the name used in the shared .env, SUPABASE_SERVICE_ROLE_KEY. Supports both the
+# legacy JWT service_role key and Supabase's newer "sb_secret_…" secret-key format
+# (both bypass RLS). Empty string when no privileged key is configured.
+SUPABASE_SERVICE_KEY = (
     os.getenv("SUPABASE_SERVICE_KEY")
+    or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    or ""
+)
+
+# General/default key. Prefers a privileged key when present, then the anon key,
+# then a hardcoded anon fallback (public-scope; last resort only).
+SUPABASE_KEY = (
+    SUPABASE_SERVICE_KEY
     or os.getenv("SUPABASE_ANON_KEY")
     or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmanlneXFpandna"
     "214Ym9kZHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDU5MjksImV4cCI6MjA4NzMyMTkyOX0."
@@ -107,7 +119,7 @@ DISCIPLINE_CODES = {
 import requests  # noqa: E402 (after env load)
 
 def _headers(service_key: bool = False) -> dict:
-    key = (os.getenv("SUPABASE_SERVICE_KEY") or SUPABASE_KEY) if service_key else SUPABASE_KEY
+    key = (SUPABASE_SERVICE_KEY or SUPABASE_KEY) if service_key else SUPABASE_KEY
     return {
         "apikey": key,
         "Authorization": f"Bearer {key}",

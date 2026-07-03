@@ -1,0 +1,45 @@
+RSO Reconciliation Report — 2026-07-02
+Lookback window: 1 day(s) (since 2026-07-01T08:24:40Z UTC)
+Supabase project: https://rfjygyqijwgkmxboddup.supabase.co
+============================================================
+
+-- Check 1: Audit log origin (last 24h) --
+  Total audit entries (last 24h): 0
+  RSO writes ([RSO] prefix):      0
+  Non-RSO writes (legacy/other):  0
+  [OK] All audit entries originate from RSO.
+
+-- Check 2: Cover requests by status --
+  Total cover requests: 144
+    approved: 21
+    cancelled: 2
+    covered: 69
+    duplicate_of: 11
+    no_cover_needed: 21
+    pending_review: 16
+    reclassified: 4
+
+-- Check 3: Trainee bookings by status --
+  Total trainee bookings: 15
+    approved: 4
+    cancelled: 1
+    rejected: 10
+
+-- Check 4: Teacher records --
+  Total teacher records: 238
+  [FAIL] Teacher count is 238 (below floor 99999) — implausible; likely a blocked read or data loss, not a healthy zero.
+
+-- Drift comparison vs yesterday --
+  [OK] Teacher count unchanged: 238.
+  [OK] Cover request count unchanged: 144.
+  [OK] Pending trainee bookings: 0 (was 0).
+
+============================================================
+Failures:  1
+P1 issues: 0
+Warnings:  0
+
+FAILURES — this run could not be trusted:
+  1. Teacher count is 238 (below floor 99999) — implausible; likely a blocked read or data loss, not a healthy zero.
+
+RECONCILE FAILED — read error or implausible zero. Result is NOT trustworthy.

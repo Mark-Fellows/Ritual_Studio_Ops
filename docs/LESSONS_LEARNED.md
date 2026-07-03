@@ -682,3 +682,29 @@ The te&& check ensures a blank email never matches anything.
 **Fix:** Deduplicate at parse time before building the batch. Use a dict keyed on the conflict column (class_name): first occurrence wins; subsequent duplicates are logged and discarded. This guarantees every key appears exactly once in the batch. The same pattern applies to any upsert batch where the source data may contain duplicate conflict-column values.
 
 **Applies to:** scripts/seed_reference_tables.py read_class_groups(); any seed or import script that reads from a workbook or CSV that may contain duplicate key values before upserting on a unique constraint.
+
+---
+
+## 2026-07-03
+
+### L-CM-10 -- A hung Chromium browser can answer /json/version over HTTP while its CDP websocket is dead
+
+**Problem:** The WhatsApp monitor failed on every hourly run from 2026-07-01 14:00 to 2026-07-03 13:00. browser_manager launch reported "Debug edge already live" every time, yet every connect_over_cdp in the monitor timed out (websocket connected, then no response). The self-heal never fired for two days. The same pattern occurred 2026-06-29..30 and recovered by chance.
+
+**Cause:** After an Edge auto-update (old binaries replaced on disk while the process keeps running), Edge can enter a half-dead state: the HTTP /json/version endpoint still responds with valid JSON, but the browser-level DevTools websocket session is unresponsive. The 2026-06-02 health probe only checked HTTP, so it declared the zombie healthy. The netstat-based guard before that had the same flaw one level shallower (port bound vs HTTP alive vs websocket drivable).
+
+**Fix:** Health = a REAL CDP session, not a proxy for one. browser_manager.cdp_drivable() opens an actual Playwright connect_over_cdp session (10 s timeout); launch requires HTTP-alive AND drivable, and kills+relaunches on the ZOMBIE state. Additionally, scheduled task "Cover Manager - Daily Browser Refresh" (07:50) force-restarts Edge every morning so pending auto-updates apply to a fresh process before the monitoring window opens.
+
+**Applies to:** Any pipeline that attaches to a long-running debug browser over CDP (WhatsApp monitor Edge:9222, Momence scraper Chrome:9333 — the latter still uses shallower checks and could hit the same state).
+
+---
+
+### L-CM-11 -- Edge session restore duplicates the WhatsApp tab after a forced kill; profile Preferences edits are unreliable
+
+**Problem:** After taskkill /F + relaunch with the WhatsApp URL on the command line, Edge opened TWO WhatsApp Web tabs (restored + command-line). WhatsApp Web allows one active tab per session, so the tabs fought over it ("WhatsApp is open in another window. Click Use Here") and the monitor could attach to the dead tab. Editing C:\EdgeDebug\Default\Preferences (exit_type=Normal, restore_on_startup=5) did NOT reliably prevent the restore.
+
+**Cause:** A forced kill records a crashed exit, and Edge may restore the previous session regardless; Edge tracks/protects some Preferences values and can revert external edits.
+
+**Fix:** Do not fight the browser's restore logic — normalise state after launch via CDP instead: browser_manager._ensure_single_whatsapp_tab() counts web.whatsapp.com pages; if zero or more than one, closes them all and opens one fresh tab, which then claims the WhatsApp session cleanly. --hide-crash-restore-bubble suppresses the "closed unexpectedly" bubble; the Preferences sanitise is kept only as best-effort.
+
+**Applies to:** browser_manager.py launch/refresh; any flow that force-kills a Chromium browser whose profile holds a single-session web app (WhatsApp Web).

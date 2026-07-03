@@ -779,7 +779,7 @@
       <button class="modal-close-x" type="button" aria-label="Close" data-modal-close>&times;</button>
       <h3>Change password</h3>
       <p>Set a new password for your account. It must be at least 8 characters.</p>
-      <div id="pw-fields">
+      <form id="pw-fields" onsubmit="return false;">
         <div class="pw-field">
           <label for="new-pw">New password</label>
           <input id="new-pw" type="password" autocomplete="new-password" placeholder="Min. 8 characters" />
@@ -788,7 +788,7 @@
           <label for="confirm-pw">Confirm password</label>
           <input id="confirm-pw" type="password" autocomplete="new-password" placeholder="Re-enter new password" />
         </div>
-      </div>
+      </form>
       <div class="pw-msg" id="pw-msg" style="display:none;"></div>
       <div class="modal-actions" id="pw-actions">
         <button class="modal-btn" type="button" data-modal-close>Cancel</button>
