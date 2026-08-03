@@ -472,3 +472,5 @@ Source: `CHANGELOG-2026-04-05-teacher-management.md`
   
 2026-06-09 | Cover Management (backend) | Fixed IndentationError in cover_processor.py caused by 3 duplicate trailing lines introduced in commit 03a86aa (2026-06-08 21:48). Crashed al
 ## 2026-06-07 | Cover Management pipeline (stage2) | Cost fix: stop re-parsing already-stored WhatsApp messages. Moved the whatsapp_messages dedup gate BEFORE the NLP step so Claude+Gemini are only called for genuinely new messages (previously every message in the lookback window was re-parsed on all 13 hourly runs and the result discarded at insert-time dedup). Added dynamic lookback (--since-last-run): scrapes back to 30 min before the last run_status='completed' run, capped/falling back to 24h. run_monitor.bat now passes --since-last-run --hours 24 | stage2/cover_processor.py, run_monitor.bat
+
+## 2026-08-03 | Cover Management (legacy) | Shortened browser tab title from "Ritual Cover Management — Admin Dashboard" to "Cover Management"; added a favicon (clipboard emoji, matching the portal tile icon) since the page previously had none | public/cover_dashboard.html
