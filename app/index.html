@@ -235,6 +235,12 @@
       display: none;
     }
     .login-card .login-error.visible { display: block; }
+    /* Signing-in (SSO bridge) panel ---------------------------------------- */
+    #signing-panel { text-align: center; padding: 8px 0; }
+    .signing-spinner { width: 30px; height: 30px; margin: 4px auto 16px;
+      border: 3px solid rgba(47,82,51,0.18); border-top-color: var(--green-dark, #2f5233);
+      border-radius: 50%; animation: signing-spin 0.8s linear infinite; }
+    @keyframes signing-spin { to { transform: rotate(360deg); } }
     /* Email-sent confirmation panel ---------------------------------------- */
     .sent-panel { display: none; text-align: center; }
     .sent-panel.visible { display: block; }
@@ -529,7 +535,13 @@
   <div class="login-overlay" id="login-overlay">
     <div class="login-card">
 
-      <div id="login-form-panel">
+      <div id="signing-panel">
+        <div class="signing-spinner"></div>
+        <h2>Ritual Management Portal</h2>
+        <div class="subtitle">Signing you in&hellip;</div>
+      </div>
+
+      <div id="login-form-panel" style="display:none;">
         <h2>Ritual Management Portal</h2>
         <div class="subtitle" id="login-subtitle">Enter the email address linked to your account.<br>We'll send you a one-tap login link.</div>
         <form id="login-form" autocomplete="on">
@@ -966,6 +978,8 @@
     // UI state helpers
     // ---------------------------------------------------------------------
     function showFormPanel(errorMsg) {
+      var $signing = document.getElementById('signing-panel');
+      if ($signing) $signing.style.display = 'none';
       const savedMode = localStorage.getItem('rmp_last_login_mode') || 'magic';
       if (typeof setLoginMode === 'function') setLoginMode(savedMode);
       $formPanel.style.display = 'block';
@@ -1112,6 +1126,34 @@
     // Auth flow
     // ---------------------------------------------------------------------
     let _authHandled = false;
+    let _bridgePromise = null;
+
+    // A3 SSO bridge: if the visitor has passed Cloudflare Access (Google) but has no
+    // Supabase session yet, mint one from the verified Access identity via /auth/bridge
+    // so a single Google sign-in logs them straight in. Returns false (→ login form)
+    // when not behind Access or if anything fails. Idempotent via a shared promise.
+    function tryAccessBridge() {
+      if (_bridgePromise) return _bridgePromise;
+      _bridgePromise = (async () => {
+        try {
+          const res = await fetch('/auth/bridge', { credentials: 'include' });
+          if (!res.ok) { dbg('bridge: HTTP ' + res.status); return false; }
+          const data = await res.json();
+          if (!data || !data.token_hash) { dbg('bridge: no token_hash'); return false; }
+          const { data: v, error } = await sb.auth.verifyOtp({ token_hash: data.token_hash, type: 'email' });
+          if (error) { dbg('bridge verifyOtp error: ' + error.message); return false; }
+          dbg('bridge: session established for ' + data.email);
+          const sess = (v && v.session) ? v.session : (await sb.auth.getSession()).data.session;
+          _authHandled = false;
+          await handleSession(sess);
+          return true;
+        } catch (e) {
+          dbg('bridge exception: ' + (e && e.message ? e.message : String(e)));
+          return false;
+        }
+      })();
+      return _bridgePromise;
+    }
 
     async function handleSession(session) {
       dbg('handleSession _authHandled=' + _authHandled + ' hasSession=' + !!(session && session.user));
@@ -1121,6 +1163,11 @@
           return;
         }
         if (!session || !session.user) {
+          dbg('handleSession: no session — trying Access bridge');
+          if (await tryAccessBridge()) {
+            dbg('handleSession: Access bridge succeeded');
+            return;
+          }
           dbg('handleSession: no session, showing login');
           showLogin();
           return;
