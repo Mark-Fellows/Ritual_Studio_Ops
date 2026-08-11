@@ -708,3 +708,29 @@ The te&& check ensures a blank email never matches anything.
 **Fix:** Do not fight the browser's restore logic — normalise state after launch via CDP instead: browser_manager._ensure_single_whatsapp_tab() counts web.whatsapp.com pages; if zero or more than one, closes them all and opens one fresh tab, which then claims the WhatsApp session cleanly. --hide-crash-restore-bubble suppresses the "closed unexpectedly" bubble; the Preferences sanitise is kept only as best-effort.
 
 **Applies to:** browser_manager.py launch/refresh; any flow that force-kills a Chromium browser whose profile holds a single-session web app (WhatsApp Web).
+
+---
+
+## 2026-08-11
+
+### L-CM-12 -- Edge session restore survives Preferences edits and restores tabs progressively; delete the Sessions files instead
+
+**Problem:** Despite _sanitise_profile_prefs() setting exit_type=Normal and restore_on_startup=5, Edge kept resurrecting WhatsApp tabs after forced kills — up to 7 visible tabs, while the post-launch dedupe reported only 3 found-and-closed. Late-restored tabs appeared AFTER the dedupe had run.
+
+**Cause:** Edge tracks/protects Preferences values and can revert external edits, and session restore is progressive — tab targets materialise over several seconds, some initially as sleeping/blank pages, so a single post-launch CDP scan misses them. The restore source data lives in <profile>\Default\Sessions (plus legacy Current/Last Session/Tabs files), which the prefs edits never touched.
+
+**Fix:** Delete the session state itself before every launch (browser_manager._clear_session_restore_files()): with no Sessions files there is nothing to restore, regardless of what Edge thinks about exit state. Safe on a dedicated profile; login is unaffected (Cookies/IndexedDB). Belt-and-braces: the dedupe now scans ALL browser contexts and closes ALL pages when normalising, since the only tab that should exist in the dedicated browser is WhatsApp.
+
+**Applies to:** browser_manager.py; any dedicated Chromium profile that gets force-killed routinely.
+
+---
+
+### L-CM-13 -- WhatsApp Web linked-device sessions expire server-side; detection is the only defence
+
+**Problem:** The monitor degraded from intermittent failures (3 Aug) to total outage (9-11 Aug, zero messages captured for 3 days). Every run timed out waiting for #pane-side. The browser was healthy and drivable throughout; the wa_load_fail screenshot showed the QR login screen.
+
+**Cause:** WhatsApp expired the linked-device session server-side (progressive: re-auth prompts, then full logout). No client-side setting prevents this; "Stay logged in" only extends it. The gradual failure ramp is the signature — distinguish it from the zombie-Edge pattern (sudden, connect_over_cdp timeout) by the error: pane-side timeout with drivable browser = logged out; connect timeout = hung browser.
+
+**Fix:** Re-link via QR, then recovery-scrape the gap (cover_processor.py --hours N; dedup makes overlap safe). Prevention is impossible, so detection must be automated: a staleness alert on whatsapp_monitor_runs (no completed run in ~3h during monitoring hours). Two multi-day outages (zombie Edge 1-3 Jul, logout 9-11 Aug) would each have been caught on day one.
+
+**Applies to:** WhatsApp monitor operations; the pending Studio Ops dashboard staleness banner.
