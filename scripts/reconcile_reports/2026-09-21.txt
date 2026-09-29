@@ -1,0 +1,38 @@
+RSO Reconciliation Report — 2026-09-21
+Lookback window: 1 day(s) (since 2026-09-19T21:00:05Z UTC)
+Supabase project: https://rfjygyqijwgkmxboddup.supabase.co
+============================================================
+
+-- Check 1: Audit log origin (last 24h) --
+  [FAIL] Query failed (audit_log?created_at=gte.2026-09-19T21:00:05Z&select=description&limit=1000): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/audit_log?created_at=gte.2026-09-19T21:00:05Z&select=description&limit=1000 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002BBEA888EC0>: Failed to resolve 'rfjygyqijwgkmxboddup.supabase.co' ([Errno 11001] getaddrinfo failed)"))
+
+-- Check 2: Cover requests by status --
+  [FAIL] Query failed (cover_requests?select=status&limit=2000): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/cover_requests?select=status&limit=2000 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002BBEA891310>: Failed to resolve 'rfjygyqijwgkmxboddup.supabase.co' ([Errno 11001] getaddrinfo failed)"))
+
+-- Check 3: Trainee bookings by status --
+  [FAIL] Query failed (trainee_bookings?select=status&limit=2000): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/trainee_bookings?select=status&limit=2000 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002BBEA891D10>: Failed to resolve 'rfjygyqijwgkmxboddup.supabase.co' ([Errno 11001] getaddrinfo failed)"))
+
+-- Check 4: Teacher records --
+  [FAIL] Query failed (teachers?select=id&limit=500): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/teachers?select=id&limit=500 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002BBEA891F90>: Failed to resolve 'rfjygyqijwgkmxboddup.supabase.co' ([Errno 11001] getaddrinfo failed)"))
+
+-- Drift comparison vs yesterday --
+  [P1] Teacher count dropped from 255 to 0. Check for unexpected deletions.
+  [P1] Cover request count dropped 236 → 0. Records may have been deleted.
+  [OK] Pending trainee bookings: 0 (was 0).
+
+============================================================
+Failures:  4
+P1 issues: 2
+Warnings:  0
+
+FAILURES — this run could not be trusted:
+  1. Query failed (audit_log?created_at=gte.2026-09-19T21:00:05Z&select=description&limit=1000): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/audit_log?created_at=gte.2026-09-19T21:00:05Z&select=description&limit=1000 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002BBEA888EC0>: Failed to resolve 'rfjygyqijwgkmxboddup.supabase.co' ([Errno 11001] getaddrinfo failed)"))
+  2. Query failed (cover_requests?select=status&limit=2000): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/cover_requests?select=status&limit=2000 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002BBEA891310>: Failed to resolve 'rfjygyqijwgkmxboddup.supabase.co' ([Errno 11001] getaddrinfo failed)"))
+  3. Query failed (trainee_bookings?select=status&limit=2000): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/trainee_bookings?select=status&limit=2000 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002BBEA891D10>: Failed to resolve 'rfjygyqijwgkmxboddup.supabase.co' ([Errno 11001] getaddrinfo failed)"))
+  4. Query failed (teachers?select=id&limit=500): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/teachers?select=id&limit=500 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002BBEA891F90>: Failed to resolve 'rfjygyqijwgkmxboddup.supabase.co' ([Errno 11001] getaddrinfo failed)"))
+
+P1 ISSUES — ACTION REQUIRED:
+  1. Teacher count dropped from 255 to 0. Check for unexpected deletions.
+  2. Cover request count dropped 236 → 0. Records may have been deleted.
+
+RECONCILE FAILED — read error or implausible zero. Result is NOT trustworthy.
