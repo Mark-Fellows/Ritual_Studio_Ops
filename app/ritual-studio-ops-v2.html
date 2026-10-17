@@ -590,11 +590,52 @@
         <div class="modal" style="width:800px;max-height:90vh;overflow-y:auto;">
             <button class="modal-close" onclick="closeHelpModal()">✕</button>
             <div class="modal-title">Help &amp; Resources</div>
-            <div style="padding:20px;">
-                <div style="margin-bottom:30px;">
-                    <h3 style="font-weight:600;margin-bottom:12px;color:var(--text-primary);">Ritual Studio Ops Guide</h3>
-                    <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px;" id="helpGuideContent">Loading guide...</p>
-                </div>
+            <div style="padding:20px;" class="help-guide">
+                <h3 style="font-weight:600;margin-bottom:6px;color:var(--text-primary);">Ritual Studio Ops: Staff Guide</h3>
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:18px;">This guide explains the everyday use of Studio Ops. What you can see and change depends on your role. If a button or section is missing, your role does not include that action. For access problems, contact your administrator.</p>
+
+                <h4 style="font-weight:600;margin:14px 0 6px;color:var(--text-primary);">1. Signing in</h4>
+                <ul style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:20px;margin-bottom:12px;">
+                    <li>Sign in with your email address and password.</li>
+                    <li>Your name and role are shown at the top right. Settings &rarr; About Roles lists what each role can do.</li>
+                    <li>Sign out with the Sign Out button when you finish, especially on a shared computer.</li>
+                </ul>
+
+                <h4 style="font-weight:600;margin:14px 0 6px;color:var(--text-primary);">2. Teachers view</h4>
+                <ul style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:20px;margin-bottom:12px;">
+                    <li>The sidebar lists the teachers. Select a name to open that teacher in the main area.</li>
+                    <li>+ Add Teacher creates a new teacher record. This needs edit rights.</li>
+                    <li>Record a teacher's absence from that teacher's record. Coordinators and administrators can view all absences together from the Absences button.</li>
+                </ul>
+
+                <h4 style="font-weight:600;margin:14px 0 6px;color:var(--text-primary);">3. Cover view</h4>
+                <ul style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:20px;margin-bottom:12px;">
+                    <li>Cover Requests lists each request with its date and time, class, studio, discipline, requesting teacher, status and coverage type.</li>
+                    <li>Use the status filter to narrow the list. Refresh reloads the latest data.</li>
+                    <li>Approve and assign actions appear only for coordinators and administrators.</li>
+                    <li>New Manual Request creates a cover request by hand. It is available to coordinators and administrators.</li>
+                    <li>The Teacher Portal tab shows the teacher view for the teacher linked to your account. If your account is not linked to a teacher, the tab shows an empty message.</li>
+                </ul>
+
+                <h4 style="font-weight:600;margin:14px 0 6px;color:var(--text-primary);">4. Settings</h4>
+                <ul style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:20px;margin-bottom:12px;">
+                    <li><strong>My Account</strong> shows the email address you are signed in with and your role.</li>
+                    <li><strong>Users</strong> (administrators only) adds user accounts with a temporary password and a role, sends invitations and password resets, and removes users.</li>
+                    <li><strong>Import Teachers</strong> imports teacher details from a CSV file.</li>
+                    <li><strong>Admin Tools</strong> contains Backfill Bookings, for assigning bookings manually.</li>
+                    <li><strong>Reference Data</strong> holds the lists that the dashboard uses for its reports: membership types (with the Revenue tick box), class groups, membership type prices, teacher pay rates and pay rate tiers, locations, rooms and location aliases.</li>
+                </ul>
+
+                <h4 style="font-weight:600;margin:14px 0 6px;color:var(--text-primary);">5. Changing Reference Data</h4>
+                <ul style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:20px;margin-bottom:12px;">
+                    <li>Each change is saved to the database when you make it. The list refreshes once the change is saved.</li>
+                    <li>The dashboard reads Reference Data on each pipeline run, so a change appears in the dashboard only after the next run.</li>
+                    <li>If a save fails with a message about permissions or no rows updated, the change has not been saved. Check the row, try again, and tell your administrator if it still fails.</li>
+                    <li>Confirm with your administrator before changing a price, a revenue flag or a pay rate.</li>
+                </ul>
+
+                <h4 style="font-weight:600;margin:14px 0 6px;color:var(--text-primary);">6. If something goes wrong</h4>
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:8px;">Note the screen you were on, what you clicked and the exact message shown, then contact your administrator. Do not share passwords when you report a problem.</p>
             </div>
         </div>
     </div>
@@ -2853,7 +2894,7 @@
                     return '<div style="display:flex;align-items:center;gap:6px;padding:3px 2px;border-bottom:1px solid var(--border-light);">'
                         + '<span style="flex:1;font-size:11px;color:var(--text-secondary);">' + esc(r.membership_type) + '</span>'
                         + '<span style="font-size:10px;color:var(--text-muted);">class revenue</span>'
-                        + '<input type="number" step="0.0001" min="0" value="' + (r.class_revenue == null ? '' : r.class_revenue) + '" onchange="updateRefMemPrice(' + i + ',this.value)" style="width:110px;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);text-align:right;">'
+                        + '<input type="number" step="0.01" min="0" value="' + (r.class_revenue == null ? '' : Number(r.class_revenue).toFixed(2)) + '" onchange="updateRefMemPrice(' + i + ',this.value)" style="width:110px;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);text-align:right;">'
                         + '</div>';
                 }).join('');
             } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
@@ -3870,18 +3911,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
         // ═══════════════════════════════════════════════════════════════════
         function openHelpModal(){document.getElementById('helpModal').classList.add('open');loadHelpContent();}
         function closeHelpModal(){document.getElementById('helpModal').classList.remove('open');}
-        async function loadHelpContent(){
-            try{
-                const guideResponse=await fetch('Ritual_Teacher_App_Prompt_Guide.md');
-                if(guideResponse.ok){
-                    document.getElementById('helpGuideContent').innerHTML=`<strong>Quick Guide:</strong><br>This app manages teachers, courses, and trainee bookings for Ritual Studios.<br><br><strong>Key Sections:</strong><ul style="margin:8px 0;padding-left:20px;font-size:13px;"><li><strong>Teachers:</strong> Add, edit, and manage instructor profiles</li><li><strong>Course Manager:</strong> Create and schedule training courses</li><li><strong>Approvals Queue:</strong> Review and approve community class bookings</li><li><strong>Timeslot Manager:</strong> Manage weekly class schedules</li><li><strong>Trainee Portal:</strong> View availability and manage bookings</li></ul><a href="guide-viewer.html" target="_blank" style="color:var(--gold);text-decoration:underline;font-size:12px;">View full guide →</a>`;
-                }
-            }catch(e){
-                document.getElementById('helpGuideContent').innerHTML=`<strong>Quick Guide:</strong><br>This app manages teachers, courses, and trainee bookings for Ritual Studios.<br><br><strong>Key Sections:</strong><ul style="margin:8px 0;padding-left:20px;font-size:13px;"><li><strong>Teachers:</strong> Add, edit, and manage instructor profiles</li><li><strong>Course Manager:</strong> Create and schedule training courses</li><li><strong>Approvals Queue:</strong> Review and approve community class bookings</li><li><strong>Timeslot Manager:</strong> Manage weekly class schedules</li><li><strong>Trainee Portal:</strong> View availability and manage bookings</li></ul>`;
-            }
-            const svgImg=document.getElementById('helpWorkflowSvg');
-            if(svgImg)svgImg.src='community_classes_booking_workflow_v3.svg';
-        }
+        function loadHelpContent(){ /* Staff guide is static markup inside #helpModal. */ }
 
         // ═══════════════════════════════════════════════════════════════════
         // PASSWORD TOGGLES
