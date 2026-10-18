@@ -45,6 +45,8 @@ The merged app **was built new** — it is not a copy of the old Teacher Managem
 
 So: the database was **not** copied (one shared project). The cover and Momence **code** was copied — the copies under `Ritual_Studio_Ops/services/` are the live ones.
 
+> **Correction, 2026-10-18.** The scheduled tasks do **not** run the copies under `Ritual_Studio_Ops/services/`. The hourly cover monitor runs `Ritual_Cover_Management/run_monitor.bat` (and recent fixes, 2026-07-03 and 2026-08-11, were made there), and the nightly Momence chain runs from `Momence_data/` (`Run_Momence_Chain.bat`, last changed 2026-08-10). Until the move is completed, change the originals. The stale Momence document copies were archived; see `DOCS_INDEX.md`, section 4.
+
 ---
 
 ## Copies that back nothing — never edit these

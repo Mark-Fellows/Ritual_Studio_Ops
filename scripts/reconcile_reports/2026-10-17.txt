@@ -1,0 +1,42 @@
+RSO Reconciliation Report — 2026-10-17
+Lookback window: 1 day(s) (since 2026-10-15T21:00:09Z UTC)
+Supabase project: https://rfjygyqijwgkmxboddup.supabase.co
+============================================================
+
+-- Check 1: Audit log origin (last 24h) --
+  [FAIL] Query failed (audit_log?created_at=gte.2026-10-15T21:00:09Z&select=description&limit=1000): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/audit_log?created_at=gte.2026-10-15T21:00:09Z&select=description&limit=1000 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)')))
+
+-- Check 2: Cover requests by status --
+  Total cover requests: 236
+    approved: 21
+    cancelled: 2
+    covered: 71
+    duplicate_of: 19
+    no_cover_needed: 21
+    pending_review: 98
+    reclassified: 4
+
+-- Check 3: Trainee bookings by status --
+  Total trainee bookings: 15
+    approved: 4
+    cancelled: 1
+    rejected: 10
+
+-- Check 4: Teacher records --
+  Total teacher records: 262
+  [OK] Teacher count looks sane: 262.
+
+-- Drift comparison vs yesterday --
+  [OK] Teacher count increased 261 → 262 (new teachers added).
+  [OK] Cover request count unchanged: 236.
+  [OK] Pending trainee bookings: 0 (was 0).
+
+============================================================
+Failures:  1
+P1 issues: 0
+Warnings:  0
+
+FAILURES — this run could not be trusted:
+  1. Query failed (audit_log?created_at=gte.2026-10-15T21:00:09Z&select=description&limit=1000): HTTPSConnectionPool(host='rfjygyqijwgkmxboddup.supabase.co', port=443): Max retries exceeded with url: /rest/v1/audit_log?created_at=gte.2026-10-15T21:00:09Z&select=description&limit=1000 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)')))
+
+RECONCILE FAILED — read error or implausible zero. Result is NOT trustworthy.
