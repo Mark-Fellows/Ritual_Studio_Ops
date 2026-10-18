@@ -2764,7 +2764,14 @@
   <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;">Supabase reference tables. The dashboard pipeline (module C5) reads them on each run; edits take effect on the next pipeline run.</p>
 
   <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px;">Membership Types <span id="refMemCount" style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;"></span></div>
-  <div id="refMemList" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:8px;"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">
+    <input class="form-control" id="refMemSearch" placeholder="Search name (all words must match)" oninput="applyRefMemFilter()" style="flex:1;min-width:180px;font-size:12px;">
+    <select class="form-control" id="refMemRevFilter" onchange="applyRefMemFilter()" style="width:150px;font-size:12px;"><option value="">Revenue: all</option><option value="on">Revenue ticked</option><option value="off">Revenue unticked</option></select>
+    <select class="form-control" id="refMemTypeFilter" onchange="applyRefMemFilter()" style="width:120px;font-size:12px;"><option value="">All types</option><option>FP</option><option>Pack</option><option>Subscription</option><option>Waiver</option><option>Card</option><option>ClassPass</option><option>Other</option></select>
+    <button class="btn btn-secondary" onclick="clearRefMemFilter()" style="font-size:11px;">Clear</button>
+    <span id="refMemShown" style="font-size:10px;color:var(--text-muted);"></span>
+  </div>
+  <div id="refMemList" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;margin-bottom:8px;"></div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
     <input class="form-control" id="newMemUsed" placeholder="Membership name (exact)" style="flex:1;min-width:180px;font-size:12px;">
     <select class="form-control" id="newMemType" style="width:150px;font-size:12px;"><option>FP</option><option>Pack</option><option>Subscription</option><option>Waiver</option><option>Card</option><option>ClassPass</option><option>Other</option></select>
@@ -2829,6 +2836,42 @@
             const mapped = _refMem.filter(function(r) { return r.in_revenue_map; }).length;
             return '(' + mapped + ' in revenue map of ' + _refMem.length + ')';
         }
+        // Filtering for the Membership Types list. Row indexes always refer to _refMem (unfiltered),
+        // so the edit handlers keep working while a filter is applied.
+        function renderRefMemList() {
+            const el = document.getElementById('refMemList');
+            if (!el) return;
+            const qEl = document.getElementById('refMemSearch');
+            const revEl = document.getElementById('refMemRevFilter');
+            const typeEl = document.getElementById('refMemTypeFilter');
+            const terms = (qEl ? qEl.value : '').toLowerCase().replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+            const revF = revEl ? revEl.value : '';
+            const typeF = typeEl ? typeEl.value : '';
+            let shown = 0;
+            const html = _refMem.map(function(r, i) {
+                const nm = String(r.membership_used || '').toLowerCase().replace(/\s+/g, ' ');
+                if (terms.some(function(t) { return nm.indexOf(t) < 0; })) return '';
+                if (revF === 'on' && !r.in_revenue_map) return '';
+                if (revF === 'off' && r.in_revenue_map) return '';
+                if (typeF && r.membership_type !== typeF) return '';
+                shown++;
+                    return '<div style="display:flex;align-items:center;gap:6px;padding:3px 2px;border-bottom:1px solid var(--border-light);">'
+                        + '<span style="flex:1;font-size:11px;color:var(--text-secondary);word-break:break-all;">' + esc(r.membership_used) + '</span>'
+                        + '<label title="Included in the revenue map used by the pipeline" style="font-size:10px;color:var(--text-muted);white-space:nowrap;"><input type="checkbox"' + (r.in_revenue_map ? ' checked' : '') + ' onchange="updateRefMemRevenue(' + i + ',this.checked)"> Revenue</label>'
+                        + '<select onchange="updateRefMembership(' + i + ',this.value)" style="font-size:11px;width:120px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
+                        + REF_MEM_TYPES.map(function(t) { return '<option' + (t === r.membership_type ? ' selected' : '') + '>' + t + '</option>'; }).join('')
+                        + '</select></div>';
+                
+            }).join('');
+            el.innerHTML = html || '<span style="color:var(--text-muted);">No membership types match the filters.</span>';
+            const sh = document.getElementById('refMemShown');
+            if (sh) sh.textContent = 'Showing ' + shown + ' of ' + _refMem.length;
+        }
+        function applyRefMemFilter() { renderRefMemList(); }
+        function clearRefMemFilter() {
+            ['refMemSearch', 'refMemRevFilter', 'refMemTypeFilter'].forEach(function(id) { const x = document.getElementById(id); if (x) x.value = ''; });
+            renderRefMemList();
+        }
         async function loadRefMembership() {
             const el = document.getElementById('refMemList');
             const cnt = document.getElementById('refMemCount');
@@ -2837,14 +2880,7 @@
             try {
                 _refMem = await dbGet('membership_types?select=membership_used,membership_type,in_revenue_map&order=membership_used.asc');
                 if (cnt) cnt.textContent = refMemCountText();
-                el.innerHTML = _refMem.map(function(r, i) {
-                    return '<div style="display:flex;align-items:center;gap:6px;padding:3px 2px;border-bottom:1px solid var(--border-light);">'
-                        + '<span style="flex:1;font-size:11px;color:var(--text-secondary);word-break:break-all;">' + esc(r.membership_used) + '</span>'
-                        + '<label title="Included in the revenue map used by the pipeline" style="font-size:10px;color:var(--text-muted);white-space:nowrap;"><input type="checkbox"' + (r.in_revenue_map ? ' checked' : '') + ' onchange="updateRefMemRevenue(' + i + ',this.checked)"> Revenue</label>'
-                        + '<select onchange="updateRefMembership(' + i + ',this.value)" style="font-size:11px;width:120px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">'
-                        + REF_MEM_TYPES.map(function(t) { return '<option' + (t === r.membership_type ? ' selected' : '') + '>' + t + '</option>'; }).join('')
-                        + '</select></div>';
-                }).join('');
+                renderRefMemList();
             } catch(e) { el.innerHTML = '<span style="color:#C0392B;">Error: ' + esc(e.message) + '</span>'; }
         }
         async function updateRefMembership(idx, newType) {
