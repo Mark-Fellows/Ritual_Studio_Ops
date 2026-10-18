@@ -1,11 +1,25 @@
-# Ritual Studio Ops — Master Documentation Index
+# Ritual Studios — Master Documentation Index
 
-**Canonical lookup for all active documentation across all four Ritual technology projects.**
+**Canonical lookup for all documentation across the Ritual technology estate:** Studio Ops (merged Teacher + Cover), Cover Management, Teacher Management (legacy), the Analytics Dashboard, Momence_data, Campaign Planning, Finance & Cashflow and CleanSweep.
 
-A document is not considered created until this index is updated. If a document is not listed here, it does not officially exist. Two entries for the same topic means one is a duplicate — mark the older as `superseded` and consolidate.
+A document is not considered created until this index is updated. If a document is not listed here, it does not officially exist. Two entries for the same topic means one is a duplicate — mark the older as `superseded` and consolidate, or archive it (section 13).
 
-Last updated: 2026-10-18 (audit against the workspace and live Supabase counts). Items marked **to confirm** exist but have not been reviewed individually. Dashboard plan and KPI versions are a best guess from the Dashboard README.
-Maintained by: Ritual Studio Ops project (Claude as PM)
+Last updated: **2026-10-18 (second pass)** — full documentation audit: superseded and duplicate documents archived, Momence canonical location corrected, previously unindexed folders added (programme documents, Campaign Planning, CleanSweep, Ritual_Apps root), user guides and video prompts added, and every row in Appendices A and B given a status. Audit report: `Ritual_Apps/Docs/Documentation_Audit_2026-10-18.md`.
+Maintained by: Ritual Studio Ops project (Claude as PM, for Mark Fellows)
+
+> **Not covered:** `G:\Shared drives\RITUAL MASTER DRIVE\Claude Project 20260322\Ritual Studios` could not be reached from the workspace on 2026-10-18. Rows that point there are carried forward unverified.
+
+---
+
+## Start here
+
+| You are… | Read first |
+|---|---|
+| A member of staff, teacher or owner | `Ritual_Apps/Docs/User_Guides/README.md` (section 9) |
+| A developer making a change | `Ritual_Apps/RSO_DEPLOYMENT_MAP.md`, then `Ritual_Studio_Ops/docs/SOURCE_OF_TRUTH.md` (read the 2026-10-18 correction in section 7 below), then `LESSONS_LEARNED.md` |
+| Looking after the overnight data | `Momence_data/PIPELINE_MAINTENANCE_GUIDE.md` (section 4) |
+| Reviewing strategy and progress | `Ritual_Apps/Docs/Ritual_Work_Review_2026-10-14.md` and `Ritual_Phase2_Proposal_2026-10-14.md` (section 8) |
+| Looking for something old | The archive manifests (section 13) |
 
 ---
 
@@ -13,9 +27,9 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 
 | Column | Meaning |
 |---|---|
-| Status | `active` = current canon · `superseded` = replaced by another entry · `legacy` = pre-merger, archived |
+| Status | `active` = current canon · `historical` = accurate record of past work, not a guide to the present · `superseded` = replaced by another entry, kept in place · `archived` = moved to a `_Doc_Archive` folder (section 13) · `legacy` = belongs to an app being retired · `to confirm` = owner decision needed |
 | Owner | Which project owns this document |
-| Location | Path relative to `C:\Users\markj\OneDrive\Desktop\Ritual_Apps\` unless noted |
+| Location | Path relative to `C:\Users\markj\OneDrive\Desktop\Ritual_Apps\` unless it starts with `Ritual Dashboard/` (`C:\Users\markj\OneDrive\Desktop\`) or `Momence_data/` (`C:\Users\markj\OneDrive - MFPL\Documents\Customer Projects\Ritual\`) |
 
 ---
 
@@ -24,8 +38,10 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Document | Owner | Location | Status | Notes |
 |---|---|---|---|---|
 | Merger Plan v2 | Ritual Studio Ops | `Ritual_Studio_Ops/docs/Ritual_Studio_Ops_Merger_Plan_v2.md` | active | Moved from TM folder 2026-05-21 |
-| Merger Plan v1 | Ritual Studio Ops | `Ritual_Teacher_Management/Ritual_Studio_Ops_Merger_Plan_v1.md` | superseded | Superseded by v2 same day (2026-05-14) |
-| DOCS_INDEX (this file) | Ritual Studio Ops | `Ritual_Studio_Ops/docs/DOCS_INDEX.md` | active | Master index for all four projects |
+| Merger Plan v1 | Ritual Studio Ops | `_Doc_Archive/2026-10-18/Ritual_Teacher_Management/Ritual_Studio_Ops_Merger_Plan_v1.md` | archived | Superseded by v2 same day (2026-05-14). Archived 2026-10-18; the identical v2 copy that sat in the TM folder was archived at the same time |
+| DOCS_INDEX (this file) | Ritual Studio Ops | `Ritual_Studio_Ops/docs/DOCS_INDEX.md` | active | Master index for the whole estate |
+| Documentation audit 2026-10-18 | Ritual Studio Ops | `Docs/Documentation_Audit_2026-10-18.md` | active | Findings, archive list, decisions needed, maintenance rules |
+| Phase numbering | Ritual Studio Ops | `Ritual_Studio_Ops/docs/PHASE-NUMBERING.md` | active | Which "Phase N" scheme a document means |
 | CHANGELOG | Ritual Studio Ops | `Ritual_Studio_Ops/docs/CHANGELOG.md` | active | Master changelog for all four projects |
 | LESSONS_LEARNED | Ritual Studio Ops | `Ritual_Studio_Ops/docs/LESSONS_LEARNED.md` | active | Consolidated hard-won knowledge |
 
@@ -43,14 +59,20 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Changelog 2026-04-05 | TM | `Ritual_Teacher_Management/CHANGELOG-2026-04-05-teacher-management.md` | legacy | Absorbed into master CHANGELOG |
 | Changelog 2026-04-06 | TM | `Ritual_Teacher_Management/CHANGELOG-2026-04-06-course-modal-refinement.md` | legacy | Absorbed into master CHANGELOG |
 | Changelog 2026-04-07 | TM | `Ritual_Teacher_Management/CHANGELOG-2026-04-07-baseline-restore.md` | legacy | Absorbed into master CHANGELOG |
-| Investigation: teachers dropdown 2026-05-14 | TM | `Ritual_Teacher_Management/INVESTIGATION-teachers-dropdown-2026-05-14.md` | active | Exists in both TM and CM — CM copy is authoritative |
-| Recommendations re id | TM | `Ritual_Teacher_Management/Recommendations re id.md` | legacy | Design note; content absorbed into LESSONS_LEARNED |
+| Investigation: teachers dropdown 2026-05-14 (TM copy) | TM | `_Doc_Archive/2026-10-18/Ritual_Teacher_Management/INVESTIGATION-teachers-dropdown-2026-05-14.md` | archived | Non-canonical copy; the CM copy is authoritative (section 3) |
+| Recommendations re id | TM | `_Doc_Archive/2026-10-18/Ritual_Teacher_Management/Recommendations re id.md` | archived | Design note; content absorbed into LESSONS_LEARNED |
 | Booking flow test | TM | `Ritual_Teacher_Management/BOOKING_FLOW_TEST.md` | active | Test plan for trainee booking flow |
 | Booking test results | TM | `Ritual_Teacher_Management/BOOKING_TEST_RESULTS.md` | active | Execution results of above |
 | Teacher Absences design spec | TM | `Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Absences_Design.md` | active | Full design spec: data model, RLS, API pattern, UI layout, migration plan. Approved and implemented 2026-05-27. |
 | Teacher Applications design spec | TM | `Ritual_Teacher_Management/Ritual Teacher Management/Teacher_Applications_Design.md` | active | Public teacher-application intake + Applicants review. Data model (status flag), RLS, Edge Functions, WhatsApp paused, import plan. rev 3, 2026-06-01. |
 | Public application form | RSO | `Ritual_Studio_Ops/app/apply.html` | active | Public unauthenticated teacher application form + email-code verification. Calls submit-teacher-application and verify-application-otp. Deploy with Pages; link from website. |
-| Merger plan prompt | TM | `Ritual_Teacher_Management/prompts/find_skills_for_merger.md` | legacy | Working note from merger planning; superseded by this programme |
+| Merger plan prompt | TM | `_Doc_Archive/2026-10-18/Ritual_Teacher_Management/prompts/find_skills_for_merger.md` | archived | Working note from merger planning |
+| Pre-merger RSO stub docs | TM | `_Doc_Archive/2026-10-18/Ritual_Teacher_Management/Ritual_Studio_Ops-Legacy/docs/` | archived | Stub CHANGELOG, DOCS_INDEX, LESSONS_LEARNED (May 2026), superseded by `Ritual_Studio_Ops/docs/` |
+| Teacher-app CLAUDE.md | TM | `Ritual_Teacher_Management/CLAUDE.md` | active | Working instructions for sessions on the legacy app |
+| Legacy read-me | TM | `Ritual_Teacher_Management/_READ_ME_FIRST_LEGACY.md` | active | Warns that this folder is legacy |
+| Cover change prompt template | TM | `Ritual_Teacher_Management/RSO_Cover_Change_Prompt_Template.md` | active | Change-prompt template |
+| Portal login change prompt (TM copy, 12 Jun) | TM | `Ritual_Teacher_Management/RSO_Portal_Login_Change_Prompt.md` | to confirm | Differs from, and is newer than, `Ritual_Apps/RSO_Portal_Login_Change_Prompt.md` (2 Jun). Owner to decide which is canonical |
+| Changelog 2026-05-26 (portal and access) | TM | `Ritual_Teacher_Management/CHANGELOG-2026-05-26-portal-and-access.md` | historical | |
 
 **Migrations (TM)**
 
@@ -79,16 +101,16 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | README | CM | `Ritual_Cover_Management/README.md` | active | Project overview |
 | Architecture | CM | `Ritual_Cover_Management/ARCHITECTURE.md` | active | Full system architecture; key reference for Phase 3 |
 | Schema | CM | `Ritual_Cover_Management/SCHEMA.md` | active | Database schema documentation |
-| Index | CM | `Ritual_Cover_Management/Index.md` | active | CM's own document index |
+| Index | CM | `Ritual_Cover_Management/Index.md` | superseded | CM's own index (last updated 2026-05-16). This master index takes precedence |
 | Developer guide | CM | `Ritual_Cover_Management/DEVELOPER.md` | active | Developer onboarding |
 | Deploy guide | CM | `Ritual_Cover_Management/DEPLOY.md` | active | Deployment instructions |
 | Setup guide | CM | `Ritual_Cover_Management/SETUP.md` | active | Initial setup |
 | Handoff: start here | CM | `Ritual_Cover_Management/HANDOFF-START-HERE.md` | active | Onboarding handoff |
 | Handoff: coverage type | CM | `Ritual_Cover_Management/HANDOFF-coverage-type-execution.md` | active | Coverage type feature handoff |
-| Help | CM | `Ritual_Cover_Management/HELP.md` | active | Operator help guide |
+| Help | CM | `Ritual_Cover_Management/HELP.md` | active | Plain-English orientation for operators. Monitor schedule corrected to hourly on 2026-10-18. Staff should use User Guide 04 |
 | Quick reference | CM | `Ritual_Cover_Management/QUICKREF.md` | active | Quick command reference |
 | Troubleshooting | CM | `Ritual_Cover_Management/TROUBLESHOOTING.md` | active | Known issues and fixes |
-| Workflow summary | CM | `Ritual_Cover_Management/WORKFLOW-SUMMARY.md` | active | End-to-end workflow overview |
+| Workflow summary | CM | `Ritual_Cover_Management/WORKFLOW-SUMMARY.md` | historical | End-to-end workflow as at 2026-04-20 (before offer matching). Current process: User Guide 04 and `docs/Cover_Process_Swimlane.svg` |
 | Nested messages | CM | `Ritual_Cover_Management/Nested_Messages.md` | active | Quoted/threaded message handling |
 | WhatsApp changelog | CM | `Ritual_Cover_Management/Changelog WhatsApp.md` | active | WhatsApp-specific change log |
 | Changelog 2026-04-13 | CM | `Ritual_Cover_Management/CHANGELOG-2026-04-13-nlp-sender-fallback.md` | legacy | Absorbed into master CHANGELOG |
@@ -101,10 +123,15 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Changelog 2026-05-17 | CM | `Ritual_Cover_Management/CHANGELOG-2026-05-17.md` | legacy | Absorbed into master CHANGELOG |
 | Changelog 2026-05-20 (dashboard) | CM | `Ritual_Cover_Management/CHANGELOG-dashboard-spinning-fix-20260520.md` | legacy | Absorbed into master CHANGELOG |
 | Investigation: teachers dropdown | CM | `Ritual_Cover_Management/INVESTIGATION-teachers-dropdown-2026-05-14.md` | active | **Authoritative copy** (also exists in TM; CM copy is canonical) |
-| Session log 2026-05-08 | CM | `Ritual_Cover_Management/SESSION-LOG-2026-05-08-evening.md` | legacy | Working session log |
-| Phase 2 dedup design | CM | `Ritual_Cover_Management/PHASE-2-DEDUP-DESIGN.md` | active | Design doc for CM dedup phase |
-| Phase 3 dashboard design | CM | `Ritual_Cover_Management/PHASE-3-DASHBOARD-DESIGN.md` | active | Dashboard design spec |
-| Phase 4 offer matching design | CM | `Ritual_Cover_Management/PHASE-4-OFFER-MATCHING-DESIGN.md` | active | Offer matching design |
+| Session log 2026-05-08 | CM | `_Doc_Archive/2026-10-18/Ritual_Cover_Management/SESSION-LOG-2026-05-08-evening.md` | archived | Working session log |
+| Staff training guide (June 2026) | CM | `_Doc_Archive/2026-10-18/Ritual_Cover_Management/docs/Cover_Dashboard_Training_Guide.md` | archived | Superseded by `Docs/User_Guides/04_Cover_Management.md`, which carries its content forward and reflects the dashboard changes of 22 June 2026 |
+| Cover process swimlane | CM | `Ritual_Cover_Management/docs/Cover_Process_Swimlane.svg` | active | Full process diagram with offers and rejections. Shows the earlier two-hourly monitor schedule; now hourly |
+| Teacher mobile concepts | CM | `Ritual_Cover_Management/docs/Teacher_Mobile_Concepts.svg` | historical | Design concepts behind `teacher_schedule.html` |
+| Momence teacher sync | CM | `Ritual_Cover_Management/docs/MOMENCE_TEACHER_SYNC.md` | active | Daily 07:45 teacher sync from Momence |
+| Prompt: contact data-quality table | CM | `Ritual_Cover_Management/docs/PROMPT-contact-data-quality-table.md` | to confirm | Build prompt; not known to be built |
+| Phase 2 dedup design | CM | `Ritual_Cover_Management/PHASE-2-DEDUP-DESIGN.md` | historical | Shipped; DB-level dedup added 2026-06-27 |
+| Phase 3 dashboard design | CM | `Ritual_Cover_Management/PHASE-3-DASHBOARD-DESIGN.md` | historical | Shipped |
+| Phase 4 offer matching design | CM | `Ritual_Cover_Management/PHASE-4-OFFER-MATCHING-DESIGN.md` | historical | Shipped 2026-06-02 |
 | Phase 5 user admin design | CM | `Ritual_Cover_Management/PHASE-5-USER-ADMIN-DESIGN.md` | superseded | In-Portal User Admin (CM-feature scheme; see PHASE-NUMBERING.md). Carries a 2026-06-02 revision notice: targets the merged app now, 5.1 UI already built, 5.0+5.2 still to do. Re-spec in progress |
 | Phase numbering (disambiguation) | RSO | `Ritual_Studio_Ops/docs/PHASE-NUMBERING.md` | active | Canonical map of the four overlapping "Phase N" schemes. Cite when a phase number is ambiguous |
 | RBAC matrix & unification | RSO | `Ritual_Studio_Ops/docs/RBAC-MATRIX.md` | active | Role × permission matrix; capability→permission mapping; how the two authz regimes were merged |
@@ -118,15 +145,15 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | 5.2 overrides UI snippet | RSO | `Ritual_Studio_Ops/app/_user-admin-5.2-overrides.snippet.js` | ready | Per-user permission override tree UI, validated; ready to integrate + browser-test |
 | Phases quick invoke | CM | `Ritual_Cover_Management/PHASES-quick-invoke.md` | active | Quick command reference per phase |
 | Plan: coverage type | CM | `Ritual_Cover_Management/PLAN-coverage-type-feature.md` | active | Feature plan |
-| Plan: phase 4 offer matching | CM | `Ritual_Cover_Management/PLAN-phase4-offer-matching-2026-05-16.md` | active | Feature plan |
+| Plan: phase 4 offer matching | CM | `Ritual_Cover_Management/PLAN-phase4-offer-matching-2026-05-16.md` | historical | Feature plan; revised 2026-06-02 and shipped. Backup copies in `backups/phase4-2026-06-02/` |
 | Sign-off: coverage type | CM | `Ritual_Cover_Management/SIGNOFF-coverage-type-2026-04-21.md` | active | Feature acceptance sign-off |
 | Skill: coverage type classification | CM | `Ritual_Cover_Management/SKILL-coverage-type-classification.md` | active | Claude skill file for NLP |
 | Skill: estimate class count | CM | `Ritual_Cover_Management/SKILL-estimate-class-count.md` | active | Claude skill file for class count |
 | Project memory | CM | `Ritual_Cover_Management/project_cover_management.md` | legacy | Working memory; content absorbed into this programme |
 | Security incident: exposed API keys (2026-06-02) | CM | `Ritual_Cover_Management/SECURITY-INCIDENT-2026-06-02-exposed-keys.md` | **OPEN** | Two credentials were committed to the repository, including a Supabase service key. Rotation status is not confirmed as at 2026-10-18; owner to confirm and record here. |
-| Working memory (CLAUDE.md) | CM | `Ritual_Cover_Management/CLAUDE.md` | active | Session working memory; last updated 2026-06-22 |
-| Changelogs 2026-06 to 2026-08 (7 files) | CM | `Ritual_Cover_Management/CHANGELOG-2026-06-*.md`, `CHANGELOG-2026-07-03-*.md`, `CHANGELOG-2026-08-11-*.md` | to confirm | Not in the master CHANGELOG list above; see Appendix A |
-| Plans and TODO (2026-06 to 2026-07) | CM | `PLAN-next-stages-2026-06-21.md`, `PLAN-phase4-offer-matching-2026-06-02-rev.md`, `PLAN-teacher-cover-app-2026-07-09.md`, `TODO-2026-06-22.md` | to confirm | Not in the list above; see Appendix A |
+| Working memory (CLAUDE.md) | CM | `Ritual_Cover_Management/CLAUDE.md` | active | Session working memory; last updated 2026-06-22. Monitor schedule line corrected to hourly on 2026-10-18 |
+| Changelogs 2026-06 to 2026-08 (8 files) | CM | `Ritual_Cover_Management/CHANGELOG-2026-06-*.md`, `CHANGELOG-2026-07-03-*.md`, `CHANGELOG-2026-08-11-*.md` | historical | Detail files behind master CHANGELOG entries; keep |
+| Plans and TODO (2026-06 to 2026-07) | CM | `PLAN-next-stages-2026-06-21.md`, `PLAN-phase4-offer-matching-2026-06-02-rev.md`, `PLAN-teacher-cover-app-2026-07-09.md`, `TODO-2026-06-22.md` | to confirm | The 06-02 revised plan is historical (shipped). The teacher cover app plan and the TODO list hold open items; owner to confirm what is still planned |
 
 **Migrations (CM — applied in order)**
 
@@ -153,30 +180,32 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 
 ## 4. Momence_data
 
-> **Note:** Momence_data files live at `C:\Users\markj\OneDrive - MFPL\Documents\Customer Projects\Ritual\Momence_data\` — different OneDrive account. This is the MOMENCE_DATA_DIR. The code will move to `Ritual_Studio_Ops/services/momence/` in Phase 0 (pending MFPL OneDrive mount). The data folders stay here permanently.
-
-**All Momence code and canonical documentation now lives in `Ritual_Studio_Ops/services/momence/`. MFPL OneDrive mounted and copy completed 2026-05-21.**
+> **Corrected 2026-10-18.** The live Momence code (`Run_Momence_Chain.bat` and the scripts it calls, last changed 2026-08-10) and the current Momence documentation are in the **root of the Momence_data folder** (MFPL OneDrive): `C:\Users\markj\OneDrive - MFPL\Documents\Customer Projects\Ritual\Momence_data\`. The copies made in May 2026 under `Ritual_Studio_Ops/services/momence/` are **not** what the scheduled tasks run, and six of their thirteen documents had fallen behind (checked by MD5: ENV_INTEGRATION_SUMMARY, INSTALLATION_SETUP_GUIDE, MOMENCE_SKILL_USAGE_GUIDE, Momence_API_v2_Reference, Momence_data_scraping_wisdom, PIPELINE_MAINTENANCE_GUIDE). Those copies, and the older Dashboard copies, were archived on 2026-10-18. `services/momence/docs/README.md` now points here.
 
 | Document | Owner | Location | Status | Notes |
 |---|---|---|---|---|
-| Scraping wisdom | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/Momence_data_scraping_wisdom.md` | **active — canonical** | Consolidated here; Dashboard copy superseded |
-| Technical details | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/TECHNICAL_DETAILS.md` | **active — canonical** | Consolidated here; Dashboard copy superseded |
-| Skill usage guide | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/MOMENCE_SKILL_USAGE_GUIDE.md` | **active — canonical** | |
-| API v2 reference | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/Momence_API_v2_Reference.md` | **active — canonical** | |
-| Cookie auth reference | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/Momence_Cookie_Auth_Reference.md` | **active — canonical** | |
-| Pipeline maintenance guide | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/PIPELINE_MAINTENANCE_GUIDE.md` | **active — canonical** | |
-| Handover notes | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/HANDOVER_NOTES.md` | **active — canonical** | |
-| Installation setup | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/INSTALLATION_SETUP_GUIDE.md` | **active — canonical** | |
-| Data cleanup rules | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/DATA_CLEANUP_RULES.md` | **active — canonical** | |
-| Env integration summary | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/ENV_INTEGRATION_SUMMARY.md` | **active — canonical** | |
-| Quick start | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/QUICK_START.md` | **active — canonical** | |
-| Run now | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/RUN_NOW.md` | **active — canonical** | |
-| Verification checklist | RSO (was Momence_data) | `Ritual_Studio_Ops/services/momence/docs/VERIFICATION_CHECKLIST.md` | **active — canonical** | |
-| Scraping wisdom (Dashboard copy) | Ritual Dashboard | `Ritual Dashboard/docs/Momence Scrape documentation/Momence_data_scraping_wisdom.md` | **superseded** | Canonical copy is in services/momence/docs/ |
-| Technical details (Dashboard copy) | Ritual Dashboard | `Ritual Dashboard/docs/Momence Scrape documentation/TECHNICAL_DETAILS.md` | **superseded** | Canonical copy is in services/momence/docs/ |
-| Other Momence copies (Dashboard folder) | Ritual Dashboard | `Ritual Dashboard/docs/Momence Scrape documentation/` (8 further files, listed in Appendix B) | superseded | Checked 2026-10-18: byte-identical to the canonical copies in `services/momence/docs/`. |
-| Momence fix notes, Feb 2026 (7 files) | Ritual Dashboard | `Ritual Dashboard/docs/archive/momence-fix-notes-2026-02/` (COLUMN_NAME_FIXES, DATAFRAME_FIX, DOWNLOAD_BUTTON_FIX, FIXES_APPLIED, LOGIN_FEATURE_SUMMARY, LOGIN_SETUP_GUIDE, TEST_REPORT) | archived 2026-10-18 | Dated 2026-02-11. Not canonical; kept for reference. LOGIN_SETUP_GUIDE and LOGIN_FEATURE_SUMMARY describe the earlier automated-login approach. |
-| Momence setup and fix notes, kept in place (2 files) | Ritual Dashboard | `Ritual Dashboard/docs/Momence Scrape documentation/MOMENCE_FIRST_RUN_SETUP.md`, `FIX_SUMMARY.md` | to confirm | Not archived: the canonical Momence docs (`services/momence/docs/QUICK_START.md`, `TECHNICAL_DETAILS.md`, `VERIFICATION_CHECKLIST.md`) still point to them. Owner decision needed: archive them after those references are updated. |
+| Pipeline maintenance guide | Momence_data | `Momence_data/PIPELINE_MAINTENANCE_GUIDE.md` | **active — canonical** | Task names, times (chain 00:21, bookings 01:02, dashboard 03:30 waiting for the chain), 4-hour limit, logs. Last updated 2026-08-07. Supersedes the schedule times quoted in the Dashboard `docs/` daily-workflow files |
+| CHANGELOG | Momence_data | `Momence_data/CHANGELOG.md` | **active — canonical** | Momence pipeline change history (last entry 2026-08-07) |
+| Scraping wisdom | Momence_data | `Momence_data/Momence_data_scraping_wisdom.md` | **active — canonical** | Updated 2026-06-21 |
+| API v2 reference | Momence_data | `Momence_data/Momence_API_v2_Reference.md` | **active — canonical** | Updated 2026-06-21 |
+| Cookie auth reference | Momence_data | `Momence_data/Momence_Cookie_Auth_Reference.md` | **active — canonical** | |
+| Skill usage guide | Momence_data | `Momence_data/MOMENCE_SKILL_USAGE_GUIDE.md` | **active — canonical** | Updated 2026-07-22 |
+| Installation setup guide | Momence_data | `Momence_data/INSTALLATION_SETUP_GUIDE.md` | **active — canonical** | Updated 2026-07-22 |
+| Env integration summary | Momence_data | `Momence_data/ENV_INTEGRATION_SUMMARY.md` | **active — canonical** | Updated 2026-07-22 |
+| Handover notes | Momence_data | `Momence_data/HANDOVER_NOTES.md` | active | 2026-03-29 |
+| Technical details | Momence_data | `Momence_data/TECHNICAL_DETAILS.md` | active | |
+| Data cleanup rules | Momence_data | `Momence_data/DATA_CLEANUP_RULES.md` | active | |
+| Quick start / Run now / Verification checklist | Momence_data | `Momence_data/QUICK_START.md`, `RUN_NOW.md`, `VERIFICATION_CHECKLIST.md` | active | February 2026 operator notes; still referenced |
+| First-run setup and fix summary | Momence_data | `Momence_data/MOMENCE_FIRST_RUN_SETUP.md`, `FIX_SUMMARY.md` | historical | February 2026. Kept in place because QUICK_START, TECHNICAL_DETAILS and VERIFICATION_CHECKLIST link to them |
+| Data pipeline overview (March 2026) | Momence_data | `Momence_data/Ritual_Data_Pipeline.md` | historical | Describes the seven-script Selenium chain before the API steps; the maintenance guide is current |
+| Leads scraper | Momence_data | `Momence_data/LEADS_SCRAPER.md` | active | |
+| Run report 2026-05-12 | Momence_data | `Momence_data/RUN_REPORT_20260512.md` | historical | One-off run report |
+| Rose list, leads journal | Momence_data | `Momence_data/Rose list.md`, `momence_leads_journal.md` | to confirm | Working notes |
+| Feb 2026 fix notes (7 files) | Momence_data | `Momence_data/_Doc_Archive/2026-10-18/` (COLUMN_NAME_FIXES, DATAFRAME_FIX, DOWNLOAD_BUTTON_FIX, FIXES_APPLIED, LOGIN_FEATURE_SUMMARY, LOGIN_SETUP_GUIDE, TEST_REPORT) | archived 2026-10-18 | Notes on the superseded form-login scraper. Byte-identical copies also archived from the Dashboard folder |
+| May 2026 copies (13 files) | RSO | `_Doc_Archive/2026-10-18/Ritual_Studio_Ops/services/momence/docs/` | archived 2026-10-18 | Stale copies; see the note above |
+| Dashboard copies (12 files) | Ritual Dashboard | `Ritual Dashboard/_Doc_Archive/2026-10-18/docs/Momence Scrape documentation/` | archived 2026-10-18 | Older copies of the documents above |
+| services/momence README | RSO | `Ritual_Studio_Ops/services/momence/README.md` | historical | Describes the planned code move; the move has not taken effect |
+| Pointer to current docs | RSO | `Ritual_Studio_Ops/services/momence/docs/README.md` | active | Added 2026-10-18 |
 
 ---
 
@@ -198,7 +227,18 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Teacher cost clean-up, task prompt (16 Oct 2026) | Dashboard | `Ritual Dashboard/Task_Prompt_Teacher_Cost_Cleanup_2026-10-16.md` | active | Source instructions for the $0 teacher-cost clean-up. |
 | Teacher cost: null sessions (17 Oct 2026) | Dashboard | `Ritual Dashboard/Teacher_Cost_Null_Sessions_2026-10-17.md` | active | 39 null-cost sessions documented (Part B). |
 | Teacher cost: Parts C and D (17 Oct 2026) | Dashboard | `Ritual Dashboard/Teacher_Cost_PartC_PartD_2026-10-17.md` | active | Placeholder allowlist and substitute-rate outcome. |
-| Momence scraping docs | Dashboard | `Ritual Dashboard/docs/Momence Scrape documentation/` | superseded | See section 4. |
+| Momence scraping docs | Dashboard | `Ritual Dashboard/_Doc_Archive/2026-10-18/docs/Momence Scrape documentation/` | archived | Archived 2026-10-18. See section 4 |
+| Daily workflow docs | Dashboard | `Ritual Dashboard/docs/DAILY_WORKFLOW_OVERVIEW.md`, `DAILY_PIPELINE_AUTOMATION.md`, `DAILY_EXPORT_CHECKLIST.md`, `QUICK_REFERENCE.md` | active (times stale) | Still describe the 02:00 / 06:00 schedule of June 2026. Live times: `Momence_data/PIPELINE_MAINTENANCE_GUIDE.md` |
+| Weekly report guide and template | Dashboard | `Ritual Dashboard/WEEKLY_REPORT_IMPLEMENTATION_GUIDE.md`, `weekly_report_template.md` | active | Monday 08:00 weekly report |
+| Weekly reports | Dashboard | `Ritual Dashboard/reports/weekly_report_YYYY-MM-DD_OWNER.md` and `_TECHNICAL.md` | active (output) | 21 Jun – 4 Oct 2026 present on 2026-10-18; no report yet for the weeks ending 11 Oct |
+| Weekly recaps | Dashboard | `Ritual Dashboard/reports/weekly/weekly_recap_YYYYMMDD.md` | active (output) | Last on 2026-09-28 |
+| Other reports | Dashboard | `Ritual Dashboard/reports/` (monthly strategy May 2026, reconciliation 15–21 Jun, workbook migration audit, c5 teachers draft) | historical | |
+| Module specifications | Dashboard | `Ritual Dashboard/specs/` (C1–C10, P0–P5, DATA_CONTRACT, Dashboard_L0/L1) | active | Design-time specs (April–June 2026); README is the current module status |
+| Class margin calculation | Dashboard | `Ritual Dashboard/Class_Margin_Calculation.md` | active | Updated 2026-10-17 |
+| C1 API migration plan and progress | Dashboard | `Ritual Dashboard/C1_API_Migration_Plan.md`, `C1_API_Migration_Phase1_Progress.md` | active | Remaining work (Structural plan S3) |
+| C1 recommended changes (root copy, 6 Mar) | Dashboard | `Ritual Dashboard/_Doc_Archive/2026-10-18/C1 Recommended changes 2026 30 06.md` | archived | Older copy; the 12 Apr version stays in `docs/` |
+| Data integrity audit set (April 2026) | Dashboard | `Ritual Dashboard/Data_Integrity_Audit_*.md`, `Findings_Register.md`, `QC_Inspection_2026-04-26.md`, `Post Stage 8*.md`, `Stage*_Changelog.md`, `Stage*_Investigation_*.md`, `Stage6_Owner_Decisions_BA_Review.md`, `Stage 8-5 Changes.md` | historical | The audit trail behind the Work Review (S6, S7). Recommended for a `docs/audits/2026-04/` subfolder (decision needed) |
+| Dashboard help page | Dashboard | `Ritual Dashboard/dashboard/help.html` | **missing** | Linked from the dashboard navigation (`assets/components.js`) but the file does not exist |
 
 
 ---
@@ -209,8 +249,10 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 |---|---|---|---|---|
 | Ritual Brand guidelines | Cross-project | `Ritual_Apps/RITUAL_BRAND.md` | active | Brand colours, fonts, voice |
 | Xero API integration guide | TM | `Ritual_Teacher_Management/Xero API Integration Architecture and Implementation Guide.docx` | legacy | Not in scope for this programme |
-| Firebase schema analysis | Legacy migration | `Ritual_Apps/FIREBASE_SCHEMA_ANALYSIS.md` | legacy | Pre-Supabase migration artefact |
-| Firebase-to-Supabase mapping | Legacy migration | `Ritual_Apps/FIREBASE_TO_SUPABASE_MAPPING.md` | legacy | Pre-Supabase migration artefact |
+| Firebase schema analysis | CleanSweep | `Ritual_Apps/FIREBASE_SCHEMA_ANALYSIS.md` | historical | CleanSweep migration; see section 11 |
+| Firebase-to-Supabase mapping | CleanSweep | `Ritual_Apps/FIREBASE_TO_SUPABASE_MAPPING.md` | historical | CleanSweep migration; see section 11 |
+| Cover Management design system | Cross-project | `Ritual_Apps/Ritual Cover Management Design System/` (README, SKILL, ui_kits, source_reference) and `.zip` | active (snapshot) | Packaged design system and skill, 2026-05-10. Its `RITUAL_BRAND.md` is identical to the root copy; `source_reference/` holds May 2026 snapshots of the CM README, ARCHITECTURE, QUICKREF and SCHEMA |
+| Task management comparison | Cross-project | `Ritual_Apps/Task_Management_Comparison.md` | historical | Asana versus ClickUp, 2026-06-19 |
 
 ---
 
@@ -234,19 +276,22 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 | Cover auth notes | RSO | `Ritual_Studio_Ops/docs/ritual-cover-management-auth-notes.md` | to confirm | Not previously indexed. |
 | Changelog 2026-05-26 (portal campaign tile) | RSO | `Ritual_Studio_Ops/docs/CHANGELOG-2026-05-26-portal-campaign-tile.md` | to confirm | Not previously indexed. |
 | Migrations 2026-06-15 (campaigns release 4 and 5; margin columns; sender name) | RSO | `Ritual_Studio_Ops/migrations/2026-06-15-*.sql` (4 files) | to confirm | Not previously indexed. |
-| Stray app files | RSO | `Ritual_Studio_Ops/app/v2-relay.html`, `index.html.old`, `index.html.2605` | to confirm | Not indexed; likely stale. Consider archiving. |
+| Stray app files | RSO | `Ritual_Studio_Ops/app/v2-relay.html`, `index.html.old`, `index.html.2605` | to confirm | Not documentation, so not archived in the 2026-10-18 pass. `app/` is the deploy folder, so these are published with every deploy — owner to confirm removal |
 | Management Portal (LIVE) | RSO | `Ritual_Studio_Ops/app/index.html` | active | Launcher hub for the new system; carries the emblem badge. Adapted from the legacy CM portal 2026-05-24. |
 | Finance & Cashflow dashboard | RSO | `Ritual_Studio_Ops/app/finance-cashflow.html` | active | v1 (2026-05-29). Static client-side cashflow dashboard opened from the portal Finance tile. Embeds Xero Stripe-settlement actuals Jul 2025 - Feb 2026; 13-week rolling forecast with editable assumptions. No auth gate yet (see PORTAL-DEVELOPER.md security note). |
-| Merged app v1 | RSO | `Ritual_Apps/RSO_archived_duplicates_2026-05-24/ritual-studio-ops-v1.html` | archived | Superseded by v2; truncated/corrupt. Moved to the archive folder on 2026-05-24. |
-| services/momence README | RSO | `Ritual_Studio_Ops/services/momence/README.md` | active | Momence code move instructions |
-| services/cover README | RSO | `Ritual_Studio_Ops/services/cover/README.md` | active | Cover pipeline move instructions (Phase 3) |
+| Merged app v1 | RSO | `_Doc_Archive/2026-10-18/RSO_archived_duplicates_2026-05-24/ritual-studio-ops-v1.html` | archived | Superseded by v2; truncated/corrupt. Archived 2026-05-24; the whole `RSO_archived_duplicates_2026-05-24` folder moved under `_Doc_Archive` on 2026-10-18 |
+| services/momence README | RSO | `Ritual_Studio_Ops/services/momence/README.md` | historical | Momence code move instructions; the move has not taken effect (section 4) |
+| services/cover README | RSO | `Ritual_Studio_Ops/services/cover/README.md` | historical | Cover pipeline move instructions (Phase 3). **The scheduled cover tasks still run from `Ritual_Cover_Management/`** (`run_monitor.bat`), and recent fixes (2026-07-03, 2026-08-11) were made there |
 | Test suite Phase 2 | RSO | `Ritual_Studio_Ops/scripts/test_phase2.py` | active | 37 checks — merged shell conventions |
 | Test suite Phase 3 | RSO | `Ritual_Studio_Ops/scripts/test_phase3.py` | active | 65 checks — cover pipeline re-point |
 | Test suite Phase 4 | RSO | `Ritual_Studio_Ops/scripts/test_phase4.py` | active | 24 checks — write-enable and legacy banners |
 | Test suite Phase 5 | RSO | `Ritual_Studio_Ops/scripts/test_phase5.py` | active | 28 checks — reconcile script (merger-programme Phase 5, scheme A — see PHASE-NUMBERING.md) |
 | Reconcile script | RSO | `Ritual_Studio_Ops/scripts/reconcile.py` | active | Daily parallel-run health check; run once per day during the merger Phase 5 (scheme A) soak |
 | Reconcile reports | RSO | `Ritual_Studio_Ops/scripts/reconcile_reports/` | active | Daily plain-text reports written by reconcile.py |
-| Source-of-truth map | RSO | `Ritual_Studio_Ops/docs/SOURCE_OF_TRUTH.md` | active | Which file backs which screen. Read before requesting changes to any dashboard or portal. |
+| Source-of-truth map | RSO | `Ritual_Studio_Ops/docs/SOURCE_OF_TRUTH.md` | active, **one correction** | Which file backs which screen (correct). **Correction 2026-10-18:** its backend table says the `services/cover/` and `services/momence/` copies are the live ones; the scheduled tasks actually run `Ritual_Cover_Management/` and `Momence_data/` |
+| Deployment map | RSO | `Ritual_Apps/RSO_DEPLOYMENT_MAP.md` | active | Which repo and branch deploys each app (2026-06-02). Custom `lesss.com.au` domains added since are in the Structural Improvements Plan |
+| Per-app change prompts | RSO | `Ritual_Apps/RSO_*_Change_Prompt.md` (Campaigns, CoverDashboard, Portal_Login, RitualDashboard, StudioTimetable, TeacherManagement) | active | Read before changing that app. Staging copies (identical) archived from `_claude_stage/` on 2026-10-18 |
+| Help modal staff guide | RSO | `Ritual_Studio_Ops/app/ritual-studio-ops-v2.html` (Help & Resources) | active | Built-in staff guide; the fuller version is User Guide 03 |
 | Navigation map | RSO | `Ritual_Studio_Ops/docs/NAVIGATION.md` | active | Diagram of how portals, dashboards and external platforms link, plus the Phase 6 Pages consolidation plan. |
 | Setup audit (2026-05-24) | RSO | `Ritual_Studio_Ops/docs/AUDIT-RSO-2026-05-24.md` | active | Latest setup audit with severity-rated findings. |
 | Migration 2026-05-22: source on cover_requests | RSO | `Ritual_Studio_Ops/migrations/2026-05-22-add-source-to-cover-requests.sql` | active | Adds the `source` column distinguishing whatsapp vs manual cover requests. |
@@ -296,175 +341,296 @@ Maintained by: Ritual Studio Ops project (Claude as PM)
 
 ---
 
+## 8. Programme, strategy and security (`Ritual_Apps/Docs/`)
+
+`Docs/` is the canonical folder for programme deliverables (set by Mark on 2026-06-16). Its own contents list is `Docs/README.md`.
+
+| Document | Location | Status | Notes |
+|---|---|---|---|
+| Docs folder README | `Docs/README.md` | active | Contents list; rewritten 2026-10-18 |
+| Work review, 14 Oct 2026 | `Docs/Ritual_Work_Review_2026-10-14.md` | active | Work to date against the owners' four objectives (sources S1–S27). Working copy on claude.ai |
+| Phase 2 proposal, 14 Oct 2026 | `Docs/Ritual_Phase2_Proposal_2026-10-14.md` | active | 13-week proposal: measure, move, hand over |
+| Meeting pack index, 14 Oct 2026 | `Docs/Ritual_Meeting_Pack_2026-10-14_INDEX.md` | active | Links to the four meeting items and the points to settle |
+| Improvement Plan v3 | `Docs/Ritual_Studios_Improvement_Plan_v3_Structural_Operational_Functional.md` | active | 20 initiatives across structural, operational and functional lenses (29 Jun 2026). Supersedes the framing of v2 |
+| Improvement Plan v2 | `Docs/Ritual_Studios_Improvement_Plan_v2.docx` | superseded | 16 Jun 2026. Kept: holds the runner-laptop workstream (its section 6) in full — owner to confirm whether to archive |
+| Structural Improvements Completion Plan | `Docs/Ritual_Studios_Structural_Improvements_Completion_Plan.md` | active | Access unification (A1–A9), S3–S6 (29 Jul 2026) |
+| Application Security Standard v1.0 | `Docs/Ritual_Studios_Application_Security_Standard.md` | active | The standard access pattern for every Ritual app (29 Jul 2026) |
+| SSO bridge spike and rollout | `Docs/A3_sso_bridge/README.md`, `ROLLOUT_PLAYBOOK.md` (+ `bridge.js`, `bridge_test.html`) | active | Cover done; Dashboard not needed; Ops and Campaigns pending (3 Aug 2026) |
+| Automation opportunities register | `Docs/Ritual_Automation_Opportunities_From_Drive_2026-06-29.md` | active | The register of 19 candidates |
+| Automation detailed plan | `Docs/Ritual_Automation_Opportunities_Detailed_Plan_2026-07-02.md` | active | Companion to the register; approval not recorded |
+| Automation board deck | `Docs/Ritual_Automation_Suite_Board_Deck.pptx` | active | Running cost about $125–$160 a month |
+| Phase 0 plan | `Docs/Ritual_Studios_Phase0_Plan.md` and `.docx` | historical | Phase 0 security runbook (16 Jun 2026). Exit gate met 30 Jun 2026 |
+| Phase 0 remaining steps | `Docs/Ritual_Studios_Phase0_Remaining_Steps.md` | historical | 18 Jun 2026 working list; cited by v3 and the completion plan |
+| Phase 0 completion plan | `Docs/Ritual_Studios_Phase0_Completion_Plan.md` | historical | Record of Phase 0 completion (1 Jul 2026) |
+| Phase 0 preparation | `Docs/Phase0_prep/` (C1_and_P0-3_plan, HANDOVER_when_you_return, REDIRECT_DEPLOY, TEST_REGIME_ops_login_and_reconcile, SQL and JS templates) | historical | June–July 2026 |
+| Portability recommendations | `Docs/Portability_Recommendations.md` | to confirm | Multi-studio deployment ideas (1 Jul 2026) |
+| Folder reorganisation plan v1.1 | `Docs/Ritual_Folder_Reorganisation_Plan_v1.1.docx` | to confirm | Not known whether executed |
+| Folder reorganisation plan v1 | `Docs/Ritual_Folder_Reorganisation_Plan.docx` | superseded | By v1.1 |
+| Templates | `Docs/Long_Tail_Operations_System_Template.docx`, `Docs/Studio_Diagnostic_Intake_Questionnaire.docx` | to confirm | Consultancy templates |
+| Supporting files | `Docs/*.csv`, `Docs/*.xlsx`, `Docs/*.ps1`, `Docs/ritual-pre-commit-hook.sh` | — | Data extracts and scripts, not documentation |
+| Documentation audit | `Docs/Documentation_Audit_2026-10-18.md` | active | This pass |
+
+---
+
+## 9. User guides and video prompts (`Ritual_Apps/Docs/User_Guides/`)
+
+Written 2026-10-18 for staff, teachers and owners, from the live screen labels. Diagrams are Mermaid; screen illustrations are SVG in `User_Guides/images/`.
+
+| Guide | Location | Audience |
+|---|---|---|
+| Guide index | `Docs/User_Guides/README.md` | Everyone |
+| 01 Start here: signing in and roles | `Docs/User_Guides/01_Start_Here_Signing_In_and_Roles.md` | Everyone |
+| 02 Management Portal | `Docs/User_Guides/02_Management_Portal.md` | All staff; administrators |
+| 03 Studio Ops: Teachers | `Docs/User_Guides/03_Studio_Ops_Teachers.md` | Coordinators, administrators |
+| 04 Cover Management | `Docs/User_Guides/04_Cover_Management.md` | Coordinators (replaces the June 2026 training guide) |
+| 05 Studio Timetable | `Docs/User_Guides/05_Studio_Timetable.md` | All staff |
+| 06 For teachers | `Docs/User_Guides/06_For_Teachers.md` | Teachers, applicants |
+| 07 Campaign Planning | `Docs/User_Guides/07_Campaign_Planning.md` | Campaign team |
+| 08 Analytics Dashboard and weekly reports | `Docs/User_Guides/08_Analytics_Dashboard_and_Weekly_Reports.md` | Owners, management |
+| 09 Finance and Cashflow | `Docs/User_Guides/09_Finance_and_Cashflow.md` | Owners |
+| 10 CleanSweep (not yet live) | `Docs/User_Guides/10_CleanSweep.md` | Cleaning team |
+| 11 Behind the scenes: daily automation | `Docs/User_Guides/11_Behind_the_Scenes_Daily_Automation.md` | Administrator |
+| 12 Troubleshooting and FAQ | `Docs/User_Guides/12_Troubleshooting_and_FAQ.md` | Everyone |
+| 13 Glossary | `Docs/User_Guides/13_Glossary.md` | Everyone |
+| Video series prompts (V01–V12) | `Docs/User_Guides/Video_Series_Prompts.md` | Video producers |
+| Illustrations | `Docs/User_Guides/images/` (portal, cover dashboard, Studio Ops, timetable, colour keys, KPI tile) | — |
+
+---
+
+## 10. Campaign Planning (`Ritual_Apps/Ritual marketing/`)
+
+App: `Ritual marketing/campaign-planning.html` (`v5.2.1 R5`), deployed to `ritual-campaign-planning.pages.dev` from `Mark-Fellows/ritual-campaign-planning` (`main`). Not previously indexed.
+
+| Document | Location | Status | Notes |
+|---|---|---|---|
+| Build stages (release plan) | `Ritual marketing/Docs/Campaign Planning tool build stages.md` | **active — authoritative** | Releases 1–5.2 done; Release 6 next |
+| Setup guide | `Ritual marketing/Docs/campaign-planning-README.md` | active (dated) | Written for Release 3; roles, migrations, digest. Current release is 5.2.1 |
+| Process design review | `Ritual marketing/Docs/Campaign Planning tool process design review.md` | active | Reasoning behind the release plan |
+| Build summaries v1, v2, v3, v4, v5, v5.1, v5.2 | `Ritual marketing/Docs/Campaign Planning tool build v*.md` | historical | One per release |
+| Release 4 and 5.2 implementation plans | `Ritual marketing/Docs/Release 4 implementation plan.md`, `Release 5.2 implementation plan.md` | historical | |
+| Progress logs | `Ritual marketing/Docs/release-4-progress-log.md`, `release-5-progress-log.md`, `release-5-2-progress-log.md`, `campaign-planning-hygiene-progress.md` | historical | |
+| Hygiene prompt | `Ritual marketing/Docs/RSO_Campaigns_Hygiene_Prompt.md` | historical | Release 5.1 |
+| Brand voice (campaign) | `Ritual marketing/Docs/files/01_brand_voice.md` | superseded | Moved into `system_config.campaign_brand_voice` in Release 5.2 |
+| First Cowork prompt; future tasks checklist | `Ritual marketing/Docs/files/03_cowork_first_prompt.md`, `04_future_tasks_checklist.md` | historical | Release sequencing superseded by the build stages document |
+| SQL migrations 02–06 | `Ritual marketing/Docs/0[2-6]_campaign_planning_*.sql` | applied | Releases 1–5 |
+| Digest Edge Function source | `Ritual marketing/Docs/campaign-digest-edge-function.ts` | active | Monday and Thursday digest |
+| Change prompt | `Ritual_Apps/RSO_Campaigns_Change_Prompt.md` | active | |
+
+---
+
+## 11. CleanSweep (cleaning-team app)
+
+Code is in the `Ritual_Apps` root (Next.js: `src/`, `package.json`); the parent `Ritual_Apps` git repository is this app (the deployment map calls it "an old Firebase/Next.js scaffold"). Migration from Firebase to Supabase is code-complete (9 Sep 2026); testing and deployment pending. Not previously indexed.
+
+| Document | Location | Status | Notes |
+|---|---|---|---|
+| Migration plan | `MIGRATION_PLAN.md` | active | Firebase to Supabase, phased |
+| Firebase schema analysis; Firebase-to-Supabase mapping | `FIREBASE_SCHEMA_ANALYSIS.md`, `FIREBASE_TO_SUPABASE_MAPPING.md` | historical | Phase 1 |
+| Schema implementation guide and SQL | `SUPABASE_SCHEMA_IMPLEMENTATION.md`, `SUPABASE_SCHEMA_DESIGN.sql` | active | Phase 2 |
+| Phase 3a/3b/3c guides | `PHASE_3A_AUTH_MIGRATION.md`, `PHASE_3A_SETUP_GUIDE.md`, `PHASE_3B_DATA_MIGRATION.md`, `PHASE_3B_SETUP_GUIDE.md`, `PHASE_3C_SUPABASE_SERVICE_LAYER.md`, `PHASE_3C_SETUP_GUIDE.md` | historical | Completed |
+| Phase 3 completion | `PHASE_3_COMPLETION.md` | active | Status as at 9 Sep 2026 |
+| Phase 4 testing and deployment | `Claude outputs/PHASE_4_SUMMARY.md`, `PHASE_4_IMPLEMENTATION_GUIDE.md`, `PHASE_4_TESTING_DEPLOYMENT.md`; `TESTING_CHECKLIST.md` | active | Next step |
+| Phase 2 import guide | `Claude outputs/PHASE-2-IMPORT-GUIDE.md` | historical | |
+| Original project export | `Ritual_CleanSweep/Docs/MASTER_DOCS.md`, `MASTER_SOURCE.md`, `MASTER_DATA.json`, `config.ts` | historical | Firebase Studio export used as the migration source |
+| User guide | `Docs/User_Guides/10_CleanSweep.md` | active | Placeholder until release |
+
+---
+
+## 12. Other documents in the `Ritual_Apps` root
+
+| Document | Location | Status | Notes |
+|---|---|---|---|
+| Reference data migration summary (copy) | `MIGRATION_SUMMARY.md` | active, **one correction** | Copy of the G-drive summary (reference tables, seed script). Owner decision 2026-10-17: `classify.py` is dead, but this summary still describes it. Not a CleanSweep document despite the name |
+| Brand guide | `RITUAL_BRAND.md` | active | Section 6 |
+| Deployment map; change prompts | `RSO_DEPLOYMENT_MAP.md`, `RSO_*_Change_Prompt.md` | active | Section 7 |
+| Task management comparison | `Task_Management_Comparison.md` | historical | Section 6 |
+| Working text files | `Class Cancellation.txt`, `The Method Three Required Elements.txt`, `audit_out.txt`, `git*_out.txt`, `rso_git_result.txt` | — | Notes and command output, not documentation. Candidates for a tidy-up (decision needed) |
+
+---
+
+## 13. Archive
+
+Superseded and duplicate documentation is kept, not deleted, under a `_Doc_Archive` folder at the root of each top-level folder. Files keep their original relative path beneath a dated folder, so restoring is a move back. Each archive has an `ARCHIVE_MANIFEST.md` listing every item and the reason.
+
+| Archive | Manifest | Items archived 2026-10-18 |
+|---|---|---|
+| `Ritual_Apps/_Doc_Archive/` | `Ritual_Apps/_Doc_Archive/ARCHIVE_MANIFEST.md` | 13: `_claude_stage/` (6 identical copies), `RSO_archived_duplicates_2026-05-24/` (earlier archive, moved out of the main folder), TM merger plans v1 and v2 copy, TM investigation copy, merger prompt, "Recommendations re id", `Ritual_Studio_Ops-Legacy/` stubs, CM session log, CM June training guide, `services/momence/docs/` (13 stale copies), two empty folders created in error |
+| `Ritual Dashboard/_Doc_Archive/` | `Ritual Dashboard/_Doc_Archive/ARCHIVE_MANIFEST.md` | 4: `docs/Momence Scrape documentation/` (12), `docs/archive/` (7 Feb 2026 fix notes), root copy of "C1 Recommended changes", an empty text file |
+| `Momence_data/_Doc_Archive/` | `Momence_data/_Doc_Archive/ARCHIVE_MANIFEST.md` | 7 Feb 2026 fix notes for the old form-login scraper |
+
+Earlier archive folders that remain in place and are **not** documentation: `Ritual Dashboard/_to_delete/`, `Ritual Dashboard/backups/`, `Momence_data/Archive/` (the nightly data archive — do not confuse with `_Doc_Archive`), `Momence_data/_backups_20260811/`, `Ritual_Cover_Management/backups/`, `Ritual_Studio_Ops/backups/`.
+
+---
+
 ## Appendix A: Cover Management files not individually reviewed
 
-71 `.md`/`.txt` files in `Ritual_Cover_Management/` (root only). Status to be confirmed by the owner.
+71 `.md`/`.txt` files in `Ritual_Cover_Management/` (root only). Statuses assigned on 2026-10-18 from each file's title, date, cross-references and (for Markdown) its content. "Working output" files are command or diagnostic output, not documentation; they are left in place because scripts may write to them.
 
 | File | Last modified | Status |
 |---|---|---|
-| `ARCHITECTURE.md` | 2026-04-21 | to confirm |
-| `backfill_fn.txt` | 2026-04-23 | to confirm |
-| `Changelog WhatsApp.md` | 2026-04-13 | to confirm |
-| `CHANGELOG-2026-04-13-nlp-sender-fallback.md` | 2026-04-13 | to confirm |
-| `CHANGELOG-2026-04-23-avail-slots.md` | 2026-04-23 | to confirm |
-| `CHANGELOG-2026-05-07-scheduled-task-setup.md` | 2026-05-07 | to confirm |
-| `CHANGELOG-2026-05-08-phase1-and-resilience.md` | 2026-05-08 | to confirm |
-| `CHANGELOG-2026-05-09.md` | 2026-05-09 | to confirm |
-| `CHANGELOG-2026-05-11-momence-sessions-table.md` | 2026-05-11 | to confirm |
-| `CHANGELOG-2026-05-16.md` | 2026-05-16 | to confirm |
-| `CHANGELOG-2026-05-17.md` | 2026-05-16 | to confirm |
-| `CHANGELOG-2026-06-01-whatsapp-export.md` | 2026-06-01 | to confirm |
-| `CHANGELOG-2026-06-02-edge-changeover-and-resilience.md` | 2026-06-02 | to confirm |
-| `CHANGELOG-2026-06-02-phase4-offer-matching.md` | 2026-06-02 | to confirm |
-| `CHANGELOG-2026-06-09-backfill-button.md` | 2026-06-09 | to confirm |
-| `CHANGELOG-2026-06-15-dedup-fix-api-keys-waReplyMap.md` | 2026-06-15 | to confirm |
-| `CHANGELOG-2026-06-15-timetable-v2-margin-columns.md` | 2026-06-15 | to confirm |
-| `CHANGELOG-2026-07-03-browser-drivability-and-daily-refresh.md` | 2026-07-04 | to confirm |
-| `CHANGELOG-2026-08-11-whatsapp-logout-and-session-restore-wipe.md` | 2026-08-11 | to confirm |
-| `CHANGELOG-dashboard-spinning-fix-20260520.md` | 2026-05-20 | to confirm |
-| `CLAUDE.md` | 2026-06-22 | to confirm |
-| `Cover management stages brief description.txt` | 2026-04-13 | to confirm |
-| `cp_run_output.txt` | 2026-06-09 | to confirm |
-| `DEPLOY.md` | 2026-05-07 | to confirm |
-| `DEVELOPER.md` | 2026-06-15 | to confirm |
-| `diag_atlogon_trigger.txt` | 2026-05-08 | to confirm |
-| `diag_chat_dump.txt` | 2026-06-09 | to confirm |
-| `diag_run_log.txt` | 2026-05-07 | to confirm |
-| `diag_scheduled_tasks.txt` | 2026-05-07 | to confirm |
-| `diag_shaye_records.txt` | 2026-05-07 | to confirm |
-| `diag_teachers_dump.txt` | 2026-06-09 | to confirm |
-| `HANDOFF-coverage-type-execution.md` | 2026-04-20 | to confirm |
-| `HANDOFF-START-HERE.md` | 2026-04-20 | to confirm |
-| `HELP.md` | 2026-05-08 | to confirm |
-| `Index.md` | 2026-05-16 | to confirm |
-| `INVESTIGATION-teachers-dropdown-2026-05-14.md` | 2026-05-21 | to confirm |
-| `Nested_Messages.md` | 2026-05-19 | to confirm |
-| `page_structure.txt` | 2026-04-13 | to confirm |
-| `PHASE-2-DEDUP-DESIGN.md` | 2026-05-08 | to confirm |
-| `PHASE-3-DASHBOARD-DESIGN.md` | 2026-05-08 | to confirm |
-| `PHASE-4-OFFER-MATCHING-DESIGN.md` | 2026-06-21 | to confirm |
-| `PHASE-5-USER-ADMIN-DESIGN.md` | 2026-06-02 | to confirm |
-| `PHASES-quick-invoke.md` | 2026-04-20 | to confirm |
-| `PLAN-coverage-type-feature.md` | 2026-04-20 | to confirm |
-| `PLAN-next-stages-2026-06-21.md` | 2026-06-21 | to confirm |
-| `PLAN-phase4-offer-matching-2026-05-16.md` | 2026-06-02 | to confirm |
-| `PLAN-phase4-offer-matching-2026-06-02-rev.md` | 2026-06-02 | to confirm |
-| `PLAN-teacher-cover-app-2026-07-09.md` | 2026-07-11 | to confirm |
-| `post_reboot_check.txt` | 2026-05-08 | to confirm |
-| `probe_chrome.txt` | 2026-05-07 | to confirm |
-| `probe_chrome_tabs.txt` | 2026-05-07 | to confirm |
-| `project_cover_management.md` | 2026-05-08 | to confirm |
-| `q_out.txt` | 2026-04-23 | to confirm |
-| `QUICKREF.md` | 2026-06-16 | to confirm |
-| `README.md` | 2026-07-17 | to confirm |
-| `requirements.txt` | 2026-04-20 | to confirm |
-| `SCHEMA.md` | 2026-06-21 | to confirm |
-| `SECURITY-INCIDENT-2026-06-02-exposed-keys.md` | 2026-06-16 | to confirm |
-| `SESSION-LOG-2026-05-08-evening.md` | 2026-05-08 | to confirm |
-| `SETUP.md` | 2026-06-16 | to confirm |
-| `setup_browser_refresh_task.txt` | 2026-07-03 | to confirm |
-| `setup_scheduled_tasks.txt` | 2026-05-28 | to confirm |
-| `SIGNOFF-coverage-type-2026-04-21.md` | 2026-04-21 | to confirm |
-| `SKILL-coverage-type-classification.md` | 2026-04-21 | to confirm |
-| `SKILL-estimate-class-count.md` | 2026-04-13 | to confirm |
-| `stage3_API_TEST_REPORT.txt` | 2026-04-14 | to confirm |
-| `stage3_live_test_output.txt` | 2026-04-14 | to confirm |
-| `TODO-2026-06-22.md` | 2026-06-29 | to confirm |
-| `trigger_monitor_run.txt` | 2026-07-03 | to confirm |
-| `TROUBLESHOOTING.md` | 2026-06-02 | to confirm |
-| `WORKFLOW-SUMMARY.md` | 2026-04-20 | to confirm |
+| `ARCHITECTURE.md` | 2026-04-21 | active — developer reference (2026-04-21; check against SCHEMA.md for later tables) |
+| `backfill_fn.txt` | 2026-04-23 | working output — not documentation |
+| `Changelog WhatsApp.md` | 2026-04-13 | historical |
+| `CHANGELOG-2026-04-13-nlp-sender-fallback.md` | 2026-04-13 | historical (in master CHANGELOG) |
+| `CHANGELOG-2026-04-23-avail-slots.md` | 2026-04-23 | historical (in master CHANGELOG) |
+| `CHANGELOG-2026-05-07-scheduled-task-setup.md` | 2026-05-07 | historical (in master CHANGELOG) |
+| `CHANGELOG-2026-05-08-phase1-and-resilience.md` | 2026-05-08 | historical (in master CHANGELOG) |
+| `CHANGELOG-2026-05-09.md` | 2026-05-09 | historical (in master CHANGELOG) |
+| `CHANGELOG-2026-05-11-momence-sessions-table.md` | 2026-05-11 | historical (in master CHANGELOG) |
+| `CHANGELOG-2026-05-16.md` | 2026-05-16 | historical (in master CHANGELOG) |
+| `CHANGELOG-2026-05-17.md` | 2026-05-16 | historical (in master CHANGELOG) |
+| `CHANGELOG-2026-06-01-whatsapp-export.md` | 2026-06-01 | historical |
+| `CHANGELOG-2026-06-02-edge-changeover-and-resilience.md` | 2026-06-02 | historical |
+| `CHANGELOG-2026-06-02-phase4-offer-matching.md` | 2026-06-02 | historical |
+| `CHANGELOG-2026-06-09-backfill-button.md` | 2026-06-09 | historical |
+| `CHANGELOG-2026-06-15-dedup-fix-api-keys-waReplyMap.md` | 2026-06-15 | historical |
+| `CHANGELOG-2026-06-15-timetable-v2-margin-columns.md` | 2026-06-15 | historical |
+| `CHANGELOG-2026-07-03-browser-drivability-and-daily-refresh.md` | 2026-07-04 | historical (detail behind master CHANGELOG) |
+| `CHANGELOG-2026-08-11-whatsapp-logout-and-session-restore-wipe.md` | 2026-08-11 | historical (detail behind master CHANGELOG) |
+| `CHANGELOG-dashboard-spinning-fix-20260520.md` | 2026-05-20 | historical (in master CHANGELOG) |
+| `CLAUDE.md` | 2026-06-22 | active (schedule line corrected 2026-10-18) |
+| `Cover management stages brief description.txt` | 2026-04-13 | historical |
+| `cp_run_output.txt` | 2026-06-09 | working output — not documentation |
+| `DEPLOY.md` | 2026-05-07 | active — check against RSO_DEPLOYMENT_MAP.md |
+| `DEVELOPER.md` | 2026-06-15 | active — developer onboarding |
+| `diag_atlogon_trigger.txt` | 2026-05-08 | working output — not documentation |
+| `diag_chat_dump.txt` | 2026-06-09 | working output — not documentation |
+| `diag_run_log.txt` | 2026-05-07 | working output — not documentation |
+| `diag_scheduled_tasks.txt` | 2026-05-07 | working output — not documentation |
+| `diag_shaye_records.txt` | 2026-05-07 | working output — not documentation |
+| `diag_teachers_dump.txt` | 2026-06-09 | working output — not documentation |
+| `HANDOFF-coverage-type-execution.md` | 2026-04-20 | historical (April 2026 handoff) |
+| `HANDOFF-START-HERE.md` | 2026-04-20 | historical (April 2026 handoff; start with README.md and DEVELOPER.md instead) |
+| `HELP.md` | 2026-05-08 | active (schedule corrected 2026-10-18) |
+| `Index.md` | 2026-05-16 | superseded by this index |
+| `INVESTIGATION-teachers-dropdown-2026-05-14.md` | 2026-05-21 | historical (canonical copy) |
+| `Nested_Messages.md` | 2026-05-19 | active |
+| `page_structure.txt` | 2026-04-13 | working output — not documentation |
+| `PHASE-2-DEDUP-DESIGN.md` | 2026-05-08 | historical (shipped) |
+| `PHASE-3-DASHBOARD-DESIGN.md` | 2026-05-08 | historical (shipped) |
+| `PHASE-4-OFFER-MATCHING-DESIGN.md` | 2026-06-21 | historical (shipped 2026-06-02) |
+| `PHASE-5-USER-ADMIN-DESIGN.md` | 2026-06-02 | superseded by USER-ADMIN-BUILD-SPEC.md |
+| `PHASES-quick-invoke.md` | 2026-04-20 | historical |
+| `PLAN-coverage-type-feature.md` | 2026-04-20 | historical (signed off 2026-04-21) |
+| `PLAN-next-stages-2026-06-21.md` | 2026-06-21 | historical (folded into Improvement Plan v3) |
+| `PLAN-phase4-offer-matching-2026-05-16.md` | 2026-06-02 | historical (shipped) |
+| `PLAN-phase4-offer-matching-2026-06-02-rev.md` | 2026-06-02 | historical (shipped) |
+| `PLAN-teacher-cover-app-2026-07-09.md` | 2026-07-11 | to confirm — open plan |
+| `post_reboot_check.txt` | 2026-05-08 | working output — not documentation |
+| `probe_chrome.txt` | 2026-05-07 | working output — not documentation |
+| `probe_chrome_tabs.txt` | 2026-05-07 | working output — not documentation |
+| `project_cover_management.md` | 2026-05-08 | legacy (still linked from HELP.md) |
+| `q_out.txt` | 2026-04-23 | working output — not documentation |
+| `QUICKREF.md` | 2026-06-16 | active |
+| `README.md` | 2026-07-17 | active |
+| `requirements.txt` | 2026-04-20 | code (Python dependencies) |
+| `SCHEMA.md` | 2026-06-21 | active |
+| `SECURITY-INCIDENT-2026-06-02-exposed-keys.md` | 2026-06-16 | **OPEN** — rotation not confirmed |
+| `SESSION-LOG-2026-05-08-evening.md` | 2026-05-08 | archived 2026-10-18 |
+| `SETUP.md` | 2026-06-16 | active |
+| `setup_browser_refresh_task.txt` | 2026-07-03 | working output — not documentation |
+| `setup_scheduled_tasks.txt` | 2026-05-28 | working output — not documentation |
+| `SIGNOFF-coverage-type-2026-04-21.md` | 2026-04-21 | historical |
+| `SKILL-coverage-type-classification.md` | 2026-04-21 | active |
+| `SKILL-estimate-class-count.md` | 2026-04-13 | active |
+| `stage3_API_TEST_REPORT.txt` | 2026-04-14 | historical test output |
+| `stage3_live_test_output.txt` | 2026-04-14 | historical test output |
+| `TODO-2026-06-22.md` | 2026-06-29 | to confirm — open items |
+| `trigger_monitor_run.txt` | 2026-07-03 | working output — not documentation |
+| `TROUBLESHOOTING.md` | 2026-06-02 | active |
+| `WORKFLOW-SUMMARY.md` | 2026-04-20 | historical (before offer matching) |
 
 ---
 
 ## Appendix B: Ritual Dashboard files not individually reviewed
 
-Root `.md` files: 44. Files in `docs/` (top level): 42. The Momence scrape subfolder is covered in section 4. Status to be confirmed by the owner.
+Root `.md` files: 44. Files in `docs/` (top level): 42. The Momence scrape subfolder is covered in section 4. Statuses assigned on 2026-10-18 from each file's title, date and cross-references; Word and PDF files were not opened. Rows after `Xero Backfill…` are in `docs/`.
 
 | File | Last modified | Status |
 |---|---|---|
-| `A2_ClassID_SessionID_Analysis.md` | 2026-04-26 | to confirm |
-| `C1 Recommended changes 2026 30 06.md` | 2026-03-06 | to confirm |
-| `C1_API_Migration_Phase1_Progress.md` | 2026-05-03 | to confirm |
-| `C1_API_Migration_Plan.md` | 2026-05-03 | to confirm |
-| `Changelog - 2026-04-17.md` | 2026-05-05 | to confirm |
-| `Class_Margin_Calculation.md` | 2026-10-17 | to confirm |
-| `COMPETITIVE_GAPS_EXECUTIVE_SUMMARY.md` | 2026-07-16 | to confirm |
-| `COMPETITIVE_INTELLIGENCE_ANALYSIS.md` | 2026-07-16 | to confirm |
-| `Course_Revenue_Recommended_Actions.md` | 2026-08-05 | to confirm |
-| `Course_Session_Revenue_Investigation_2026-08-05.md` | 2026-08-05 | to confirm |
-| `Data_Integrity_Audit_2026-04-17.md` | 2026-04-18 | to confirm |
-| `Data_Integrity_Audit_Index.md` | 2026-04-26 | to confirm |
-| `Data_Integrity_Audit_Stage1.md` | 2026-04-18 | to confirm |
-| `Data_Integrity_Audit_Stage2.md` | 2026-04-18 | to confirm |
-| `Data_Integrity_Audit_Stages3-6.md` | 2026-04-22 | to confirm |
-| `Findings_Register.md` | 2026-04-26 | to confirm |
-| `Memberships_Dashboard_Investigation_2026-05-01.md` | 2026-05-03 | to confirm |
-| `Momence_API_Call_Reference.md` | 2026-05-03 | to confirm |
-| `momence_booking_id_test.md` | 2026-04-26 | to confirm |
-| `Post Stage 8 Integrity Audit.md` | 2026-04-26 | to confirm |
-| `Post Stage 8.9 Close-Out Audit.md` | 2026-04-27 | to confirm |
-| `QC_Inspection_2026-04-26.md` | 2026-04-26 | to confirm |
-| `Reconciliation_20260323.md` | 2026-03-23 | to confirm |
-| `SCHEDULING_ENGINE_QUICK_START.md` | 2026-07-16 | to confirm |
-| `SCHEDULING_OPTIMISATION_FRAMEWORK.md` | 2026-07-16 | to confirm |
-| `Setup_Summary.md` | 2026-04-02 | to confirm |
-| `Stage 8-5 Changes.md` | 2026-04-26 | to confirm |
-| `Stage6_Owner_Decisions_BA_Review.md` | 2026-04-26 | to confirm |
-| `Stage7_Changelog.md` | 2026-04-26 | to confirm |
-| `Stage8.1_Changelog.md` | 2026-04-26 | to confirm |
-| `Stage8.4_Changelog.md` | 2026-04-26 | to confirm |
-| `Stage8.5_Changelog.md` | 2026-04-26 | to confirm |
-| `Stage8.5_Investigation_fp_unmatched.md` | 2026-04-26 | to confirm |
-| `Stage8.6_Changelog.md` | 2026-04-26 | to confirm |
-| `Stage8.7_Changelog.md` | 2026-04-26 | to confirm |
-| `Stage8.8_Investigation_stale_collectors.md` | 2026-04-27 | to confirm |
-| `Stage8.9_Changelog.md` | 2026-04-27 | to confirm |
-| `Stage9.0_Changelog.md` | 2026-05-03 | to confirm |
-| `WEEKLY_RECOMMENDATION_TRACKER.md` | 2026-07-16 | to confirm |
-| `WEEKLY_REPORT_IMPLEMENTATION_GUIDE.md` | 2026-06-19 | to confirm |
-| `WEEKLY_REPORT_SAMPLE.md` | 2026-06-21 | to confirm |
-| `WEEKLY_REPORT_SAMPLE_UPDATED.md` | 2026-06-21 | to confirm |
-| `weekly_report_template.md` | 2026-06-26 | to confirm |
-| `Xero Backfill & Financial Model Update — Session Summary.md` | 2026-05-29 | to confirm |
-| `12-12 Meeting- Defining Mark's Role and Operational Strategy.docx` | 2025-12-12 | to confirm |
-| `12-12 Meeting- Defining Mark's Role and Operational Strategy.pdf` | 2025-12-12 | to confirm |
-| `C1 Recommended changes 2026 30 06.md` | 2026-04-12 | to confirm |
-| `CGPT ideas for campaign maangement Jan 2026.docx` | 2026-01-06 | to confirm |
-| `Class change suggestions wc 12Jan26.docx` | 2026-01-13 | to confirm |
-| `Cloudflare_GitHub_Deployment_Guide.md` | 2026-04-12 | to confirm |
-| `DAILY_EXPORT_CHECKLIST.md` | 2026-06-20 | to confirm |
-| `DAILY_PIPELINE_AUTOMATION.md` | 2026-06-19 | to confirm |
-| `DAILY_WORKFLOW_OVERVIEW.md` | 2026-06-19 | to confirm |
-| `Dashboard_Data_Fixes_2026-04-12.md` | 2026-04-12 | to confirm |
-| `Draft Quarterly Agenda for Ritual v1.docx` | 2026-01-08 | to confirm |
-| `KPI_Drilldown_Design_v1.0.md` | 2026-06-15 | to confirm |
-| `manual and automatic processes, procedures, and work instructions for the studio.docx` | 2026-02-09 | to confirm |
-| `Meeting notes 26 01 19.docx` | 2026-01-19 | to confirm |
-| `Meeting notes 27 01 19.docx` | 2026-01-27 | to confirm |
-| `Meeting notes February 4th 2026.docx` | 2026-02-04 | to confirm |
-| `Membership_Attendance_Report_Documentation.docx` | 2026-03-31 | to confirm |
-| `Mermaid lease.docx` | 2026-01-08 | to confirm |
-| `Minutes of 4 February 2026.docx` | 2026-02-12 | to confirm |
-| `Notes on Cash improvement.docx` | 2026-03-25 | to confirm |
-| `Notes on Cash improvement.txt` | 2026-03-25 | to confirm |
-| `Proposal 14 November 2025.docx` | 2025-11-14 | to confirm |
-| `Proposal 20 November 2025.docx` | 2025-11-26 | to confirm |
-| `QUICK_REFERENCE.md` | 2026-06-19 | to confirm |
-| `Ritual notes and clippings.docx` | 2025-11-15 | to confirm |
-| `Ritual notes.docx` | 2025-11-14 | to confirm |
-| `Ritual Studio -  A Strategic Framework for Operational Excellence.docx` | 2025-12-17 | to confirm |
-| `RITUAL STUDIO --  ASANA ARCHITECTURE FOR OPERATIONAL TURNAROUND.docx` | 2025-12-18 | to confirm |
-| `Ritual Teacher Contract 2025 .docx` | 2025-12-05 | to confirm |
-| `Ritual_Dashboard_Project_Plan_v1.1.docx` | 2026-03-01 | to confirm |
-| `Ritual_Dashboard_Project_Plan_v1.2.docx` | 2026-03-01 | to confirm |
-| `Ritual_KPI_Library_v1.0.docx` | 2026-03-01 | to confirm |
-| `Ritual_KPI_Library_v1.1.docx` | 2026-03-01 | to confirm |
-| `Ritual_Studios_Structured_Proposal_With_TOC.docx` | 2025-11-14 | to confirm |
-| `Studio_Systems_Roadmap.html` | 2026-01-25 | to confirm |
-| `Summary of meeting 6-Jan-26 Mark Rose.docx` | 2026-02-17 | to confirm |
-| `Teacher payrates extract Dec 2025.docx` | 2026-01-26 | to confirm |
-| `Teacher_Substitution_Build_Prompts.md` | 2026-06-22 | to confirm |
-| `The uploaded document also discussed the need for.docx` | 2025-11-14 | to confirm |
-| `To Do list from 12-12-25.docx` | 2025-12-17 | to confirm |
-| `UI_INVENTORY.md` | 2026-06-15 | to confirm |
-| `Xero_OAuth_Setup.md` | 2026-04-12 | to confirm |
+| `A2_ClassID_SessionID_Analysis.md` | 2026-04-26 | historical analysis |
+| `C1 Recommended changes 2026 30 06.md` | 2026-03-06 | archived 2026-10-18 (root copy, 2026-03-06) |
+| `C1_API_Migration_Phase1_Progress.md` | 2026-05-03 | active (remaining work: Structural plan S3) |
+| `C1_API_Migration_Plan.md` | 2026-05-03 | active (remaining work: Structural plan S3) |
+| `Changelog - 2026-04-17.md` | 2026-05-05 | historical (v4.1.0 bookings fixes; not repeated in CHANGELOG.md, so keep) |
+| `Class_Margin_Calculation.md` | 2026-10-17 | active |
+| `COMPETITIVE_GAPS_EXECUTIVE_SUMMARY.md` | 2026-07-16 | reference (Jul 2026) |
+| `COMPETITIVE_INTELLIGENCE_ANALYSIS.md` | 2026-07-16 | reference (Jul 2026) |
+| `Course_Revenue_Recommended_Actions.md` | 2026-08-05 | active — open issue (course revenue restatement) |
+| `Course_Session_Revenue_Investigation_2026-08-05.md` | 2026-08-05 | active — open issue (course revenue restatement) |
+| `Data_Integrity_Audit_2026-04-17.md` | 2026-04-18 | historical audit record |
+| `Data_Integrity_Audit_Index.md` | 2026-04-26 | historical audit record (index of the audit set) |
+| `Data_Integrity_Audit_Stage1.md` | 2026-04-18 | historical audit record |
+| `Data_Integrity_Audit_Stage2.md` | 2026-04-18 | historical audit record |
+| `Data_Integrity_Audit_Stages3-6.md` | 2026-04-22 | historical audit record |
+| `Findings_Register.md` | 2026-04-26 | historical audit record (334 findings) |
+| `Memberships_Dashboard_Investigation_2026-05-01.md` | 2026-05-03 | historical |
+| `Momence_API_Call_Reference.md` | 2026-05-03 | reference (May 2026; see Momence_data/Momence_API_v2_Reference.md) |
+| `momence_booking_id_test.md` | 2026-04-26 | historical |
+| `Post Stage 8 Integrity Audit.md` | 2026-04-26 | historical audit record |
+| `Post Stage 8.9 Close-Out Audit.md` | 2026-04-27 | historical audit record (M4, M5 left open) |
+| `QC_Inspection_2026-04-26.md` | 2026-04-26 | historical audit record |
+| `Reconciliation_20260323.md` | 2026-03-23 | historical |
+| `SCHEDULING_ENGINE_QUICK_START.md` | 2026-07-16 | reference (Jul 2026) |
+| `SCHEDULING_OPTIMISATION_FRAMEWORK.md` | 2026-07-16 | reference (Jul 2026) |
+| `Setup_Summary.md` | 2026-04-02 | historical (GitHub Desktop workflow, replaced by auto-commit on 2026-06-19) |
+| `Stage 8-5 Changes.md` | 2026-04-26 | historical audit record |
+| `Stage6_Owner_Decisions_BA_Review.md` | 2026-04-26 | historical audit record |
+| `Stage7_Changelog.md` | 2026-04-26 | historical audit record |
+| `Stage8.1_Changelog.md` | 2026-04-26 | historical audit record |
+| `Stage8.4_Changelog.md` | 2026-04-26 | historical audit record |
+| `Stage8.5_Changelog.md` | 2026-04-26 | historical audit record |
+| `Stage8.5_Investigation_fp_unmatched.md` | 2026-04-26 | historical audit record |
+| `Stage8.6_Changelog.md` | 2026-04-26 | historical audit record |
+| `Stage8.7_Changelog.md` | 2026-04-26 | historical audit record |
+| `Stage8.8_Investigation_stale_collectors.md` | 2026-04-27 | historical audit record |
+| `Stage8.9_Changelog.md` | 2026-04-27 | historical audit record |
+| `Stage9.0_Changelog.md` | 2026-05-03 | historical audit record |
+| `WEEKLY_RECOMMENDATION_TRACKER.md` | 2026-07-16 | to confirm — last updated 2026-07-16 |
+| `WEEKLY_REPORT_IMPLEMENTATION_GUIDE.md` | 2026-06-19 | active |
+| `WEEKLY_REPORT_SAMPLE.md` | 2026-06-21 | superseded by real reports (kept: linked from the implementation guide) |
+| `WEEKLY_REPORT_SAMPLE_UPDATED.md` | 2026-06-21 | superseded by real reports |
+| `weekly_report_template.md` | 2026-06-26 | active |
+| `Xero Backfill & Financial Model Update — Session Summary.md` | 2026-05-29 | historical |
+| `12-12 Meeting- Defining Mark's Role and Operational Strategy.docx` | 2025-12-12 | reference — source of owner objectives (S3) |
+| `12-12 Meeting- Defining Mark's Role and Operational Strategy.pdf` | 2025-12-12 | reference — PDF of the above |
+| `C1 Recommended changes 2026 30 06.md` | 2026-04-12 | historical (current copy, in docs/) |
+| `CGPT ideas for campaign maangement Jan 2026.docx` | 2026-01-06 | historical |
+| `Class change suggestions wc 12Jan26.docx` | 2026-01-13 | historical |
+| `Cloudflare_GitHub_Deployment_Guide.md` | 2026-04-12 | historical (April 2026; see RSO_DEPLOYMENT_MAP.md) |
+| `DAILY_EXPORT_CHECKLIST.md` | 2026-06-20 | active (times stale; see section 5) |
+| `DAILY_PIPELINE_AUTOMATION.md` | 2026-06-19 | active (times stale; see section 5) |
+| `DAILY_WORKFLOW_OVERVIEW.md` | 2026-06-19 | active (times stale; see section 5) |
+| `Dashboard_Data_Fixes_2026-04-12.md` | 2026-04-12 | historical |
+| `Draft Quarterly Agenda for Ritual v1.docx` | 2026-01-08 | reference — source of owner goals (S1) |
+| `KPI_Drilldown_Design_v1.0.md` | 2026-06-15 | active (design) |
+| `manual and automatic processes, procedures, and work instructions for the studio.docx` | 2026-02-09 | reference |
+| `Meeting notes 26 01 19.docx` | 2026-01-19 | historical |
+| `Meeting notes 27 01 19.docx` | 2026-01-27 | historical |
+| `Meeting notes February 4th 2026.docx` | 2026-02-04 | historical |
+| `Membership_Attendance_Report_Documentation.docx` | 2026-03-31 | reference |
+| `Mermaid lease.docx` | 2026-01-08 | historical (studio closed January 2026) |
+| `Minutes of 4 February 2026.docx` | 2026-02-12 | historical |
+| `Notes on Cash improvement.docx` | 2026-03-25 | historical |
+| `Notes on Cash improvement.txt` | 2026-03-25 | historical (text copy of the above) |
+| `Proposal 14 November 2025.docx` | 2025-11-14 | historical |
+| `Proposal 20 November 2025.docx` | 2025-11-26 | reference — original scope (S4) |
+| `QUICK_REFERENCE.md` | 2026-06-19 | active (times stale; see section 5) |
+| `Ritual notes and clippings.docx` | 2025-11-15 | historical |
+| `Ritual notes.docx` | 2025-11-14 | historical |
+| `Ritual Studio -  A Strategic Framework for Operational Excellence.docx` | 2025-12-17 | historical |
+| `RITUAL STUDIO --  ASANA ARCHITECTURE FOR OPERATIONAL TURNAROUND.docx` | 2025-12-18 | historical |
+| `Ritual Teacher Contract 2025 .docx` | 2025-12-05 | reference |
+| `Ritual_Dashboard_Project_Plan_v1.1.docx` | 2026-03-01 | superseded by v1.3 |
+| `Ritual_Dashboard_Project_Plan_v1.2.docx` | 2026-03-01 | superseded by v1.3 |
+| `Ritual_KPI_Library_v1.0.docx` | 2026-03-01 | superseded by v1.2 |
+| `Ritual_KPI_Library_v1.1.docx` | 2026-03-01 | superseded by v1.2 |
+| `Ritual_Studios_Structured_Proposal_With_TOC.docx` | 2025-11-14 | historical |
+| `Studio_Systems_Roadmap.html` | 2026-01-25 | historical (January 2026) |
+| `Summary of meeting 6-Jan-26 Mark Rose.docx` | 2026-02-17 | reference — source of owner goals (S2) |
+| `Teacher payrates extract Dec 2025.docx` | 2026-01-26 | historical (pay rates now in Reference Data) |
+| `Teacher_Substitution_Build_Prompts.md` | 2026-06-22 | historical |
+| `The uploaded document also discussed the need for.docx` | 2025-11-14 | historical |
+| `To Do list from 12-12-25.docx` | 2025-12-17 | historical |
+| `UI_INVENTORY.md` | 2026-06-15 | reference (June 2026) |
+| `Xero_OAuth_Setup.md` | 2026-04-12 | active (reference) |
