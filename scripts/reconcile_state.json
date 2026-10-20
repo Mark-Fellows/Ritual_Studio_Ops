@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-18",
+  "date": "2026-10-20",
   "audit_24h": {
     "total": 0,
     "rso": 0,
@@ -20,6 +20,6 @@
     "cancelled": 1
   },
   "teachers": {
-    "count": 262
+    "count": 263
   }
 }
