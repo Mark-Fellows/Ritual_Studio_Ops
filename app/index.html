@@ -715,16 +715,13 @@
         </a>
 
         <!--
-          Finance &amp; Cashflow tile. Opens the same-origin cashflow dashboard finance-cashflow.html.
-          Intentionally has NO data-perm: the code "index.tile.finance" does NOT exist in
-          v_role_permissions_resolved, so adding data-perm would immediately grey the tile for
-          all users (the same trap as the Campaign tile below). Visible to all signed-in users
-          by design. If role-gating is required later, add "index.tile.finance" to role_permissions
-          via migration FIRST, confirm it appears in v_role_permissions_resolved, and only THEN add
-          the data-perm attribute. Note: finance-cashflow.html is a static client-side dashboard with
-          no auth gate of its own yet - see docs/PORTAL-DEVELOPER.md before exposing sensitive figures.
+          Finance &amp; Cashflow tile. Gated by permission index.tile.finance (standalone code,
+          granted to administrator, coordinator and developer only; guests and other roles do
+          not see the tile). data-hide-if-denied removes the tile entirely instead of greying it.
+          Note: finance-cashflow.html itself has no auth gate yet - hiding the tile does not
+          protect the page URL. See docs/PORTAL-DEVELOPER.md before exposing sensitive figures.
         -->
-        <a class="card" id="finance-tile"
+        <a class="card" id="finance-tile" data-perm="index.tile.finance" data-hide-if-denied
            href="./finance-cashflow.html" target="_blank" rel="noopener"
            title="Cashflow dashboard - Stripe-settled actuals and a 13-week rolling forecast for Ritual Studios.">
           <span class="card-tag">Finance</span>
@@ -1074,7 +1071,11 @@
       document.querySelectorAll('[data-perm]').forEach(el => {
         const code = el.getAttribute('data-perm');
         const allowed = permSet.has(code);
-        el.classList.toggle('disabled', !allowed);
+        if (el.hasAttribute('data-hide-if-denied')) {
+          el.style.display = allowed ? '' : 'none';
+        } else {
+          el.classList.toggle('disabled', !allowed);
+        }
         el.setAttribute('aria-disabled', allowed ? 'false' : 'true');
         if (!allowed) {
           el.setAttribute('title', 'Your role does not have access to this tool. Speak to an administrator if you need it.');
@@ -1874,6 +1875,6 @@
       }
     }, true);
   </script>
-<div data-file-id="rso-file-footer" title="Click to copy footer" onclick="(function(el){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;navigator.clipboard.writeText(t).then(function(){el.textContent='Copied!';setTimeout(function(){el.textContent=el.dataset.orig;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.1.4</div>
+<div data-file-id="rso-file-footer" title="Click to copy footer" onclick="(function(el){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;navigator.clipboard.writeText(t).then(function(){el.textContent='Copied!';setTimeout(function(){el.textContent=el.dataset.orig;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.1.5</div>
 </body>
 </html>
