@@ -734,3 +734,187 @@ The te&& check ensures a blank email never matches anything.
 **Fix:** Re-link via QR, then recovery-scrape the gap (cover_processor.py --hours N; dedup makes overlap safe). Prevention is impossible, so detection must be automated: a staleness alert on whatsapp_monitor_runs (no completed run in ~3h during monitoring hours). Two multi-day outages (zombie Edge 1-3 Jul, logout 9-11 Aug) would each have been caught on day one.
 
 **Applies to:** WhatsApp monitor operations; the pending Studio Ops dashboard staleness banner.
+
+## 2026-10-23
+
+Source: CleanSweep single sign-on deployment (Portal & access project, `claude/CleanSweep-SSO-deployment-plan.md`, section 6).
+
+---
+
+### L-CS-01 -- Access bridge reports every token failure as "access token invalid"
+
+**Problem:** After Cloudflare Access sign-in, `/auth/bridge` returned `{"error":"access token invalid"}` with no further detail.
+
+**Cause:** Any failure in verifying the Access token gives the same message. This includes `CF_ACCESS_TEAM_DOMAIN` set without `https://`: the bridge downloads signing keys from that address and compares the token issuer with it.
+
+**Fix:** Set `CF_ACCESS_TEAM_DOMAIN` to the full address (`https://<team>.cloudflareaccess.com`) and redeploy.
+
+**Applies to:** `functions/auth/bridge.js` in any app using the Access bridge.
+
+---
+
+### L-CS-02 -- "bridge not configured" means one of the four settings is empty
+
+**Problem:** `/auth/bridge` returned `{"error":"bridge not configured"}`.
+
+**Cause:** One of `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `SUPABASE_URL` or `SUPABASE_SERVICE_KEY` was empty at runtime. The exact original cause was not confirmed.
+
+**Fix:** Check all four settings. Re-enter `SUPABASE_SERVICE_KEY` as a Secret, then redeploy. Fixed on 23 Oct 2026.
+
+**Applies to:** Pages Functions using the Access bridge.
+
+---
+
+### L-CS-03 -- Pages environment variables apply only to new deployments
+
+**Problem:** Changes to environment variables had no visible effect.
+
+**Cause:** Cloudflare Pages attaches environment variables when a deployment is created.
+
+**Fix:** Redeploy after every change. A plain-text variable cannot be changed to a Secret in place: delete it and add it again.
+
+**Applies to:** All Cloudflare Pages projects that use Functions.
+
+---
+
+### L-CS-04 -- Custom domain stays pending without a CNAME record
+
+**Problem:** `ritual-cleansweep.lesss.com.au` showed "site can't be reached" after the custom domain was added to the Pages project.
+
+**Cause:** Adding the domain did not create its CNAME record in the `lesss.com.au` zone. The domain status read "CNAME record not set".
+
+**Fix:** Create a proxied CNAME, `ritual-cleansweep` → `ritual-cleansweep.pages.dev`. The domain became active within minutes.
+
+**Applies to:** Any new Pages custom domain on `lesss.com.au`.
+
+---
+
+### L-CS-05 -- Access matches the email address exactly
+
+**Problem:** Sign-in was refused for an address that was meant to be allowed.
+
+**Cause:** Dictation changed "Fellows" to "Fowers". Access correctly refused an address that is not on the policy.
+
+**Fix:** Check the typed address against the policy before changing the policy.
+
+**Applies to:** Cloudflare Access named-email policies.
+
+---
+
+### L-CS-06 -- Supabase return addresses must be on the Redirect URLs list
+
+**Problem:** Magic links opened the Ritual Ops portal instead of CleanSweep.
+
+**Cause:** When a return address is not on the Redirect URLs list, Supabase sends the user to the Site URL. The Site URL is an old Pages address.
+
+**Fix:** Add each app's `/**` address to Redirect URLs. Leave the Site URL unchanged, because other apps depend on it.
+
+**Applies to:** Supabase Auth for all four Ritual apps.
+
+---
+
+### L-CS-07 -- Duplicate element IDs break tab navigation silently
+
+**Problem:** The Settings tab opened, but its panel stayed empty.
+
+**Cause:** The Settings button and its panel both had the ID `tab-settings`. `getElementById` returned the button, so the panel was never shown.
+
+**Fix:** Rename the button to `btn-settings`. Check for duplicate IDs before each deployment.
+
+**Applies to:** CleanSweep app. Check other single-file apps too.
+
+---
+
+### L-CS-08 -- Login screen flashed before the bridge signed the user in
+
+**Problem:** The email sign-in form appeared briefly before the main screen loaded.
+
+**Cause:** On page load Supabase reports "no session" before the bridge check has finished, and the app showed the login screen at once.
+
+**Fix:** Hold the login screen with a `booting` flag until the bridge has been tried. Fixed on 23 Oct 2026.
+
+**Applies to:** Any app that uses an Access bridge with a fallback login form.
+
+---
+
+### L-CS-09 -- Cloudflare API connector needs explicit scopes
+
+**Problem:** Read calls to Access, Pages and zone endpoints returned HTTP 403.
+
+**Cause:** The connector's token lacked the scopes those endpoints need. The first reconnection did not carry them.
+
+**Fix:** Disconnect fully, reconnect, tick each required scope on the consent screen, refresh the tools, and confirm with a read call before any write.
+
+**Applies to:** The Cloudflare API connector.
+
+---
+
+### L-CS-10 -- The pages.dev address sits outside Access
+
+**Problem:** The CleanSweep app shell at `ritual-cleansweep.pages.dev` can be opened without Access.
+
+**Cause:** Access protects only the custom domain.
+
+**Fix:** Accepted on 23 Oct 2026. Data is protected by Supabase row-level security and the bridge's sign-in check. Revisit if the data sensitivity changes.
+
+**Applies to:** Pages projects where Access protects a custom domain only.
+
+---
+
+### L-CS-11 -- Deployment list shows a stale local commit message
+
+**Problem:** The Pages deployment list showed "Try fixing this error: Runtime TypeError…" as the message.
+
+**Cause:** Wrangler takes the commit message from the local repository when it uploads. The message was left from an earlier fix.
+
+**Fix:** Tidy the commit message before deploying, so the list is readable.
+
+**Applies to:** Wrangler direct-upload deployments.
+
+---
+
+### L-CS-12 -- A new GitHub repository starts with a placeholder README
+
+**Problem:** A push to the new CleanSweep repository was rejected as non-fast-forward.
+
+**Cause:** GitHub created an "Initial commit" with a placeholder README when the repository was created.
+
+**Fix:** Merge with `--allow-unrelated-histories` and keep the real README. Do not force-push over the existing history.
+
+**Applies to:** Any new GitHub repository created in the browser.
+
+---
+
+### L-CS-13 -- A Claude Code session cannot create GitHub repositories
+
+**Problem:** `gh repo create` returned HTTP 403: sessions are bound to their configured repositories.
+
+**Cause:** A session can use only the repositories attached to it.
+
+**Fix:** Create the empty repository in the browser, then attach it to the session with push access.
+
+**Applies to:** Claude Code sessions with GitHub access.
+
+---
+
+### L-CS-14 -- CRLF line endings make identical files appear modified
+
+**Problem:** Git listed `app/index.html` and `README.md` as modified, although their content matched GitHub.
+
+**Cause:** Windows checkouts write CRLF line endings. The repositories store LF.
+
+**Fix:** Confirm with `git diff --ignore-cr-at-eol`. If nothing shows, no action is needed.
+
+**Applies to:** Windows working copies, especially OneDrive folders.
+
+---
+
+### L-CS-15 -- Git commands must run from the folder you mean
+
+**Problem:** `Ritual_CleanSweep` sits inside `Ritual_Apps`, which is a Git repository with many uncommitted deletions unrelated to CleanSweep.
+
+**Cause:** Running Git in the parent folder acts on the parent repository, and `git init` in a child folder creates a separate repository inside it.
+
+**Fix:** Run Git commands from the folder you mean. The parent repository was not changed on 23 Oct 2026.
+
+**Applies to:** The `Ritual_Apps` folder layout.
