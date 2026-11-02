@@ -369,6 +369,8 @@ Maintained by: Ritual Studio Ops project (Claude as PM, for Mark Fellows)
 | Templates | `Docs/Long_Tail_Operations_System_Template.docx`, `Docs/Studio_Diagnostic_Intake_Questionnaire.docx` | to confirm | Consultancy templates |
 | Supporting files | `Docs/*.csv`, `Docs/*.xlsx`, `Docs/*.ps1`, `Docs/ritual-pre-commit-hook.sh` | — | Data extracts and scripts, not documentation |
 | Documentation audit | `Docs/Documentation_Audit_2026-10-18.md` | active | This pass |
+| Dashboards and data integrity review and plan | `Docs/Dashboards_Data_Integrity_Review_and_Plan_2026-10-25.md` | active | Cross-surface consistency, schema and feed checks; phased plan A–E and decisions DEC-1 to DEC-8 (25 Oct 2026; updated 1 Nov: A1 and A7 done, re-check, new findings N-1 to N-7) |
+| Integrity plan preparation pack | `Docs/Integrity_prep_2026-11-01/` (README, staged patches A3, A4, B2, B3, B4/A6/E5, E7; `integrity_check.py`) | active | Staged 1 Nov 2026, not applied; apply in the README's order |
 
 ---
 

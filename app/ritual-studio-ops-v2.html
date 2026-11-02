@@ -22,6 +22,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%91%E2%80%8D%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./cleansweep-widget.js"></script>
     <style>
         :root {
             --cream: #F8F4EE; --warm-white: #FDFAF6; --sand: #E8DDD0; --stone: #C4B5A0;
@@ -343,6 +344,15 @@
                 <button class="btn btn-ghost" onclick="closeRejectModal()">Cancel</button>
                 <button class="btn btn-danger" onclick="submitRejectFromModal()">Reject Booking</button>
             </div>
+        </div>
+    </div>
+
+    <!-- CLEANSWEEP ACCESS MODAL (27 Oct 2026): shared widget cleansweep-widget.js + Edge Function cleansweep-admin -->
+    <div class="modal-overlay" id="cleanSweepModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeCleanSweepModal()" aria-label="Close">✕</button>
+            <div class="modal-title">CleanSweep access</div>
+            <div id="cleanSweepWidget" style="margin-top:10px;"></div>
         </div>
     </div>
 
@@ -1876,6 +1886,8 @@
             const _schedPhone = (t.whatsapp_phone||t.phone||'').replace(/\D/g,'');
             const sendBtn = can('canEditTeachers') ? `<button class="btn btn-secondary" title="WhatsApp this teacher their personal cover-schedule link" onclick="sendTeacherScheduleLink('${t.id}','${_schedPhone}','${encodeURIComponent(t.first_name||'')}')">Send link</button>` : '';
             const _hasEmail = !!((t.email||'').toString().trim());
+            const _canCs = hasPerm('admin.users.manage') || (currentUserProfile && currentUserProfile.cleansweep_role === 'administrator');
+            const csBtn = (_canCs && _hasEmail) ? `<button class="btn btn-secondary" title="Give this teacher CleanSweep access" onclick="openCleanSweepAccess('${t.id}')">CleanSweep</button>` : '';
             const emailBtn = can('canEditTeachers') ? `<button class="btn btn-secondary" ${_hasEmail?'':'disabled'} style="${_hasEmail?'':'opacity:0.45;cursor:not-allowed;'}" title="${_hasEmail?'Email this teacher their cover-schedule link':'No email on file for this teacher'}" onclick="emailTeacherScheduleLink('${t.id}', this)">Email link</button>` : '';
             return `<div class="teacher-header">
     ${photoHtml}
@@ -1889,8 +1901,29 @@
         ${t.notes?`<span class="contact-chip" style="font-style:italic;color:var(--text-muted)">${esc(t.notes)}</span>`:''}
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end;">${editBtn}${deleteBtn}${sendBtn}${emailBtn}</div>
+    <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end;">${editBtn}${deleteBtn}${sendBtn}${emailBtn}${csBtn}</div>
   </div>`;
+        }
+
+        // CleanSweep access shortcut (27 Oct 2026). Opens the shared widget pre-filled with this
+        // teacher; the Edge Function cleansweep-admin checks the caller's permission.
+        function openCleanSweepAccess(id) {
+            const t = teachers.find(x => x.id === id);
+            if (!t || !window.CleanSweepWidget) { showToast('CleanSweep access is not available here.', 'error'); return; }
+            if (!t.email) { showToast('This teacher has no email on file.', 'error'); return; }
+            document.getElementById('cleanSweepModal').classList.add('open');
+            window.CleanSweepWidget.mount(document.getElementById('cleanSweepWidget'), {
+                fnUrl: `${SUPABASE_URL}/functions/v1/cleansweep-admin`,
+                apikey: SUPABASE_ANON,
+                getToken: () => (cachedSession && cachedSession.access_token) || null,
+                selfEmail: currentUserEmail,
+                prefill: { email: t.email, first_name: t.first_name, last_name: t.last_name, teacher_id: t.id },
+                onCancel: closeCleanSweepModal
+            });
+        }
+        function closeCleanSweepModal() {
+            const m = document.getElementById('cleanSweepModal');
+            if (m) m.classList.remove('open');
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -4115,6 +4148,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
                 else if(importModal&&importModal.classList.contains('open')){closeImportModal();}
                 else if(document.getElementById('manualRequestModal')?.classList.contains('open')){closeManualRequestModal();}
                 else if(document.getElementById('absenceModalOverlay')?.classList.contains('open')){closeAbsenceModal();}
+                else if(document.getElementById('cleanSweepModal')?.classList.contains('open')){closeCleanSweepModal();}
             }
         });
         // ═══════════════════════════════════════════════════════════════════

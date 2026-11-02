@@ -918,3 +918,47 @@ Source: CleanSweep single sign-on deployment (Portal & access project, `claude/C
 **Fix:** Run Git commands from the folder you mean. The parent repository was not changed on 23 Oct 2026.
 
 **Applies to:** The `Ritual_Apps` folder layout.
+
+---
+
+### L-CS-16 -- A NULL inside a CHECK list makes the check accept anything
+
+**Problem:** `user_profiles` allowed `cleansweep_role = 'cleaner'` although the check listed only `team_member` and `administrator`.
+
+**Cause:** The check was `cleansweep_role = ANY (ARRAY['team_member','administrator',NULL])`. For a value that matches nothing, the comparison with NULL gives NULL, and a CHECK only rejects FALSE.
+
+**Fix:** Write `col IS NULL OR col IN (...)`. Replaced for role and venue on 27 Oct 2026.
+
+**Applies to:** Every CHECK constraint in the shared database.
+
+---
+
+### L-CS-17 -- A trigger that relies on auth.uid() also blocks server-side functions
+
+**Problem:** Updates to names, role or `teacher_id` from Edge Functions using the service key would fail with "CleanSweep administrators may only change cleansweep_role and cleansweep_venue".
+
+**Cause:** `cs_guard_profile_update` allowed changes only when `has_admin_users_manage()` was true. Under the service key `auth.uid()` is NULL, so it was false.
+
+**Fix:** The trigger also allows `auth.role() = 'service_role'` and SQL editor sessions (27 Oct 2026).
+
+**Applies to:** Any trigger or policy that identifies the caller through `auth.uid()`.
+
+---
+
+### L-CS-18 -- New-format Supabase secret keys go only in the apikey header
+
+**Problem:** A `sb_secret_...` key sent as `Authorization: Bearer` can be rejected, because it is not a JWT.
+
+**Fix:** The CleanSweep bridge and the PC scripts send `sb_` keys only as `apikey`, and legacy JWT keys in both headers.
+
+**Applies to:** Pages Functions and scripts that call Supabase REST with a secret key.
+
+---
+
+### L-CS-19 -- Open the Access gate only after the bridge checks the role
+
+**Problem:** With Access open to any verified email (decision D2), the bridge is the gate. The 23 Oct bridge issued a session to any email Access let through.
+
+**Fix:** The bridge now looks up a CleanSweep role before issuing a token (403 "not a CleanSweep user" otherwise). Deploy it before changing the Access policy, and test with an email that has no role.
+
+**Applies to:** Any app that uses the Access bridge with an open Access policy.

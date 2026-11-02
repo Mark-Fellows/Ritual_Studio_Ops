@@ -15,6 +15,7 @@
   <link rel="icon" type="image/png" href="./images/ritual-logo.png">
   <link rel="apple-touch-icon" href="./images/ritual-logo.png">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./cleansweep-widget.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -524,6 +525,11 @@
     .um-msg.error { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
     .um-msg.success { background: var(--green-bg); color: var(--green-dark); border: 1px solid var(--green-light); }
     .um-empty, .um-loading { padding: 20px 14px; text-align: center; color: var(--text-muted); font-size: 13px; }
+    .um-list-actions { display: inline-flex; gap: 6px; }
+    .um-cs-btn { background: var(--card); color: var(--green-dark); border: 1px solid var(--green-dark); }
+    .um-cs-btn:hover { background: var(--green-bg); }
+    .um-cs-intro { font-size: 13px; color: var(--text-muted); margin: -6px 0 6px; line-height: 1.45; }
+    .um-cs-widget .csw { --csw-accent: var(--green-dark); }
 
     /* ------------------------------------------------------------------ */
     /* Mobile layout (v1.1.4) — stacks the header to stop the emblem,     */
@@ -896,7 +902,10 @@
         <div class="um-list" id="um-list">
           <div class="um-list-header">
             <span>Users</span>
-            <button class="um-add-btn" id="um-add-btn" type="button">+ Add user</button>
+            <span class="um-list-actions">
+              <button class="um-add-btn um-cs-btn" id="um-cs-btn" type="button" title="Give people CleanSweep access">CleanSweep</button>
+              <button class="um-add-btn" id="um-add-btn" type="button">+ Add user</button>
+            </span>
           </div>
           <div id="um-list-body"><div class="um-loading">Loading&hellip;</div></div>
         </div>
@@ -936,6 +945,12 @@
             <button class="um-btn" id="um-cancel-btn" type="button">Cancel</button>
             <button class="um-btn primary" id="um-save-btn" type="button">Save</button>
           </div>
+        </div>
+        <!-- CleanSweep users panel (v1.1.7): shared widget cleansweep-widget.js + Edge Function cleansweep-admin -->
+        <div class="um-form" id="um-cs-panel" style="display:none;">
+          <h4>CleanSweep users</h4>
+          <p class="um-cs-intro">Give someone CleanSweep access without retyping their details. Cleaners can also be tagged as Karma Yogi in Momence.</p>
+          <div id="um-cs-widget" class="um-cs-widget"></div>
         </div>
       </div>
     </div>
@@ -1721,6 +1736,8 @@
       };
 
       $umForm.style.display = 'flex';
+      const _csPanel = document.getElementById('um-cs-panel');
+      if (_csPanel) _csPanel.style.display = 'none';
       document.querySelectorAll('.um-user-row').forEach(r => r.classList.remove('active'));
       if (user) {
         const row = document.querySelector('.um-user-row[data-uid="' + user.user_id + '"]');
@@ -1848,6 +1865,8 @@
     function umOpenModal() {
       $umModal.classList.add('visible');
       $umForm.style.display = 'none';
+      const _csPanel = document.getElementById('um-cs-panel');
+      if (_csPanel) _csPanel.style.display = 'none';
       umLoadUsers();
     }
     function umCloseModal() { $umModal.classList.remove('visible'); }
@@ -1856,6 +1875,32 @@
     $umClose.addEventListener('click', umCloseModal);
     $umModal.addEventListener('click', function(ev) { if (ev.target === $umModal) umCloseModal(); });
     $umAddBtn.addEventListener('click', function() { umOpenEdit(null); });
+
+    // CleanSweep users panel (v1.1.7). Search portal users, teachers and Momence customers,
+    // set a CleanSweep role and venue, and queue the Momence Karma Yogi tag for cleaners.
+    let _umCsMounted = false;
+    function umOpenCleanSweep() {
+      $umForm.style.display = 'none';
+      document.querySelectorAll('.um-user-row').forEach(function(r) { r.classList.remove('active'); });
+      document.getElementById('um-cs-panel').style.display = 'flex';
+      if (_umCsMounted || !window.CleanSweepWidget) return;
+      _umCsMounted = true;
+      sb.auth.getUser().then(function(res) {
+        const me = res && res.data && res.data.user;
+        window.CleanSweepWidget.mount(document.getElementById('um-cs-widget'), {
+          fnUrl: SUPABASE_URL + '/functions/v1/cleansweep-admin',
+          apikey: SUPABASE_KEY,
+          getToken: function() {
+            return sb.auth.getSession().then(function(r) {
+              return r && r.data && r.data.session ? r.data.session.access_token : null;
+            });
+          },
+          selfEmail: me ? me.email : ''
+        });
+      });
+    }
+    const $umCsBtn = document.getElementById('um-cs-btn');
+    if ($umCsBtn) $umCsBtn.addEventListener('click', umOpenCleanSweep);
     $umCancelBtn.addEventListener('click', function() {
       $umForm.style.display = 'none';
       document.querySelectorAll('.um-user-row').forEach(function(r) { r.classList.remove('active'); });
@@ -1889,6 +1934,6 @@
       }
     }, true);
   </script>
-<div data-file-id="rso-file-footer" title="Click to copy footer" onclick="(function(el){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;navigator.clipboard.writeText(t).then(function(){el.textContent='Copied!';setTimeout(function(){el.textContent=el.dataset.orig;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.1.6</div>
+<div data-file-id="rso-file-footer" title="Click to copy footer" onclick="(function(el){var t=el.dataset.orig||el.textContent;el.dataset.orig=t;navigator.clipboard.writeText(t).then(function(){el.textContent='Copied!';setTimeout(function(){el.textContent=el.dataset.orig;},1500);});el.blur();})(this)" style="position:fixed;bottom:0;left:0;background:rgba(248,244,238,0.92);color:#5C4A32;font:10px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:3px 10px;border-top-right-radius:6px;border-top:1px solid rgba(92,74,50,0.15);border-right:1px solid rgba(92,74,50,0.15);z-index:9999;cursor:pointer;letter-spacing:0.02em;user-select:text;">File: Ritual_Studio_Ops/app/index.html &middot; Management Portal (new) &middot; v1.1.7</div>
 </body>
 </html>
